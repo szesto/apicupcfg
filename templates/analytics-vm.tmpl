@@ -1,0 +1,51 @@
+{{$subsys := .SubsysName}}
+
+{{$pathsep := .OsEnv.PathSeparator}}
+{{$apicup := .OsEnv.BinApicup}}
+{{$islinux := .OsEnv.IsLinux}}
+
+{{ template "scriptheader" .OsEnv }}
+
+{{ $apicup }} subsys create {{ $subsys }} analytics
+{{ $apicup }} subsys set {{ $subsys }} mode={{ .Mode }}
+
+{{ with .CloudInit }}
+{{ if len .CloudInitFile }}
+    {{ $apicup }} subsys set {{ $subsys }} additional-cloud-init-file=..{{$pathsep}}{{ .CloudInitFile }}
+{{ end }}
+{{- end }}
+
+{{ $apicup }} subsys set {{ $subsys }} analytics-ingestion={{ .AnalyticsIngestion }}
+{{ $apicup }} subsys set {{ $subsys }} analytics-client={{ .AnalyticsClient }}
+
+{{ $apicup }} subsys set {{ $subsys }} search-domain={{ join "," .SearchDomains | trim | quote }}
+
+{{ $apicup }} subsys set {{ $subsys }} ssh-keyfiles=..{{$pathsep}}{{ .SshPublicKeyFile }}
+
+{{ with .VmFirstBoot }}
+{{ $apicup }} subsys set {{ $subsys }} dns-servers={{ join "," .DnsServers | trim | quote }}
+
+{{ if $islinux }}
+    {{ $apicup }} subsys set {{ $subsys }} default-password={{ .VmwareConsolePasswordHash | squote }}
+{{ else}}
+    {{ $apicup }} subsys set {{ $subsys }} default-password={{ .VmwareConsolePasswordHash | quote }}
+{{end}}
+
+{{ with .IpRanges }}
+{{ if len .PodNetwork }}
+    {{ $apicup }} subsys set {{ $subsys }} k8s-pod-network={{ .PodNetwork | quote }}
+{{- end}}
+{{ if len .ServiceNetwork }}
+    {{ $apicup }} subsys set {{ $subsys }} k8s-service-network={{ .ServiceNetwork | quote }}
+{{- end}}
+{{- end}}
+
+{{- range .Hosts}}
+{{$h := .}}
+{{ $apicup }} hosts create {{$subsys}} {{$h.Name}} {{$h.HardDiskPassword}}
+{{ $apicup }} iface create {{$subsys}} {{$h.Name}} {{$h.Device}} {{$h.IpAddress}}/{{$h.SubnetMask}} {{$h.Gateway}}
+{{- end}}
+
+{{- end}}
+
+{{ $apicup }} subsys set {{ $subsys }} enable-message-queue={{ .EnableMessageQueue }}

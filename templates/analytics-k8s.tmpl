@@ -1,0 +1,42 @@
+{{$subsys := .SubsysName}}
+
+{{$pathsep := .OsEnv.PathSeparator}}
+{{$apicup := .OsEnv.BinApicup}}
+
+{{ template "scriptheader" .OsEnv }}
+
+{{$apicup}} subsys create {{$subsys}} analytics --k8s
+
+{{ if len .ExtraValuesFile -}}
+{{$apicup}} subsys set {{$subsys}} extra-values-file=..{{$pathsep}}{{ .ExtraValuesFile }}
+{{ end -}}
+
+{{$apicup}} subsys set {{$subsys}} analytics-ingestion={{.AnalyticsIngestionEndpoint}}
+{{$apicup}} subsys set {{$subsys}} analytics-client={{.AnalyticsClientEndpoint}}
+{{$apicup}} subsys set {{$subsys}} namespace={{.Namespace}}
+{{$apicup}} subsys set {{$subsys}} registry={{.RegistryUrl}}
+{{$apicup}} subsys set {{$subsys}} registry-secret={{.RegistrySecret}}
+
+{{/* default 6, recommended minimum 12 */}}
+{{$apicup}} subsys set {{$subsys}} coordinating-max-memory-gb={{.CoordinatingMaxMemoryGb | default 12}}
+{{/* default 6, recommended minimum 12 */}}
+{{$apicup}} subsys set {{$subsys}} data-max-memory-gb={{.DataMaxMemoryGb | default 12}}
+{{/* default 200, minimum 200, this is per pod, 3 pods: 600gb */}}
+{{$apicup}} subsys set {{$subsys}} data-storage-size-gb={{.DataStorageSizeGb | default 200}}
+{{/* miminum 12 */}}
+{{$apicup}} subsys set {{$subsys}} master-max-memory-gb={{.MasterMaxMemoryGb | default 12}}
+{{/* minimum 5 */}}
+{{$apicup}} subsys set {{$subsys}} master-storage-size-gb={{.MasterStorageSizeGb | default 5}}
+
+{{$apicup}} subsys set {{$subsys}} enable-message-queue={{.EnableMessageQueue | default false}}
+
+{{$apicup}} subsys set {{$subsys}} storage-class={{.StorageClass}}
+{{ if len .EsStorageClass }}
+{{$apicup}} subsys set {{$subsys}} es-storage-class={{.EsStorageClass}}
+{{end}}
+{{ if len .MqStorageClass }}
+{{$apicup}} subsys set {{$subsys}} mq-storage-class={{.MqStorageClass}}
+{{end}}
+
+{{$apicup}} subsys set {{$subsys}} mode={{.Mode}}
+{{$apicup}} subsys set {{$subsys}} ingress-type={{.IngressType}}

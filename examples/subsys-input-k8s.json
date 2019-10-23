@@ -1,0 +1,162 @@
+{
+  "InstallType": "k8s",
+  "Version": "2018.1.7",
+
+  "Mode": "dev",
+
+  "Namespace": "apic",
+  "RegistryUrl": "us.icr.io/apic417",
+  "RegistrySecret": "apic-us-icr-io",
+  "IngressType": "ingress",
+  "StorageClass": "gp2",
+
+  "Certs": {
+    "DnFields": ["O=APIC","C=US"],
+    "K8sNamespace": "apic",
+    "CaFile": "ca-chain-root-last.crt",
+
+    "Certbot": {
+      "CertDir": "letsencrypt/live/apim.cloud",
+      "Cert": "cert.pem",
+      "Key": "privkey.pem",
+      "CaChain": "chain.pem"
+    },
+
+    "PublicUserFacingEkuServerAuth": {
+      "platform-api": {"Cn": "api.apim.cloud"},
+      "consumer-api": {"Cn": "consumer.apim.cloud"},
+      "api-manager-ui": {"Cn": "apim.apim.cloud"},
+      "cloud-admin-ui": {"Cn": "cm.apim.cloud"},
+      "portal-www-ingress": {"Cn": "portal.apim.cloud"}
+    },
+
+    "PublicEkuServerAuth": {
+      "apic-gw-service-ingress": {"Cn": "gwd.apim.cloud"}
+    },
+
+    "CommonEkuClientAuth": {
+      "portal-client": {"Cn": "portal-client"},
+      "analytics-client-client": {"Cn": "analytics-client-client"},
+      "analytics-ingestion-client": {"Cn": "analytics-ingestion-client"}
+    },
+
+    "MutualAuthEkuServerAuth": {
+      "portal-admin-ingress": {"Cn": "padmin.apim.cloud"},
+      "analytics-client-ingress": {"Cn": "ac.apim.cloud"},
+      "analytics-ingestion-ingress": {"Cn": "ai.apim.cloud"}
+    }
+  },
+
+  "Management": {
+    "SubsysName": "mgmt",
+    "ExtraValuesFile": "mgmt-values.yaml",
+    "ExtraValues": {},
+
+    "CassandraBackup": {
+      "BackupProtocol": "",
+      "BackupAuthUser": "admin",
+      "BackupAuthPass": "secret",
+      "BackupHost": "",
+      "BackupPort": 9090,
+      "BackupPath": "/backup",
+      "ObjstoreS3SecretKeyId": "",
+      "ObjstoreS3SecretAccessKey": "",
+      "ObjstoreEndpointRegion": "",
+      "ObjstoreBucketSubfolder": "",
+      "backupEncoding": "min(0-59) hour(0-23) dayofmonth(1-31) month(1-12) dayofweek(0-6)",
+      "BackupSchedule": "0 0 * * *"
+    },
+
+    "CassandraMaxMemoryGb": 9,
+    "CassandraVolumeSizeGb": 50,
+    "CassandraClusterSize": 3,
+    "ExternalCassandraHost": "",
+    "CreateCrd": true,
+
+    "PlatformApi": "api.apim.cloud",
+    "ApiManagerUi": "apim.apim.cloud",
+    "CloudAdminUi": "cm.apim.cloud",
+    "ConsumerApi": "consumer.apim.cloud"
+  },
+
+  "Analytics": {
+    "SubsysName": "analyt",
+    "ExtraValuesFile": "analyt-values.yaml",
+    "ExtraValues": {},
+
+    "CoordinatingMaxMemoryGb": 12,
+    "DataMaxMemoryGb": 12,
+    "DataStorageSizeGb": 200,
+    "MasterMaxMemoryGb": 12,
+    "MasterStorageSizeGb": 5,
+
+    "EnableMessageQueue": false,
+
+    "EsStorageClass": "",
+    "MqStorageClass": "",
+
+    "AnalyticsIngestionEndpoint": "ai.apim.com",
+    "AnalyticsClientEndpoint": "ac.apim.com"
+  },
+
+  "Portal": {
+    "SubsysName": "ptl",
+
+    "ExtraValuesFile": "ptl-values.yaml",
+    "ExtraValues": {},
+
+    "SiteBackup": {
+      "BackupProtocol": "",
+      "BackupAuthUser": "admin",
+      "BackupAuthPass": "secret",
+      "BackupHost": "",
+      "BackupPort": 1022,
+      "BackupPath": "/sites",
+      "ObjstoreS3SecretKeyId": "",
+      "ObjstoreS3SecretAccessKey": "",
+      "ObjstoreEndpointRegion": "",
+      "ObjstoreBucketSubfolder": "",
+      "BackupSchedule": "* * * * *"
+    },
+
+    "WwwStorageSizeGb": 5,
+    "BackupStorageSizeGb": 5,
+    "DbStorageSizeGb": 12,
+
+    "Fixed": {
+      "DbLogsStorageSizeGb": 2,
+      "AdminStorageSizeGb": 1
+    },
+
+    "PortalAdmin": "padmin.apim.cloud",
+    "PortalWWW": "portal.apim.cloud"
+  },
+
+  "Gateway": {
+    "SubsysName": "gwy",
+    "Mode": "dev",
+
+    "ExtraValuesFile": "gwy-values.yaml",
+    "ExtraValues": {
+      "datapower": {
+        "webGuiManagementState": "enabled",
+        "apiDebugProbe": "enabled"
+      }
+    },
+
+    "LicenseVersion": "Production",
+    "ImagePullPolicy": "IfNotPresent",
+
+    "ReplicaCount": 3,
+    "MaxCpu": 4,
+    "MaxMemoryGb": 6,
+
+    "V5ComatabilityMode": false,
+    "EnableTms": true,
+    "TmsPeeringStorageSizeGb": 10,
+    "EnableHighPerformancePeering": "true",
+
+    "ApiGateway": "gw.apicdatapower.com",
+    "ApicGwService": "gwd.apicdatapower.com"
+  }
+}

@@ -1,0 +1,41 @@
+{{$subsys := .SubsysName}}
+
+{{$pathsep := .OsEnv.PathSeparator}}
+{{$apicup := .OsEnv.BinApicup}}
+
+{{ template "scriptheader" .OsEnv }}
+
+{{$apicup}} subsys create {{$subsys}} gateway --k8s
+
+{{if len .ExtraValuesFile}}
+{{$apicup}} subsys set {{$subsys}} extra-values-file=..{{$pathsep}}{{.ExtraValuesFile}}
+{{end}}
+
+{{$apicup}} subsys set {{$subsys}} api-gateway={{.ApiGateway}}
+{{$apicup}} subsys set {{$subsys}} apic-gw-service={{.ApicGwService}}
+
+{{$apicup}} subsys set {{$subsys}} namespace={{.Namespace}}
+
+{{if len .RegistryUrl}}
+{{$apicup}} subsys set {{$subsys}} registry={{.RegistryUrl}}
+{{end}}
+{{if len .RegistrySecret}}
+{{$apicup}} subsys set {{$subsys}} registry-secret={{.RegistrySecret}}
+{{end}}
+
+{{$apicup}} subsys set {{$subsys}} image-pull-policy={{.ImagePullPolicy | default "IfNotPresent"}}
+
+{{$apicup}} subsys set {{$subsys}} replica-count={{.ReplicaCount | default 3}}
+{{$apicup}} subsys set {{$subsys}} max-cpu={{.MaxCpu | default 4}}
+{{$apicup}} subsys set gwy max-memory-gb={{.MaxMemoryGb | default 6}}
+
+{{$apicup}} subsys set {{$subsys}} storage-class={{.StorageClass}}
+
+{{$apicup}} subsys set {{$subsys}} v5-compatibility-mode={{.V5CompatibilityMode | default false}}
+{{$apicup}} subsys set {{$subsys}} enable-tms={{.EnableTms}}
+{{$apicup}} subsys set {{$subsys}} tms-peering-storage-size-gb={{.TmsPeeringStorageSizeGb | default 10}}
+{{$apicup}} subsys set {{$subsys}} enable-high-performance-peering={{.EnableHighPerformancePeering | quote}}
+
+{{$apicup}} subsys set {{$subsys}} license-version={{.LicenseVersion}}
+{{$apicup}} subsys set {{$subsys}} mode={{.Mode}}
+{{$apicup}} subsys set {{$subsys}} ingress-type={{.IngressType | default "ingress"}}

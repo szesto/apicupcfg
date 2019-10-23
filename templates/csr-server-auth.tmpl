@@ -1,0 +1,39 @@
+[req]
+# default key length for rsa key
+default_bits = 2048
+
+# do not encrypt private key
+encrypt_key = no
+encrypt_rsa_key = no
+
+# default message digest alg for signing certs and cert reqs
+default_md = sha256
+
+# cert request extensions section
+req_extensions = req_ext
+
+# self-signed cert extensions section
+#x509_extensions = self_signed_extensions
+
+# do not prompt for the dn
+prompt = no
+
+# section name for dn fields
+distinguished_name = dn
+
+# make sure dn components match ca policy
+[dn]
+{{- range .DnFields | reverse }}
+    {{- nindent 0 . }}
+{{- end }}
+CN = {{ .Cn }}
+
+[req_ext]
+extendedKeyUsage = serverAuth
+# update subject alt name
+{{- $isclusterdns := or (eq .CertName "analytics-client-ingress") (eq .CertName "analytics-ingestion-ingress")}}
+{{- if $isclusterdns }}
+subjectAltName = DNS:{{.Cn}},DNS:*.{{.K8sNamespace}},DNS:*.{{.K8sNamespace}}.svc,DNS:*.{{.K8sNamespace}}.svc.cluster.local
+{{- else}}
+subjectAltName = DNS:{{.Cn}}
+{{- end}}

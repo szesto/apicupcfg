@@ -1,0 +1,9 @@
+{{$pathsep := .OsEnv.PathSeparator}}
+{{$shellext := .OsEnv.ShellExt}}
+{{$scriptinvoke := .OsEnv.ScriptInvoke}}
+
+{{ template "scriptheader1" .OsEnv }}
+
+{{ range $k, $cs := .CertSpecs }}
+    {{$scriptinvoke}} .{{$pathsep}}{{$cs.CsrConf}}{{$shellext}}
+{{ end }}

@@ -1,0 +1,9 @@
+{{$pathsep := .OsEnv.PathSeparator}}
+{{$apicup := .OsEnv.BinApicup}}
+
+{{ template "scriptheader" .OsEnv }}
+
+{{ range .CertSpecs}}
+    {{ $certSpec := .}}
+    {{$apicup}} certs set {{ $certSpec.SubsysName}} {{$certSpec.CertName}} ..{{$pathsep}}{{$certSpec.CsrSubdir}}{{$pathsep}}{{$certSpec.CertFile}} ..{{$pathsep}}{{$certSpec.CsrSubdir}}{{$pathsep}}{{$certSpec.KeyFile}} ..{{$pathsep}}{{$certSpec.CsrSubdir}}{{$pathsep}}{{$certSpec.CaFile}}
+{{ end }}

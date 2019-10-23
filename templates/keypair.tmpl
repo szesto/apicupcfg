@@ -1,0 +1,6 @@
+{{$pathsep := .OsEnv.PathSeparator}}
+{{$shellext := .OsEnv.ShellExt}}
+
+{{ template "scriptheader1" .OsEnv }}
+
+openssl req -config {{.CertSpec.CsrConf}} -out {{.CertSpec.CertFile}}.csr -outform PEM -new -keyout {{.CertSpec.KeyFile}}

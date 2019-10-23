@@ -1,0 +1,71 @@
+{{- $subsys := .SubsysName}}
+
+{{$pathsep := .OsEnv.PathSeparator}}
+{{$apicup := .OsEnv.BinApicup}}
+{{$islinux := .OsEnv.IsLinux}}
+
+{{ template "scriptheader" .OsEnv }}
+
+{{$apicup}} subsys create {{ $subsys }} management
+
+{{$apicup}} subsys set {{ $subsys }} mode={{ .Mode }}
+
+{{ with .CloudInit }}
+    {{- if len .CloudInitFile }}
+        {{$apicup}} subsys set {{ $subsys }} additional-cloud-init-file=..{{$pathsep}}{{ .CloudInitFile }}
+    {{- end }}
+{{ end }}
+
+{{$apicup}} subsys set {{ $subsys }} search-domain={{ join "," .SearchDomains | trim | quote }}
+
+{{ with .VmFirstBoot }}
+    {{$apicup}} subsys set {{ $subsys }} dns-servers={{ join "," .DnsServers | trim | quote }}
+
+    {{- if $islinux }}
+        {{$apicup}} subsys set {{ $subsys }} default-password={{ .VmwareConsolePasswordHash | squote }}
+    {{- else }}
+        {{$apicup}} subsys set {{ $subsys }} default-password={{ .VmwareConsolePasswordHash | quote }}
+    {{- end }}
+
+    {{ with .IpRanges }}
+        {{- if len .PodNetwork }}
+            {{$apicup}} subsys set {{ $subsys }} k8s-pod-network={{ .PodNetwork | quote }}
+        {{- end}}
+        {{- if len .ServiceNetwork }}
+            {{$apicup}} subsys set {{ $subsys }} k8s-service-network={{ .ServiceNetwork | quote }}
+        {{- end }}
+    {{ end }}
+
+    {{ range .Hosts}}
+        {{- $h := .}}
+        {{$apicup}} hosts create {{$subsys}} {{$h.Name}} {{$h.HardDiskPassword}}
+        {{$apicup}} iface create {{$subsys}} {{$h.Name}} {{$h.Device}} {{$h.IpAddress}}/{{$h.SubnetMask}} {{$h.Gateway}}
+    {{ end}}
+
+{{ end}}
+
+{{$apicup}} subsys set {{ $subsys }} ssh-keyfiles=..{{$pathsep}}{{ .SshPublicKeyFile }}
+
+{{ with .CassandraBackup }}
+    {{- if .BackupProtocol | lower | eq "sftp" }}
+        {{$apicup}} subsys set {{ $subsys }} cassandra-backup-protocol=sftp
+        {{$apicup}} subsys set {{ $subsys }} cassandra-backup-host={{ .BackupHost }}
+        {{$apicup}} subsys set {{ $subsys }} cassandra-backup-port={{ .BackupPort | default 22 }}
+        {{$apicup}} subsys set {{ $subsys }} cassandra-backup-auth-user={{ .BackupAuthUser }}
+        {{$apicup}} subsys set {{ $subsys }} cassandra-backup-auth-pass={{ .BackupAuthPass }}
+        {{$apicup}} subsys set {{ $subsys }} cassandra-backup-path={{ .BackupPath }}
+        {{$apicup}} subsys set {{ $subsys }} cassandra-backup-schedule={{ .BackupSchedule | quote }}
+    {{- else if .BackupProtocol | lower | eq "objstore" }}
+        {{$apicup}} subsys set {{ $subsys }} cassandra-backup-protocol=objstore
+        {{$apicup}} subsys set {{ $subsys }} cassandra-backup-host={{ .ObjstoreEndpointRegion }}
+        {{$apicup}} subsys set {{ $subsys }} cassandra-backup-auth-user={{ .ObjstoreS3SecretKeyId }}
+        {{$apicup}} subsys set {{ $subsys }} cassandra-backup-auth-pass={{ .ObjstoreS3SecretAccessKey }}
+        {{$apicup}} subsys set {{ $subsys }} cassandra-backup-path={{ .ObjstoreBucketSubfolder }}
+        {{$apicup}} subsys set {{ $subsys }} cassandra-backup-schedule={{ .BackupSchedule | quote }}
+    {{- end }}
+{{ end }}
+
+{{$apicup}} subsys set {{ $subsys }} platform-api={{ .PlatformApi }}
+{{$apicup}} subsys set {{ $subsys }} api-manager-ui={{ .ApiManagerUi }}
+{{$apicup}} subsys set {{ $subsys }} cloud-admin-ui={{ .CloudAdminUi }}
+{{$apicup}} subsys set {{ $subsys }} consumer-api={{ .ConsumerApi }}

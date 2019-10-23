@@ -1,0 +1,159 @@
+{
+  "InstallType": "ova",
+  "Version": "2018.1.5",
+
+  "Mode": "dev",
+
+  "SshPublicKeyFile": "/path/to/public/key/file",
+
+  "SearchDomains": ["bla.bla.com", "bla.com"],
+
+  "VmFirstBoot": {
+    "DnsServers": ["dns-ip-1","dns-ip-2"],
+    "VmwareConsolePasswordHash": "$1$Vr3LAI2B$HjbwKdOlwMTBEVtTuOS7L1",
+
+    "IpRanges": {
+      "PodNetwork": "172.16.0.0/16",
+      "ServiceNetwork": "172.17.0.0/16"
+    }
+  },
+
+  "CloudInit": {
+    "CloudInitFile": "cloud-init-file.yml",
+    "InitValues": {
+      "rsyslog": {
+        "remotes": {
+          "syslog_server1": "syslog-collector-ip:514(tcp)/601(udp)",
+          "syslog_server2": "syslog-collector-ip:514(tcp)/601(udp)"
+        }
+      }
+    }
+  },
+
+  "Certs": {
+    "DnFields": ["O=APIC","C=US"],
+    "K8sNamespace": "default",
+    "CaFile": "ca-chain-root-last.crt",
+
+    "Certbot": {
+      "CertDir": "letsencrypt/live/apim.cloud",
+      "Cert": "cert.pem",
+      "Key": "privkey.pem",
+      "CaChain": "chain.pem"
+    },
+
+    "PublicUserFacingEkuServerAuth": {
+      "platform-api": {"Cn": "api.apim.cloud"},
+      "consumer-api": {"Cn": "consumer.apim.cloud"},
+      "api-manager-ui": {"Cn": "apim.apim.cloud"},
+      "cloud-admin-ui": {"Cn": "cm.apim.cloud"},
+      "portal-www-ingress": {"Cn": "portal.apim.cloud"}
+    },
+
+    "PublicEkuServerAuth": {
+      "apic-gw-service-ingress": {"Cn": "gwd.apim.cloud"}
+    },
+
+    "CommonEkuClientAuth": {
+      "portal-client": {"Cn": "portal-client"},
+      "analytics-client-client": {"Cn": "analytics-client-client"},
+      "analytics-ingestion-client": {"Cn": "analytics-ingestion-client"}
+    },
+
+    "MutualAuthEkuServerAuth": {
+      "portal-admin-ingress": {"Cn": "padmin.apim.cloud"},
+      "analytics-client-ingress": {"Cn": "ac.apim.cloud"},
+      "analytics-ingestion-ingress": {"Cn": "ai.apim.cloud"}
+    }
+  },
+
+  "Management": {
+    "SubsysName": "mgmt",
+
+    "VmFirstBoot": {
+      "Hosts": [
+        {"Name": "h1.bla.com", "HardDiskPassword": "secret1", "Device": "eth0",
+          "IpAddress": "ip-address-1", "SubnetMask": "mask1","Gateway": "gw-ip-addr"},
+        {"Name": "h2.bla.com", "HardDiskPassword": "secret2", "Device": "eth0",
+          "IpAddress": "ip-address-2", "SubnetMask": "mask2", "Gateway": "gw-ip-addr"},
+        {"Name": "h3.bla.com", "HardDiskPassword": "secret3", "Device": "eth0",
+          "IpAddress": "ip-address-3", "SubnetMask": "mask3", "Gateway": "gw-ip-addr"}
+      ]
+    },
+
+    "CassandraBackup": {
+      "BackupProtocol": "sftp",
+      "BackupAuthUser": "admin",
+      "BackupAuthPass": "secret",
+      "BackupHost": "zorro.com",
+      "BackupPort": 9090,
+      "BackupPath": "/backup",
+      "ObjstoreS3SecretKeyId": "",
+      "ObjstoreS3SecretAccessKey": "",
+      "ObjstoreEndpointRegion": "",
+      "ObjstoreBucketSubfolder": "",
+      "BackupEncoding": "min(0-59) hour(0-23) dayofmonth(1-31) month(1-12) dayofweek(0-6)",
+      "BackupSchedule": "0 0 * * 0"
+    },
+
+    "PlatformApi": "platform.apim.com",
+    "ApiManagerUi": "ui.apim.com",
+    "CloudAdminUi": "cm.apim.com",
+    "ConsumerApi": "consumer.apim.com"
+  },
+
+  "Analytics": {
+    "SubsysName": "alt",
+
+    "VmFirstBoot": {
+      "Hosts": [
+        {"Name": "alt1.bla.com", "HardDiskPassword": "secret1", "Device": "eth0",
+          "IpAddress": "ip-address-1", "SubnetMask": "mask1","Gateway": "gw-ip-addr"},
+        {"Name": "alt2.bla.com", "HardDiskPassword": "secret2", "Device": "eth0",
+          "IpAddress": "ip-address-2", "SubnetMask": "mask2", "Gateway": "gw-ip-addr"},
+        {"Name": "alt33.bla.com", "HardDiskPassword": "secret3", "Device": "eth0",
+          "IpAddress": "ip-address-3", "SubnetMask": "mask3", "Gateway": "gw-ip-addr"}
+      ]
+    },
+
+    "EnableMessageQueue": false,
+
+    "AnalyticsIngestion": "ai.apicdatapower.com",
+    "AnalyticsClient": "ac.apicdatapower.com"
+  },
+
+  "Portal": {
+    "SubsysName": "ptl",
+
+    "VmFirstBoot": {
+      "Hosts": [
+        {"Name": "p1.bla.com", "HardDiskPassword": "secret1", "Device": "eth0",
+          "IpAddress": "ip-address-1", "SubnetMask": "mask1","Gateway": "gw-ip-addr"},
+        {"Name": "p2.bla.com", "HardDiskPassword": "secret2", "Device": "eth0",
+          "IpAddress": "ip-address-2", "SubnetMask": "mask2", "Gateway": "gw-ip-addr"},
+        {"Name": "p3.bla.com", "HardDiskPassword": "secret3", "Device": "eth0",
+          "IpAddress": "ip-address-3", "SubnetMask": "mask3", "Gateway": "gw-ip-addr"}
+      ]
+    },
+
+    "SiteBackup": {
+      "BackupProtocol": "sftp",
+      "BackupAuthUser": "admin",
+      "BackupAuthPass": "secret",
+      "BackupHost": "zorro.com",
+      "BackupPort": 9090,
+      "BackupPath": "/backup",
+      "ObjstoreS3SecretKeyId": "",
+      "ObjstoreS3SecretAccessKey": "",
+      "ObjstoreEndpointRegion": "",
+      "ObjstoreBucketSubfolder": "",
+      "BackupEncoding": "min(0-59) hour(0-23) dayofmonth(1-31) month(1-12) dayofweek(0-6)",
+      "BackupSchedule": "0 2 * * *"
+    },
+
+    "PortalAdmin": "padmin.apicdatapower.com",
+    "PortalWww": "portal.apicdatapower.com"
+  },
+
+  "Gateway": {}
+}

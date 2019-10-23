@@ -1,0 +1,41 @@
+{{/* write out script header. pass OsEnv as scope */}}
+{{ define "scriptheader"}}
+    {{ if .IsLinux }}
+        #!/bin/bash
+        # run this script from project directory
+        set -x
+    {{else}}
+        rem run this script from project directory
+    {{end}}
+{{ end }}
+
+{{ define "scriptheader1"}}
+    {{ if .IsLinux }}
+        #!/bin/bash
+        # run this script from current directory
+        set -x
+    {{else}}
+        rem run this script from current directory
+    {{end}}
+{{ end }}
+
+{{- /* print out map as yml... pass list as scope: [depth, map] */}}
+{{- define "map2yml" }}
+    {{- $d := first . }}
+    {{- $m := last . }}
+    {{- range $k, $v := $m }}
+        {{- $vt := typeOf $v }}
+        {{- if eq $vt "map[string]interface {}" }}
+            {{- /*(key-depth -- {{$d}})*/}}
+            {{- $s := int $d}}
+            {{- nindent $s $k}}:
+            {{- $d1 := add1 $d}}
+            {{- $a := list $d1 $v}}
+            {{- template "map2yml" $a }}
+        {{- else}}
+            {{- /*(key-val-depth -- {{$d}})*/}}
+            {{- $s := int $d }}
+            {{- nindent $s $k }}: {{$v}}
+        {{- end}}
+    {{- end }}
+{{- end }}
