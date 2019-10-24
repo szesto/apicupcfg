@@ -9,6 +9,7 @@ Change to the cmd/apicupcfg: then `go install`.
 *apicupcfg* executable will be in the $GOPATH/bin (or %GOPATH\bin) directory:
 
 `$GOPATH/bin/apicupcfg -help`
+`%GOPATH\bin\apicupcfg.exe -help`
 
 Resulting executable is operating-system specific. 
 File path syntax and command file syntax are native to the target operating system.
