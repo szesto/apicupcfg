@@ -47,11 +47,20 @@ Help is available with the help command line option:
 
 Example configuration files for kubernetes and ova deployments are in the examples subdirectory.
 
+You can generate initial configuration file with the *initconfig* command line option.
+
+By default this command will generate *subsys-config.json* file in the current directory, or
+you can pass config file name with the *config* option:
+
+`apicupcfg -initconfig -configtype ova|k8s [-config subsys-config.json]`
+
+Make sure you update generated file with correct values.
+
 The simpliest way to use this tool is to create an output directory, eg apicup-out-vm (for ova
-deployment), copy json configuration file into it (subsys-input-vm.json) then run apicupcfg 
+deployment), copy or create json configuration file (subsys-config.json) then run *apicupcfg* 
 executable:
 
-`apicupcfg -config /path-to/apicup-out-vm/subsys-input-vm.json -out .`
+`apicupcfg -config subsys-config.json -out .`
 
 This will create all required directries and configuration scripts.
 Place apicup executable into the *bin* subdirectory, change to the *project* subdirectory, then run:
