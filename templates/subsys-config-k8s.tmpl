@@ -1,0 +1,163 @@
+{
+    "InstallType": "k8s",
+    "Version": {{ .Version | default "2018.1.x" | quote }},
+
+    "Mode": {{ .Mode | default "dev|standard" | quote }},
+
+    "Namespace": {{ .Namespace | default "apic" | quote }},
+    "RegistryUrl": "container-image-registry-url",
+    "RegistrySecret": "container-image-registry-secret",
+    "IngressType": "ingress|route",
+    "StorageClass": "gp2|etc",
+
+    "Certs": {
+        "DnFields": ["O=APIC|match ca reqs","C=US|match ca reqs"],
+        "K8sNamespace": {{ .Namespace | default "apic" | quote }},
+        "CaFile": "ca-chain-root-last.crt",
+
+        "Certbot": {
+            "CertDir": "letsencrypt/live/my.domain.com|blank",
+            "Cert": "cert.pem",
+            "Key": "privkey.pem",
+            "CaChain": "chain.pem"
+        },
+
+        "PublicUserFacingEkuServerAuth": {
+            "platform-api": {"Cn": "api.my.domain.com|blank"},
+            "consumer-api": {"Cn": "consumer.my.domain.com|blank"},
+            "api-manager-ui": {"Cn": "apim.my.domain.com|blank"},
+            "cloud-admin-ui": {"Cn": "cm.my.domain.com|blank"},
+            "portal-www-ingress": {"Cn": "portal.my.domain.com|blank"}
+        },
+
+        "PublicEkuServerAuth": {
+            "apic-gw-service-ingress": {"Cn": "gwd.my.domain.com|blank"}
+        },
+
+        "CommonEkuClientAuth": {
+            "portal-client": {"Cn": "portal-client"},
+            "analytics-client-client": {"Cn": "analytics-client-client"},
+            "analytics-ingestion-client": {"Cn": "analytics-ingestion-client"}
+        },
+
+        "MutualAuthEkuServerAuth": {
+            "portal-admin-ingress": {"Cn": "padmin.my.domain.com|blank"},
+            "analytics-client-ingress": {"Cn": "ac.my.domain.com|blank"},
+            "analytics-ingestion-ingress": {"Cn": "ai.my.domain.com|blank"}
+        }
+    },
+
+    "Management": {
+        "SubsysName": "mgmt",
+        "ExtraValuesFile": "mgmt-values.yaml",
+        "ExtraValues": {},
+
+        "CassandraBackup": {
+            "BackupProtocol": "sftp|objstore|blank",
+            "BackupAuthUser": "admin",
+            "BackupAuthPass": "secret",
+            "BackupHost": "backup.my.domain.com",
+            "BackupPort": 1022,
+            "BackupPath": "/backup",
+            "ObjstoreS3SecretKeyId": "",
+            "ObjstoreS3SecretAccessKey": "",
+            "ObjstoreEndpointRegion": "",
+            "ObjstoreBucketSubfolder": "",
+            "BackupEncoding": "min(0-59) hour(0-23) dayofmonth(1-31) month(1-12) dayofweek(0-6)",
+            "BackupSchedule": "0 0 * * 0"
+        },
+
+        "CassandraMaxMemoryGb": 9,
+        "CassandraVolumeSizeGb": 50,
+        "CassandraClusterSize": 3,
+        "ExternalCassandraHost": "ext.my.domain.com"|blank,
+        "CreateCrd": true,
+
+        "PlatformApi": "api.my.domain.com",
+        "ApiManagerUi": "apim.my.domain.com",
+        "CloudAdminUi": "cm.my.domain.com",
+        "ConsumerApi": "consumer.my.domain.com"
+    },
+
+    "Analytics": {
+        "SubsysName": "analyt",
+        "ExtraValuesFile": "analyt-values.yaml",
+        "ExtraValues": {},
+
+        "CoordinatingMaxMemoryGb": 12,
+        "DataMaxMemoryGb": 12,
+        "DataStorageSizeGb": 200,
+        "MasterMaxMemoryGb": 12,
+        "MasterStorageSizeGb": 5,
+
+        "EnableMessageQueue": false,
+
+        "EsStorageClass": "",
+        "MqStorageClass": "",
+
+        "AnalyticsIngestionEndpoint": "ai.my.domain.com",
+        "AnalyticsClientEndpoint": "ac.my.domain.com"
+    },
+
+    "Portal": {
+        "SubsysName": "ptl",
+
+        "ExtraValuesFile": "ptl-values.yaml",
+        "ExtraValues": {},
+
+        "SiteBackup": {
+            "BackupProtocol": "sftp|objstore|blank",
+            "BackupAuthUser": "admin",
+            "BackupAuthPass": "secret",
+            "BackupHost": "backup.my.domain.com",
+            "BackupPort": 1022,
+            "BackupPath": "/backup",
+            "ObjstoreS3SecretKeyId": "",
+            "ObjstoreS3SecretAccessKey": "",
+            "ObjstoreEndpointRegion": "",
+            "ObjstoreBucketSubfolder": "",
+            "BackupEncoding": "min(0-59) hour(0-23) dayofmonth(1-31) month(1-12) dayofweek(0-6)",
+            "BackupSchedule": "0 0 * * 0"
+        },
+
+        "WwwStorageSizeGb": 5,
+        "BackupStorageSizeGb": 5,
+        "DbStorageSizeGb": 12,
+
+        "Fixed": {
+            "DbLogsStorageSizeGb": 2,
+            "AdminStorageSizeGb": 1
+        },
+
+        "PortalAdmin": "padmin.my.domain.com",
+        "PortalWWW": "portal.my.domain.com"
+    },
+
+    "Gateway": {
+        "SubsysName": "gwy",
+        "Mode": "dev",
+
+        "ExtraValuesFile": "gwy-values.yaml",
+        "ExtraValues": {
+            "datapower": {
+                "webGuiManagementState": "enabled",
+                "apiDebugProbe": "enabled"
+            }
+        },
+
+        "LicenseVersion": "Production|Development",
+        "ImagePullPolicy": "IfNotPresent",
+
+        "ReplicaCount": 3,
+        "MaxCpu": 4,
+        "MaxMemoryGb": 6,
+
+        "V5ComatabilityMode": false,
+        "EnableTms": true,
+        "TmsPeeringStorageSizeGb": 10,
+        "EnableHighPerformancePeering": "true",
+
+        "ApiGateway": "gw.my.domain.com",
+        "ApicGwService": "gwd.my.domain.com"
+    }
+}

@@ -1,0 +1,159 @@
+{
+    "InstallType": "ova",
+    "Version": {{ .Version | default "2018.1.x" | quote }},
+
+    "Mode": {{ .Mode | default "dev|standard" | quote }},
+
+    "SshPublicKeyFile": "/path/to/public/key/file",
+
+    "SearchDomains": ["my.domain.com", "domain.com"],
+
+    "VmFirstBoot": {
+        "DnsServers": ["dns-ip-1","dns-ip-2"],
+        "VmwareConsolePasswordHash": "hash-output-b64",
+
+        "IpRanges": {
+            "PodNetwork": "172.16.0.0/16",
+            "ServiceNetwork": "172.17.0.0/16"
+        }
+    },
+
+    "CloudInit": {
+        "CloudInitFile": "cloud-init-file.yml|blank",
+        "InitValues": {
+            "rsyslog": {
+                "remotes": {
+                    "syslog_server1": "syslog-collector-ip-1:514|601",
+                    "syslog_server2": "syslog-collector-ip-2:514|601"
+                }
+            }
+        }
+    },
+
+    "Certs": {
+        "DnFields": ["O=APIC|match ca reqs","C=US|match ca reqs"],
+        "K8sNamespace": "default",
+        "CaFile": "ca-chain-root-last.crt",
+
+        "Certbot": {
+            "CertDir": "letsencrypt/live/my.domain.com|blank",
+            "Cert": "cert.pem",
+            "Key": "privkey.pem",
+            "CaChain": "chain.pem"
+        },
+
+        "PublicUserFacingEkuServerAuth": {
+            "platform-api": {"Cn": "api.my.domain.com|blank"},
+            "consumer-api": {"Cn": "consumer.my.domain.com|blank"},
+            "api-manager-ui": {"Cn": "apim.my.domain.com|blank"},
+            "cloud-admin-ui": {"Cn": "cm.my.domain.com|blank"},
+            "portal-www-ingress": {"Cn": "portal.my.domain.com|blank"}
+        },
+
+        "PublicEkuServerAuth": {
+            "apic-gw-service-ingress": {"Cn": "gwd.my.domain.com|blank"}
+        },
+
+        "CommonEkuClientAuth": {
+            "portal-client": {"Cn": "portal-client"},
+            "analytics-client-client": {"Cn": "analytics-client-client"},
+            "analytics-ingestion-client": {"Cn": "analytics-ingestion-client"}
+        },
+
+        "MutualAuthEkuServerAuth": {
+            "portal-admin-ingress": {"Cn": "padmin.my.domain.com|blank"},
+            "analytics-client-ingress": {"Cn": "ac.my.domain.com|blank"},
+            "analytics-ingestion-ingress": {"Cn": "ai.my.domain.com|blank"}
+        }
+    },
+
+    "Management": {
+        "SubsysName": "mgmt",
+
+        "VmFirstBoot": {
+            "Hosts": [
+                {"Name": "m1.my.domain.com", "HardDiskPassword": "password", "Device": "eth0",
+                    "IpAddress": "ip-address", "SubnetMask": "dot.subnet.mask","Gateway": "gw-ip-address"},
+                {"Name": "m2.my.domain.com", "HardDiskPassword": "password", "Device": "eth0",
+                    "IpAddress": "ip-address", "SubnetMask": "dot.subnet.mask", "Gateway": "gw-ip-address"},
+                {"Name": "m3.my.domain.com", "HardDiskPassword": "password", "Device": "eth0",
+                    "IpAddress": "ip-address", "SubnetMask": "dot.subnet.mask", "Gateway": "gw-ip-address"}
+            ]
+        },
+
+        "CassandraBackup": {
+            "BackupProtocol": "sftp|objstore|blank",
+            "BackupAuthUser": "admin",
+            "BackupAuthPass": "secret",
+            "BackupHost": "backup.my.domain.com",
+            "BackupPort": 9090,
+            "BackupPath": "/backup",
+            "ObjstoreS3SecretKeyId": "",
+            "ObjstoreS3SecretAccessKey": "",
+            "ObjstoreEndpointRegion": "",
+            "ObjstoreBucketSubfolder": "",
+            "BackupEncoding": "min(0-59) hour(0-23) dayofmonth(1-31) month(1-12) dayofweek(0-6)",
+            "BackupSchedule": "0 0 * * 0"
+        },
+
+        "PlatformApi": "platform.my.domain.com",
+        "ApiManagerUi": "ui.my.domain.com",
+        "CloudAdminUi": "cm.my.domain.com",
+        "ConsumerApi": "consumer.my.domain.com"
+    },
+
+    "Analytics": {
+        "SubsysName": "alt",
+
+        "VmFirstBoot": {
+            "Hosts": [
+                {"Name": "a1.my.domain.com", "HardDiskPassword": "password", "Device": "eth0",
+                    "IpAddress": "ip-address", "SubnetMask": "dot.subnet.mask","Gateway": "gw-ip-address"},
+                {"Name": "a2.my.domain.com", "HardDiskPassword": "password", "Device": "eth0",
+                    "IpAddress": "ip-address", "SubnetMask": "dot.subnet.mask", "Gateway": "gw-ip-address"},
+                {"Name": "a3.my.domain.com", "HardDiskPassword": "password", "Device": "eth0",
+                    "IpAddress": "ip-address", "SubnetMask": "dot.subnet.mask", "Gateway": "gw-ip-address"}
+            ]
+        },
+
+        "EnableMessageQueue": false,
+
+        "AnalyticsIngestion": "ai.my.domain.com",
+        "AnalyticsClient": "ac.my.domain.com"
+    },
+
+    "Portal": {
+        "SubsysName": "ptl",
+
+        "VmFirstBoot": {
+            "Hosts": [
+                {"Name": "p1.my.domain.com", "HardDiskPassword": "password", "Device": "eth0",
+                    "IpAddress": "ip-address", "SubnetMask": "dot.subnet.mask","Gateway": "gw-ip-address"},
+                {"Name": "p2.my.domain.com", "HardDiskPassword": "password", "Device": "eth0",
+                    "IpAddress": "ip-address", "SubnetMask": "dot.subnet.mask", "Gateway": "gw-ip-address"},
+                {"Name": "p3.my.domain.com", "HardDiskPassword": "password", "Device": "eth0",
+                    "IpAddress": "ip-address", "SubnetMask": "dot.subnet.mask", "Gateway": "gw-ip-address"}
+            ]
+        },
+
+        "SiteBackup": {
+            "BackupProtocol": "sftp|objstore|blank",
+            "BackupAuthUser": "admin",
+            "BackupAuthPass": "secret",
+            "BackupHost": "backup.my.domain.com",
+            "BackupPort": 9090,
+            "BackupPath": "/backup",
+            "ObjstoreS3SecretKeyId": "",
+            "ObjstoreS3SecretAccessKey": "",
+            "ObjstoreEndpointRegion": "",
+            "ObjstoreBucketSubfolder": "",
+            "BackupEncoding": "min(0-59) hour(0-23) dayofmonth(1-31) month(1-12) dayofweek(0-6)",
+            "BackupSchedule": "0 2 * * *"
+        },
+
+        "PortalAdmin": "padmin.my.domain.com",
+        "PortalWww": "portal.my.domain.com"
+    },
+
+    "Gateway": {}
+}

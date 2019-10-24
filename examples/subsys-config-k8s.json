@@ -1,37 +1,37 @@
 {
   "InstallType": "k8s",
-  "Version": "2018.1.7",
+  "Version": "2018.1.x",
 
   "Mode": "dev",
 
   "Namespace": "apic",
-  "RegistryUrl": "us.icr.io/apic417",
-  "RegistrySecret": "apic-us-icr-io",
-  "IngressType": "ingress",
-  "StorageClass": "gp2",
+  "RegistryUrl": "container-image-registry-url",
+  "RegistrySecret": "container-image-registry-secret",
+  "IngressType": "ingress|route",
+  "StorageClass": "gp2|etc",
 
   "Certs": {
-    "DnFields": ["O=APIC","C=US"],
+    "DnFields": ["O=APIC|match ca reqs","C=US|match ca reqs"],
     "K8sNamespace": "apic",
     "CaFile": "ca-chain-root-last.crt",
 
     "Certbot": {
-      "CertDir": "letsencrypt/live/apim.cloud",
+      "CertDir": "letsencrypt/live/my.domain.com|blank",
       "Cert": "cert.pem",
       "Key": "privkey.pem",
       "CaChain": "chain.pem"
     },
 
     "PublicUserFacingEkuServerAuth": {
-      "platform-api": {"Cn": "api.apim.cloud"},
-      "consumer-api": {"Cn": "consumer.apim.cloud"},
-      "api-manager-ui": {"Cn": "apim.apim.cloud"},
-      "cloud-admin-ui": {"Cn": "cm.apim.cloud"},
-      "portal-www-ingress": {"Cn": "portal.apim.cloud"}
+      "platform-api": {"Cn": "api.my.domain.com|blank"},
+      "consumer-api": {"Cn": "consumer.my.domain.com|blank"},
+      "api-manager-ui": {"Cn": "apim.my.domain.com|blank"},
+      "cloud-admin-ui": {"Cn": "cm.my.domain.com|blank"},
+      "portal-www-ingress": {"Cn": "portal.my.domain.com|blank"}
     },
 
     "PublicEkuServerAuth": {
-      "apic-gw-service-ingress": {"Cn": "gwd.apim.cloud"}
+      "apic-gw-service-ingress": {"Cn": "gwd.my.domain.com|blank"}
     },
 
     "CommonEkuClientAuth": {
@@ -41,9 +41,9 @@
     },
 
     "MutualAuthEkuServerAuth": {
-      "portal-admin-ingress": {"Cn": "padmin.apim.cloud"},
-      "analytics-client-ingress": {"Cn": "ac.apim.cloud"},
-      "analytics-ingestion-ingress": {"Cn": "ai.apim.cloud"}
+      "portal-admin-ingress": {"Cn": "padmin.my.domain.com|blank"},
+      "analytics-client-ingress": {"Cn": "ac.my.domain.com|blank"},
+      "analytics-ingestion-ingress": {"Cn": "ai.my.domain.com|blank"}
     }
   },
 
@@ -53,30 +53,30 @@
     "ExtraValues": {},
 
     "CassandraBackup": {
-      "BackupProtocol": "",
+      "BackupProtocol": "sftp|objstore|blank",
       "BackupAuthUser": "admin",
       "BackupAuthPass": "secret",
-      "BackupHost": "",
-      "BackupPort": 9090,
+      "BackupHost": "backup.my.domain.com",
+      "BackupPort": 1022,
       "BackupPath": "/backup",
       "ObjstoreS3SecretKeyId": "",
       "ObjstoreS3SecretAccessKey": "",
       "ObjstoreEndpointRegion": "",
       "ObjstoreBucketSubfolder": "",
-      "backupEncoding": "min(0-59) hour(0-23) dayofmonth(1-31) month(1-12) dayofweek(0-6)",
-      "BackupSchedule": "0 0 * * *"
+      "BackupEncoding": "min(0-59) hour(0-23) dayofmonth(1-31) month(1-12) dayofweek(0-6)",
+      "BackupSchedule": "0 0 * * 0"
     },
 
     "CassandraMaxMemoryGb": 9,
     "CassandraVolumeSizeGb": 50,
     "CassandraClusterSize": 3,
-    "ExternalCassandraHost": "",
+    "ExternalCassandraHost": "ext.my.domain.com"|blank,
     "CreateCrd": true,
 
-    "PlatformApi": "api.apim.cloud",
-    "ApiManagerUi": "apim.apim.cloud",
-    "CloudAdminUi": "cm.apim.cloud",
-    "ConsumerApi": "consumer.apim.cloud"
+    "PlatformApi": "api.my.domain.com",
+    "ApiManagerUi": "apim.my.domain.com",
+    "CloudAdminUi": "cm.my.domain.com",
+    "ConsumerApi": "consumer.my.domain.com"
   },
 
   "Analytics": {
@@ -95,8 +95,8 @@
     "EsStorageClass": "",
     "MqStorageClass": "",
 
-    "AnalyticsIngestionEndpoint": "ai.apim.com",
-    "AnalyticsClientEndpoint": "ac.apim.com"
+    "AnalyticsIngestionEndpoint": "ai.my.domain.com",
+    "AnalyticsClientEndpoint": "ac.my.domain.com"
   },
 
   "Portal": {
@@ -106,17 +106,18 @@
     "ExtraValues": {},
 
     "SiteBackup": {
-      "BackupProtocol": "",
+      "BackupProtocol": "sftp|objstore|blank",
       "BackupAuthUser": "admin",
       "BackupAuthPass": "secret",
-      "BackupHost": "",
+      "BackupHost": "backup.my.domain.com",
       "BackupPort": 1022,
-      "BackupPath": "/sites",
+      "BackupPath": "/backup",
       "ObjstoreS3SecretKeyId": "",
       "ObjstoreS3SecretAccessKey": "",
       "ObjstoreEndpointRegion": "",
       "ObjstoreBucketSubfolder": "",
-      "BackupSchedule": "* * * * *"
+      "BackupEncoding": "min(0-59) hour(0-23) dayofmonth(1-31) month(1-12) dayofweek(0-6)",
+      "BackupSchedule": "0 0 * * 0"
     },
 
     "WwwStorageSizeGb": 5,
@@ -128,8 +129,8 @@
       "AdminStorageSizeGb": 1
     },
 
-    "PortalAdmin": "padmin.apim.cloud",
-    "PortalWWW": "portal.apim.cloud"
+    "PortalAdmin": "padmin.my.domain.com",
+    "PortalWWW": "portal.my.domain.com"
   },
 
   "Gateway": {
@@ -144,7 +145,7 @@
       }
     },
 
-    "LicenseVersion": "Production",
+    "LicenseVersion": "Production|Development",
     "ImagePullPolicy": "IfNotPresent",
 
     "ReplicaCount": 3,
@@ -156,7 +157,7 @@
     "TmsPeeringStorageSizeGb": 10,
     "EnableHighPerformancePeering": "true",
 
-    "ApiGateway": "gw.apicdatapower.com",
-    "ApicGwService": "gwd.apicdatapower.com"
+    "ApiGateway": "gw.my.domain.com",
+    "ApicGwService": "gwd.my.domain.com"
   }
 }
