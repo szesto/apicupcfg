@@ -31,8 +31,9 @@ in the cmd/apicupcfg directory:
 
 *apicupcfg* is a tool to create IBM API Connect 2018.x configuration scripts.
 
-Audience for this tool are consultants working with the IBM API Connect version 2018.1.x
-No IBM API Connect software is required to build or use this tool.
+Audience for this tool are consultants working with the IBM API Connect version 2018.1.x.
+
+*No IBM API Connect software is required to build or use this tool.*
 
 Configuration data is defined in one json configuration file that collects subsystems
 information. 
