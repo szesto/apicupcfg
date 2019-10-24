@@ -6,6 +6,7 @@ import (
 
 const InstallTypeOva = "ova"
 const InstallTypeK8s = "k8s"
+const InstallTypeInit = "init"
 const InstallTypeUknown = "unknown"
 
 type InstallTypeHeader struct {

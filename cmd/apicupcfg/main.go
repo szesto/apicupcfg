@@ -12,13 +12,20 @@ func main() {
 	tbox := rice.MustFindBox("../../templates")
 
 	// input: configuration file, output dir, csr subdirectories
-	input, outdir, commonCsrSubdir, customCsrSubdir, projectSubdir, validateIp := apicupcfg.Input()
+	input, outdir, commonCsrSubdir, customCsrSubdir, projectSubdir, validateIp, initConfig, initConfigType := apicupcfg.Input()
 
 	// output files
 	output := apicupcfg.OutputFiles(outdir, commonCsrSubdir, customCsrSubdir)
 
 	// install type
-	installType := apicupcfg.InstallType(input)
+	installType := apicupcfg.InstallTypeUknown
+
+	if initConfig {
+		installType = apicupcfg.InstallTypeInit
+
+	} else {
+		installType = apicupcfg.InstallType(input)
+	}
 
 	switch installType {
 	case apicupcfg.InstallTypeOva:
@@ -57,6 +64,9 @@ func main() {
 			// apply templates
 			apicupcfg.ApplyTemplatesK8s(subsysk8s, output, tbox)
 		}
+
+	case apicupcfg.InstallTypeInit:
+		apicupcfg.InitConfig(input, initConfigType, tbox)
 
 	default:
 		log.Fatalf("unsupported install type %s\n", installType)

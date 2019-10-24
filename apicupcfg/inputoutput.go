@@ -44,15 +44,20 @@ func concatSubdir(dir1 string, dir2 string) string {
 	return dir1 + string(os.PathSeparator) + dir2
 }
 
-func Input() (input string, outdir string, commonCsrSubdir string, customCsrSubdir string, projectSubdir string, validateIp bool) {
+func Input() (input string, outdir string, commonCsrSubdir string, customCsrSubdir string, projectSubdir string, validateIp bool,
+	initConfig bool, initConfigType string) {
 
 	// define command line flags
-	inputArg := flag.String("config", "apicupconfig.json", "-config input-file")
+	inputArg := flag.String("config", "subsys-config.json", "-config input-file")
 	outdirArg := flag.String("out", "output", "-out output-directory")
 	commonCsrSubdirArg := flag.String("commoncsr", "common-csr", "-commoncsr subdir")
 	customCsrSubdirArg := flag.String("customcsr", "custom-csr", "-customcsr subdir")
 	projectSubdirArg := flag.String("project", "project", "-project subdir")
+
 	validateIpArg := flag.Bool("validateip", false, "-validateip true|false")
+
+	initConfigArg := flag.Bool("initconfig", false, "-initconfig true")
+	initConfigTypeArg := flag.String("configtype", "ova", "-configtype ova|k8s")
 
 	// scan command line args
 	flag.Parse()
@@ -63,6 +68,8 @@ func Input() (input string, outdir string, commonCsrSubdir string, customCsrSubd
 	customCsrSubdir = *customCsrSubdirArg
 	projectSubdir = *projectSubdirArg
 	validateIp = *validateIpArg
+	initConfig = *initConfigArg
+	initConfigType = *initConfigTypeArg
 
-	return input, outdir, commonCsrSubdir, customCsrSubdir, projectSubdir, validateIp
+	return input, outdir, commonCsrSubdir, customCsrSubdir, projectSubdir, validateIp, initConfig, initConfigType
 }

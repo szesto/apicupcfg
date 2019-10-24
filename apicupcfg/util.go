@@ -37,6 +37,20 @@ func fileName(dir string, file string) string {
 	return dir2 + string(os.PathSeparator) + file
 }
 
+func isFileExist(file string) (bool, error) {
+	_, err := os.Stat(file)
+
+	if os.IsExist(err)  {
+		return true, nil
+
+	} else if os.IsNotExist(err) {
+		return false, nil
+	}
+
+	// pretend file exists, return error
+	return true, err
+}
+
 func openFile(file string) (*os.File, error) {
 	return os.OpenFile(file, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0666)
 }
@@ -185,7 +199,8 @@ func writeLines(lines []string, file string) {
 	firstline := true
 
 	yaml := strings.HasSuffix(strings.ToLower(file),".yml" ) ||
-		strings.HasSuffix(strings.ToLower(file), "yaml")
+		strings.HasSuffix(strings.ToLower(file), "yaml") ||
+		strings.HasSuffix(strings.ToLower(file), "json")
 
 	for _, line := range lines {
 
