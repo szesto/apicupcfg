@@ -23,21 +23,26 @@ func OutputFiles(baseout string, commonCsrSubdir string, customCsrSubdir string)
 
 	outfiles := map[string]string{
 		outdir:                   baseout,
-		managementOut:            "apicup-subsys-set-management.conf",
-		gatewayOut:               "apicup-subsys-set-gateway.conf",
-		analyticsOut:             "apicup-subsys-set-analytics.conf",
-		portalOut:                "apicup-subsys-set-portal.conf",
-		userFacingPublicCertsOut: "apicup-certs-set-user-facing-public.conf",
-		publicCertsOut:           "apicup-certs-set-public.conf",
-		mutualAuthCertsOut:       "apicup-certs-set-mutual-auth.conf",
-		commonCertsOut:           "apicup-certs-set-common.conf",
+		managementOut:            "apicup-subsys-set-management",
+		gatewayOut:               "apicup-subsys-set-gateway",
+		analyticsOut:             "apicup-subsys-set-analytics",
+		portalOut:                "apicup-subsys-set-portal",
+		userFacingPublicCertsOut: "apicup-certs-set-user-facing-public",
+		publicCertsOut:           "apicup-certs-set-public",
+		mutualAuthCertsOut:       "apicup-certs-set-mutual-auth",
+		commonCertsOut:           "apicup-certs-set-common",
 		commonCsrOutDir:          commonCsrSubdir,
 		customCsrOutDir:          customCsrSubdir,
-		certbotUserFacingPublicCertOut: "apicup-certs-set-certbot-user-facing-public.conf",
-		certbotPublicCertOut: "apicup-certs-set-certbot-public.conf",
+		certbotUserFacingPublicCertOut: "apicup-certs-set-certbot-user-facing-public",
+		certbotPublicCertOut: "apicup-certs-set-certbot-public",
 	}
 
 	return outfiles
+}
+
+func updateOutputFileName(outName string, subsysName string) string {
+	const dot = "."
+	return outName + dot + subsysName
 }
 
 func concatSubdir(dir1 string, dir2 string) string {

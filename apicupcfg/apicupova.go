@@ -253,19 +253,20 @@ func ApplyTemplateVm(subsys *SubsysVm, outfiles map[string]string, tbox *rice.Bo
 	shellext := subsys.OsEnv.ShellExt
 
 	var outpath string
+	const dot = "."
 
 	if isManagement {
-		outpath = fileName(outfiles[outdir], outfiles[managementOut]) + shellext
+		outpath = fileName(outfiles[outdir], updateOutputFileName(outfiles[managementOut], subsys.Management.SubsysName)) + shellext
 		writeTemplate(mgtt, outpath, subsys.Management)
 	}
 
 	if isAnalytics {
-		outpath = fileName(outfiles[outdir], outfiles[analyticsOut]) + shellext
+		outpath = fileName(outfiles[outdir], updateOutputFileName(outfiles[analyticsOut], subsys.Analytics.SubsysName)) + shellext
 		writeTemplate(analyt, outpath, subsys.Analytics)
 	}
 
 	if isPortal {
-		outpath = fileName(outfiles[outdir], outfiles[portalOut]) + shellext
+		outpath = fileName(outfiles[outdir], updateOutputFileName(outfiles[portalOut], subsys.Portal.SubsysName)) + shellext
 		writeTemplate(ptl, outpath, subsys.Portal)
 	}
 

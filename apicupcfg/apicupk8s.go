@@ -193,36 +193,51 @@ func ApplyTemplatesK8s(subsys *SubsysK8s, outfiles map[string]string, tbox *rice
 	// execute templates
 	shellExt := subsys.OsEnv.ShellExt
 
-	outpath := fileName(outfiles[outdir], outfiles[managementOut]) + shellExt
-	writeTemplate(mgtt, outpath, subsys.Management)
+	isManagement := len(subsys.Management.SubsysName) > 0
+	isGateway := len(subsys.Gateway.SubsysName) > 0
+	isAnalytics := len(subsys.Analytics.SubsysName) > 0
+	isPortal := len(subsys.Analytics.SubsysName) > 0
 
-	if len(subsys.Management.ExtraValuesFile) > 0 {
-		outpath = fileName(outfiles[outdir], subsys.Management.ExtraValuesFile)
-		writeTemplate(valt, outpath, subsys.Management.ExtraValues)
+	outpath := ""
+
+	if isManagement {
+		outpath = fileName(outfiles[outdir], updateOutputFileName(outfiles[managementOut], subsys.Management.SubsysName)) + shellExt
+		writeTemplate(mgtt, outpath, subsys.Management)
+
+		if len(subsys.Management.ExtraValuesFile) > 0 {
+			outpath = fileName(outfiles[outdir], subsys.Management.ExtraValuesFile)
+			writeTemplate(valt, outpath, subsys.Management.ExtraValues)
+		}
 	}
 
-	outpath = fileName(outfiles[outdir], outfiles[gatewayOut]) + shellExt
-	writeTemplate(gwyt, outpath, subsys.Gateway)
+	if isGateway {
+		outpath = fileName(outfiles[outdir], updateOutputFileName(outfiles[gatewayOut], subsys.Gateway.SubsysName)) + shellExt
+		writeTemplate(gwyt, outpath, subsys.Gateway)
 
-	if len(subsys.Gateway.ExtraValuesFile) > 0 {
-		outpath = fileName(outfiles[outdir], subsys.Gateway.ExtraValuesFile)
-		writeTemplate(valt, outpath, subsys.Gateway.ExtraValues)
+		if len(subsys.Gateway.ExtraValuesFile) > 0 {
+			outpath = fileName(outfiles[outdir], subsys.Gateway.ExtraValuesFile)
+			writeTemplate(valt, outpath, subsys.Gateway.ExtraValues)
+		}
 	}
 
-	outpath = fileName(outfiles[outdir], outfiles[analyticsOut]) + shellExt
-	writeTemplate(alytt, outpath, subsys.Analytics)
+	if isAnalytics {
+		outpath = fileName(outfiles[outdir], updateOutputFileName(outfiles[analyticsOut], subsys.Analytics.SubsysName)) + shellExt
+		writeTemplate(alytt, outpath, subsys.Analytics)
 
-	if len(subsys.Analytics.ExtraValuesFile) > 0 {
-		outpath = fileName(outfiles[outdir], subsys.Analytics.ExtraValuesFile)
-		writeTemplate(valt, outpath, subsys.Analytics.ExtraValues)
+		if len(subsys.Analytics.ExtraValuesFile) > 0 {
+			outpath = fileName(outfiles[outdir], subsys.Analytics.ExtraValuesFile)
+			writeTemplate(valt, outpath, subsys.Analytics.ExtraValues)
+		}
 	}
 
-	outpath = fileName(outfiles[outdir], outfiles[portalOut]) + shellExt
-	writeTemplate(ptlt, outpath, subsys.Portal)
+	if isPortal {
+		outpath = fileName(outfiles[outdir], updateOutputFileName(outfiles[portalOut], subsys.Portal.SubsysName)) + shellExt
+		writeTemplate(ptlt, outpath, subsys.Portal)
 
-	if len(subsys.Portal.ExtraValuesFile) > 0 {
-		outpath = fileName(outfiles[outdir], subsys.Portal.ExtraValuesFile)
-		writeTemplate(valt, outpath, subsys.Portal.ExtraValues)
+		if len(subsys.Portal.ExtraValuesFile) > 0 {
+			outpath = fileName(outfiles[outdir], subsys.Portal.ExtraValuesFile)
+			writeTemplate(valt, outpath, subsys.Portal.ExtraValues)
+		}
 	}
 
 	// certs
