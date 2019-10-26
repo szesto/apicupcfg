@@ -115,10 +115,21 @@ func updateCertSpec(certs *Certs, subsysName string, certName string, certSpec *
 }
 
 func createCertMaps(certs *Certs) {
-	certs.PublicUserFacingEkuServerAuth = make(map[string]CertSpec)
-	certs.PublicEkuServerAuth = make(map[string]CertSpec)
-	certs.MutualAuthEkuServerAuth = make(map[string]CertSpec)
-	certs.CommonEkuClientAuth = make(map[string]CertSpec)
+	if certs.PublicUserFacingEkuServerAuth == nil {
+		certs.PublicUserFacingEkuServerAuth = make(map[string]CertSpec)
+	}
+
+	if certs.PublicEkuServerAuth == nil {
+		certs.PublicEkuServerAuth = make(map[string]CertSpec)
+	}
+
+	if certs.MutualAuthEkuServerAuth == nil {
+		certs.MutualAuthEkuServerAuth = make(map[string]CertSpec)
+	}
+
+	if certs.CommonEkuClientAuth == nil {
+		certs.CommonEkuClientAuth = make(map[string]CertSpec)
+	}
 }
 
 func updateCertSpecs(certs *Certs, mgmt ManagementSubsysDescriptor, alyt AnalyticsSubsysDescriptor,
@@ -132,28 +143,32 @@ func updateCertSpecs(certs *Certs, mgmt ManagementSubsysDescriptor, alyt Analyti
 	isPortal := len(ptl.GetPortalSubsysName()) > 0
 	isGateway := len(gwy.GetGatewaySubsysName()) > 0
 
+	getCertSpec := func (certmap map[string]CertSpec, key string) CertSpec {
+		if certspec, ok := certmap[key]; ok {return certspec } else {return CertSpec{}}
+	}
+
 	if isManagement && certs.PublicUserFacingCerts {
 		// management subsystem contributes public-user-facing certs
 
 		// build cert specs
 		certmap := certs.PublicUserFacingEkuServerAuth
 
-		certSpec := CertSpec{}
+		certSpec := getCertSpec(certmap, CertKeyPlatformApi)
 		certSpec.Cn = mgmt.GetPlatformApiEndpoint()
 		updateCertSpec(certs, mgmt.GetManagementSubsysName(), CertKeyPlatformApi, &certSpec, customCsrOutDir)
 		certmap[CertKeyPlatformApi] = certSpec
 
-		certSpec = CertSpec{}
+		certSpec = getCertSpec(certmap, CertKeyConsumerApi)
 		certSpec.Cn = mgmt.GetConsumerApiEndpoint()
 		updateCertSpec(certs, mgmt.GetManagementSubsysName(), CertKeyConsumerApi, &certSpec, customCsrOutDir)
 		certmap[CertKeyConsumerApi] = certSpec
 
-		certSpec = CertSpec{}
+		certSpec = getCertSpec(certmap, CertKeyApiManagerUi)
 		certSpec.Cn = mgmt.GetApiManagerUIEndpoint()
 		updateCertSpec(certs, mgmt.GetManagementSubsysName(), CertKeyApiManagerUi, &certSpec, customCsrOutDir)
 		certmap[CertKeyApiManagerUi] = certSpec
 
-		certSpec = CertSpec{}
+		certSpec = getCertSpec(certmap,CertKeyCloudAdminUi)
 		certSpec.Cn = mgmt.GetCloudAdminUIEndpoint()
 		updateCertSpec(certs, mgmt.GetManagementSubsysName(), CertKeyCloudAdminUi, &certSpec, customCsrOutDir)
 		certmap[CertKeyCloudAdminUi] = certSpec
@@ -163,7 +178,7 @@ func updateCertSpecs(certs *Certs, mgmt ManagementSubsysDescriptor, alyt Analyti
 		// portal subsystem contributes public-user-facing certs
 		certmap := certs.PublicUserFacingEkuServerAuth
 
-		certSpec := CertSpec{}
+		certSpec := getCertSpec(certmap, CertKeyPortalWwwIngress)
 		certSpec.Cn = ptl.GetPortalWWWEndpoint()
 		updateCertSpec(certs, ptl.GetPortalSubsysName(), CertKeyPortalWwwIngress, &certSpec, customCsrOutDir)
 		certmap[CertKeyPortalWwwIngress] = certSpec
@@ -173,7 +188,7 @@ func updateCertSpecs(certs *Certs, mgmt ManagementSubsysDescriptor, alyt Analyti
 		// gateway contributes to public certs
 		certmap := certs.PublicEkuServerAuth
 
-		certSpec := CertSpec{}
+		certSpec := getCertSpec(certmap, CertKeyApicGwServiceIngress)
 		certSpec.Cn = CertKeyApicGwServiceIngress
 		updateCertSpec(certs, mgmt.GetManagementSubsysName(), CertKeyApicGwServiceIngress, &certSpec, commonCsrOutDir)
 		certmap[CertKeyApicGwServiceIngress] = certSpec
@@ -183,17 +198,17 @@ func updateCertSpecs(certs *Certs, mgmt ManagementSubsysDescriptor, alyt Analyti
 		// common certs are set on the management subystem
 		certmap := certs.CommonEkuClientAuth
 
-		certSpec := CertSpec{}
+		certSpec := getCertSpec(certmap, CertKeyPortalClient)
 		certSpec.Cn = CertKeyPortalClient
 		updateCertSpec(certs, mgmt.GetManagementSubsysName(), CertKeyPortalClient, &certSpec, commonCsrOutDir)
 		certmap[CertKeyPortalClient] = certSpec
 
-		certSpec = CertSpec{}
+		certSpec = getCertSpec(certmap, CertKeyAnalyticsClientClient)
 		certSpec.Cn = CertKeyAnalyticsClientClient
 		updateCertSpec(certs, mgmt.GetManagementSubsysName(), CertKeyAnalyticsClientClient, &certSpec, commonCsrOutDir)
 		certmap[CertKeyAnalyticsClientClient] = certSpec
 
-		certSpec = CertSpec{}
+		certSpec = getCertSpec(certmap, CertKeyAnalyticsIngestionClient)
 		certSpec.Cn = CertKeyAnalyticsIngestionClient
 		updateCertSpec(certs, mgmt.GetManagementSubsysName(), CertKeyAnalyticsIngestionClient, &certSpec, commonCsrOutDir)
 		certmap[CertKeyAnalyticsIngestionClient] = certSpec
@@ -203,7 +218,7 @@ func updateCertSpecs(certs *Certs, mgmt ManagementSubsysDescriptor, alyt Analyti
 		// portal subsystem contributes mutual auth server cert
 		certmap := certs.MutualAuthEkuServerAuth
 
-		certSpec := CertSpec{}
+		certSpec := getCertSpec(certmap, CertKeyPortalAdminIngress)
 		certSpec.Cn = ptl.GetPortalAdminEndpoint()
 		updateCertSpec(certs, ptl.GetPortalSubsysName(), CertKeyPortalAdminIngress, &certSpec, commonCsrOutDir)
 		certmap[CertKeyPortalAdminIngress] = certSpec
@@ -213,12 +228,12 @@ func updateCertSpecs(certs *Certs, mgmt ManagementSubsysDescriptor, alyt Analyti
 		// analytics subsystem contributes mutual auth server certs
 		certmap := certs.MutualAuthEkuServerAuth
 
-		certSpec := CertSpec{}
+		certSpec := getCertSpec(certmap, CertKeyAnalyticsIngestionIngress)
 		certSpec.Cn = alyt.GetAnalyticsIngestionEndpoint()
 		updateCertSpec(certs, alyt.GetAnalyticsSubsysName(), CertKeyAnalyticsIngestionIngress, &certSpec, commonCsrOutDir)
 		certmap[CertKeyAnalyticsIngestionIngress] = certSpec
 
-		certSpec = CertSpec{}
+		certSpec = getCertSpec(certmap, CertKeyAnalyticsClientIngress)
 		certSpec.Cn = alyt.GetAnalyticsClientEndpoint()
 		updateCertSpec(certs, alyt.GetAnalyticsSubsysName(), CertKeyAnalyticsClientIngress, &certSpec, commonCsrOutDir)
 		certmap[CertKeyAnalyticsClientIngress] = certSpec

@@ -17,7 +17,7 @@
         "CaFile": "ca-chain-root-last.crt",
 
         "Certbot": {
-            "CertDir": "letsencrypt/live/my.domain.com|blank",
+            "CertDir": "letsencrypt/live/my.domain.com",
             "Cert": "cert.pem",
             "Key": "privkey.pem",
             "CaChain": "chain.pem"
@@ -34,7 +34,7 @@
         "ExtraValues": {},
 
         "CassandraBackup": {
-            "BackupProtocol": "sftp|objstore|blank",
+            "BackupProtocol": "sftp|objstore",
             "BackupAuthUser": "admin",
             "BackupAuthPass": "secret",
             "BackupHost": "backup.my.domain.com",
@@ -51,7 +51,7 @@
         "CassandraMaxMemoryGb": 9,
         "CassandraVolumeSizeGb": 50,
         "CassandraClusterSize": 3,
-        "ExternalCassandraHost": "ext.my.domain.com"|blank,
+        "ExternalCassandraHost": "ext.my.domain.com",
         "CreateCrd": true,
 
         "PlatformApi": "api.my.domain.com",
@@ -87,7 +87,7 @@
         "ExtraValues": {},
 
         "SiteBackup": {
-            "BackupProtocol": "sftp|objstore|blank",
+            "BackupProtocol": "sftp|objstore",
             "BackupAuthUser": "admin",
             "BackupAuthPass": "secret",
             "BackupHost": "backup.my.domain.com",

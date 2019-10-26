@@ -145,6 +145,14 @@ type PtlSubsysVm struct {
 }
 
 type GwySubsysVm struct {
+	SubsysName string
+	Mode string
+
+	SearchDomains []string
+	DnsServers []string
+	Hosts []HostVm
+
+	ApiGateway string
 	ApicGwService string
 }
 

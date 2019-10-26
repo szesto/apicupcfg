@@ -54,9 +54,9 @@ type GatewaySubsysDescriptor interface {
 	GetApiGatewayEndpoint() string
 }
 
-func (gwy *GwySubsysVm) GetGatewaySubsysName() string { return "gwy" }
+func (gwy *GwySubsysVm) GetGatewaySubsysName() string { return gwy.SubsysName }
 func (gwy *GwySubsysVm) GetApicGatewayServiceEndpoint() string { return gwy.ApicGwService }
-func (gwy *GwySubsysVm) GetApiGatewayEndpoint() string { return "" }
+func (gwy *GwySubsysVm) GetApiGatewayEndpoint() string { return gwy.ApiGateway }
 
 func (gwy *GwSubsysK8s) GetGatewaySubsysName() string { return gwy.SubsysName }
 func (gwy *GwSubsysK8s) GetApicGatewayServiceEndpoint() string { return gwy.ApicGwService }

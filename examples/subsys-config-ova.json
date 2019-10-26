@@ -1,142 +1,158 @@
 {
-  "InstallType": "ova",
-  "Version": "2018.1.x",
-  "Tag": "tag",
+    "InstallType": "ova",
+    "Version": "2018.1.x",
+    "Tag": "tag",
 
-  "Mode": "dev",
+    "Mode": "dev|standard",
 
-  "SshPublicKeyFile": "/path/to/public/key/file",
+    "SshPublicKeyFile": "/path/to/public/key/file",
 
-  "SearchDomains": ["my.domain.com", "domain.com"],
+    "SearchDomains": ["my.domain.com", "domain.com"],
 
-  "VmFirstBoot": {
-    "DnsServers": ["dns-ip-1","dns-ip-2"],
-    "VmwareConsolePasswordHash": "hash-output-b64",
+    "VmFirstBoot": {
+        "DnsServers": ["dns-ip-1","dns-ip-2"],
+        "VmwareConsolePasswordHash": "hash-output-b64",
 
-    "IpRanges": {
-      "PodNetwork": "172.16.0.0/16",
-      "ServiceNetwork": "172.17.0.0/16"
-    }
-  },
-
-  "CloudInit": {
-    "CloudInitFile": "cloud-init-file.yml|blank",
-    "InitValues": {
-      "rsyslog": {
-        "remotes": {
-          "syslog_server1": "syslog-collector-ip-1:514|601",
-          "syslog_server2": "syslog-collector-ip-2:514|601"
+        "IpRanges": {
+            "PodNetwork": "172.16.0.0/16",
+            "ServiceNetwork": "172.17.0.0/16"
         }
-      }
+    },
+
+    "CloudInit": {
+        "CloudInitFile": "cloud-init-file.yml",
+        "InitValues": {
+            "rsyslog": {
+                "remotes": {
+                    "syslog_server1": "syslog-collector-ip-1:514|601",
+                    "syslog_server2": "syslog-collector-ip-2:514|601"
+                }
+            }
+        }
+    },
+
+    "Certs": {
+        "DnFields": ["O=APIC|match ca reqs","C=US|match ca reqs"],
+        "K8sNamespace": "default",
+        "CaFile": "ca-chain-root-last.crt",
+
+        "Certbot": {
+            "CertDir": "letsencrypt/live/my.domain.com",
+            "Cert": "cert.pem",
+            "Key": "privkey.pem",
+            "CaChain": "chain.pem"
+        },
+
+        "PublicUserFacingCerts": true,
+        "PublicCerts": false,
+        "CommonCerts": false
+    },
+
+    "Management": {
+        "SubsysName": "mgmt",
+
+        "VmFirstBoot": {
+            "Hosts": [
+                {"Name": "m1.my.domain.com", "HardDiskPassword": "password", "Device": "eth0",
+                    "IpAddress": "ip-address", "SubnetMask": "dot.subnet.mask","Gateway": "gw-ip-address"},
+                {"Name": "m2.my.domain.com", "HardDiskPassword": "password", "Device": "eth0",
+                    "IpAddress": "ip-address", "SubnetMask": "dot.subnet.mask", "Gateway": "gw-ip-address"},
+                {"Name": "m3.my.domain.com", "HardDiskPassword": "password", "Device": "eth0",
+                    "IpAddress": "ip-address", "SubnetMask": "dot.subnet.mask", "Gateway": "gw-ip-address"}
+            ]
+        },
+
+        "CassandraBackup": {
+            "BackupProtocol": "sftp|objstore",
+            "BackupAuthUser": "admin",
+            "BackupAuthPass": "secret",
+            "BackupHost": "backup.my.domain.com",
+            "BackupPort": 1022,
+            "BackupPath": "/backup",
+            "ObjstoreS3SecretKeyId": "",
+            "ObjstoreS3SecretAccessKey": "",
+            "ObjstoreEndpointRegion": "",
+            "ObjstoreBucketSubfolder": "",
+            "BackupEncoding": "min(0-59) hour(0-23) dayofmonth(1-31) month(1-12) dayofweek(0-6)",
+            "BackupSchedule": "0 0 * * 0"
+        },
+
+        "PlatformApi": "platform.my.domain.com",
+        "ApiManagerUi": "ui.my.domain.com",
+        "CloudAdminUi": "cm.my.domain.com",
+        "ConsumerApi": "consumer.my.domain.com"
+    },
+
+    "Analytics": {
+        "SubsysName": "alt",
+
+        "VmFirstBoot": {
+            "Hosts": [
+                {"Name": "a1.my.domain.com", "HardDiskPassword": "password", "Device": "eth0",
+                    "IpAddress": "ip-address", "SubnetMask": "dot.subnet.mask","Gateway": "gw-ip-address"},
+                {"Name": "a2.my.domain.com", "HardDiskPassword": "password", "Device": "eth0",
+                    "IpAddress": "ip-address", "SubnetMask": "dot.subnet.mask", "Gateway": "gw-ip-address"},
+                {"Name": "a3.my.domain.com", "HardDiskPassword": "password", "Device": "eth0",
+                    "IpAddress": "ip-address", "SubnetMask": "dot.subnet.mask", "Gateway": "gw-ip-address"}
+            ]
+        },
+
+        "EnableMessageQueue": false,
+
+        "AnalyticsIngestion": "ai.my.domain.com",
+        "AnalyticsClient": "ac.my.domain.com"
+    },
+
+    "Portal": {
+        "SubsysName": "ptl",
+
+        "VmFirstBoot": {
+            "Hosts": [
+                {"Name": "p1.my.domain.com", "HardDiskPassword": "password", "Device": "eth0",
+                    "IpAddress": "ip-address", "SubnetMask": "dot.subnet.mask","Gateway": "gw-ip-address"},
+                {"Name": "p2.my.domain.com", "HardDiskPassword": "password", "Device": "eth0",
+                    "IpAddress": "ip-address", "SubnetMask": "dot.subnet.mask", "Gateway": "gw-ip-address"},
+                {"Name": "p3.my.domain.com", "HardDiskPassword": "password", "Device": "eth0",
+                    "IpAddress": "ip-address", "SubnetMask": "dot.subnet.mask", "Gateway": "gw-ip-address"}
+            ]
+        },
+
+        "SiteBackup": {
+            "BackupProtocol": "sftp|objstore",
+            "BackupAuthUser": "admin",
+            "BackupAuthPass": "secret",
+            "BackupHost": "backup.my.domain.com",
+            "BackupPort": 1022,
+            "BackupPath": "/backup",
+            "ObjstoreS3SecretKeyId": "",
+            "ObjstoreS3SecretAccessKey": "",
+            "ObjstoreEndpointRegion": "",
+            "ObjstoreBucketSubfolder": "",
+            "BackupEncoding": "min(0-59) hour(0-23) dayofmonth(1-31) month(1-12) dayofweek(0-6)",
+            "BackupSchedule": "0 2 * * *"
+        },
+
+        "PortalAdmin": "padmin.my.domain.com",
+        "PortalWww": "portal.my.domain.com"
+    },
+
+    "Gateway": {
+        "SubsysName": "gwy",
+        "Mode": "standard",
+
+        "SearchDomains": [],
+        "DnsServers": [],
+
+        "Hosts": [
+            {"Name": "dp1.my.domain.com", "HardDiskPassword": "password", "Device": "eth0",
+                "IpAddress": "ip-address", "SubnetMask": "dot.subnet.mask","Gateway": "gw-ip-address"},
+            {"Name": "dp2.my.domain.com", "HardDiskPassword": "password", "Device": "eth0",
+                "IpAddress": "ip-address", "SubnetMask": "dot.subnet.mask", "Gateway": "gw-ip-address"},
+            {"Name": "dp3.my.domain.com", "HardDiskPassword": "password", "Device": "eth0",
+                "IpAddress": "ip-address", "SubnetMask": "dot.subnet.mask", "Gateway": "gw-ip-address"}
+        ],
+
+        "ApiGateway": "gw.my.domain.com",
+        "ApicGwService": "gwd.my.domain.com"
     }
-  },
-
-  "Certs": {
-    "DnFields": ["O=APIC|match ca reqs","C=US|match ca reqs"],
-    "K8sNamespace": "default",
-    "CaFile": "ca-chain-root-last.crt",
-
-    "Certbot": {
-      "CertDir": "letsencrypt/live/my.domain.com|blank",
-      "Cert": "cert.pem",
-      "Key": "privkey.pem",
-      "CaChain": "chain.pem"
-    },
-
-    "PublicUserFacingCerts": true,
-    "PublicCerts": false,
-    "CommonCerts": false
-  },
-
-  "Management": {
-    "SubsysName": "mgmt",
-
-    "VmFirstBoot": {
-      "Hosts": [
-        {"Name": "m1.my.domain.com", "HardDiskPassword": "password", "Device": "eth0",
-          "IpAddress": "ip-address", "SubnetMask": "dot.subnet.mask","Gateway": "gw-ip-address"},
-        {"Name": "m2.my.domain.com", "HardDiskPassword": "password", "Device": "eth0",
-          "IpAddress": "ip-address", "SubnetMask": "dot.subnet.mask", "Gateway": "gw-ip-address"},
-        {"Name": "m3.my.domain.com", "HardDiskPassword": "password", "Device": "eth0",
-          "IpAddress": "ip-address", "SubnetMask": "dot.subnet.mask", "Gateway": "gw-ip-address"}
-      ]
-    },
-
-    "CassandraBackup": {
-      "BackupProtocol": "sftp|objstore|blank",
-      "BackupAuthUser": "admin",
-      "BackupAuthPass": "secret",
-      "BackupHost": "backup.my.domain.com",
-      "BackupPort": 1022,
-      "BackupPath": "/backup",
-      "ObjstoreS3SecretKeyId": "",
-      "ObjstoreS3SecretAccessKey": "",
-      "ObjstoreEndpointRegion": "",
-      "ObjstoreBucketSubfolder": "",
-      "BackupEncoding": "min(0-59) hour(0-23) dayofmonth(1-31) month(1-12) dayofweek(0-6)",
-      "BackupSchedule": "0 0 * * 0"
-    },
-
-    "PlatformApi": "platform.my.domain.com",
-    "ApiManagerUi": "ui.my.domain.com",
-    "CloudAdminUi": "cm.my.domain.com",
-    "ConsumerApi": "consumer.my.domain.com"
-  },
-
-  "Analytics": {
-    "SubsysName": "alt",
-
-    "VmFirstBoot": {
-      "Hosts": [
-        {"Name": "a1.my.domain.com", "HardDiskPassword": "password", "Device": "eth0",
-          "IpAddress": "ip-address", "SubnetMask": "dot.subnet.mask","Gateway": "gw-ip-address"},
-        {"Name": "a2.my.domain.com", "HardDiskPassword": "password", "Device": "eth0",
-          "IpAddress": "ip-address", "SubnetMask": "dot.subnet.mask", "Gateway": "gw-ip-address"},
-        {"Name": "a3.my.domain.com", "HardDiskPassword": "password", "Device": "eth0",
-          "IpAddress": "ip-address", "SubnetMask": "dot.subnet.mask", "Gateway": "gw-ip-address"}
-      ]
-    },
-
-    "EnableMessageQueue": false,
-
-    "AnalyticsIngestion": "ai.my.domain.com",
-    "AnalyticsClient": "ac.my.domain.com"
-  },
-
-  "Portal": {
-    "SubsysName": "ptl",
-
-    "VmFirstBoot": {
-      "Hosts": [
-        {"Name": "p1.my.domain.com", "HardDiskPassword": "password", "Device": "eth0",
-          "IpAddress": "ip-address", "SubnetMask": "dot.subnet.mask","Gateway": "gw-ip-address"},
-        {"Name": "p2.my.domain.com", "HardDiskPassword": "password", "Device": "eth0",
-"         IpAddress": "ip-address", "SubnetMask": "dot.subnet.mask", "Gateway": "gw-ip-address"},
-        {"Name": "p3.my.domain.com", "HardDiskPassword": "password", "Device": "eth0",
-          "IpAddress": "ip-address", "SubnetMask": "dot.subnet.mask", "Gateway": "gw-ip-address"}
-      ]
-    },
-
-    "SiteBackup": {
-      "BackupProtocol": "sftp|objstore|blank",
-      "BackupAuthUser": "admin",
-      "BackupAuthPass": "secret",
-      "BackupHost": "backup.my.domain.com",
-      "BackupPort": 1022,
-      "BackupPath": "/backup",
-      "ObjstoreS3SecretKeyId": "",
-      "ObjstoreS3SecretAccessKey": "",
-      "ObjstoreEndpointRegion": "",
-      "ObjstoreBucketSubfolder": "",
-      "BackupEncoding": "min(0-59) hour(0-23) dayofmonth(1-31) month(1-12) dayofweek(0-6)",
-      "BackupSchedule": "0 2 * * *"
-    },
-
-    "PortalAdmin": "padmin.my.domain.com",
-    "PortalWww": "portal.my.domain.com"
-  },
-
-  "Gateway": {
-    "ApicGwService": "gwd.my.domain.com"
-  }
 }

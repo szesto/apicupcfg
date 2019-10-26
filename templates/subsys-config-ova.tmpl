@@ -20,7 +20,7 @@
     },
 
     "CloudInit": {
-        "CloudInitFile": "cloud-init-file.yml|blank",
+        "CloudInitFile": "cloud-init-file.yml",
         "InitValues": {
             "rsyslog": {
                 "remotes": {
@@ -37,7 +37,7 @@
         "CaFile": "ca-chain-root-last.crt",
 
         "Certbot": {
-            "CertDir": "letsencrypt/live/my.domain.com|blank",
+            "CertDir": "letsencrypt/live/my.domain.com",
             "Cert": "cert.pem",
             "Key": "privkey.pem",
             "CaChain": "chain.pem"
@@ -63,11 +63,11 @@
         },
 
         "CassandraBackup": {
-            "BackupProtocol": "sftp|objstore|blank",
+            "BackupProtocol": "sftp|objstore",
             "BackupAuthUser": "admin",
             "BackupAuthPass": "secret",
             "BackupHost": "backup.my.domain.com",
-            "BackupPort": 9090,
+            "BackupPort": 1022,
             "BackupPath": "/backup",
             "ObjstoreS3SecretKeyId": "",
             "ObjstoreS3SecretAccessKey": "",
@@ -118,11 +118,11 @@
         },
 
         "SiteBackup": {
-            "BackupProtocol": "sftp|objstore|blank",
+            "BackupProtocol": "sftp|objstore",
             "BackupAuthUser": "admin",
             "BackupAuthPass": "secret",
             "BackupHost": "backup.my.domain.com",
-            "BackupPort": 9090,
+            "BackupPort": 1022,
             "BackupPath": "/backup",
             "ObjstoreS3SecretKeyId": "",
             "ObjstoreS3SecretAccessKey": "",
@@ -136,5 +136,23 @@
         "PortalWww": "portal.my.domain.com"
     },
 
-    "Gateway": {}
+    "Gateway": {
+        "SubsysName": "gwy",
+        "Mode": "standard",
+
+        "SearchDomains": [],
+        "DnsServers": [],
+
+        "Hosts": [
+            {"Name": "dp1.my.domain.com", "HardDiskPassword": "password", "Device": "eth0",
+                "IpAddress": "ip-address", "SubnetMask": "dot.subnet.mask","Gateway": "gw-ip-address"},
+            {"Name": "dp2.my.domain.com", "HardDiskPassword": "password", "Device": "eth0",
+                "IpAddress": "ip-address", "SubnetMask": "dot.subnet.mask", "Gateway": "gw-ip-address"},
+            {"Name": "dp3.my.domain.com", "HardDiskPassword": "password", "Device": "eth0",
+                "IpAddress": "ip-address", "SubnetMask": "dot.subnet.mask", "Gateway": "gw-ip-address"}
+        ],
+
+        "ApiGateway": "gw.my.domain.com",
+        "ApicGwService": "gwd.my.domain.com"
+    }
 }
