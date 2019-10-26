@@ -238,7 +238,7 @@ func LoadSubsysVm(jsonConfigFile string) *SubsysVm {
 	return subsys
 }
 
-func ApplyTemplateVm(subsys *SubsysVm, outfiles map[string]string, tbox *rice.Box) {
+func ApplyTemplateVm(subsys *SubsysVm, outfiles map[string]string, subsysOnly, certsOnly bool, tbox *rice.Box) {
 
 	isManagement := len(subsys.Management.SubsysName) > 0
 	isAnalytics := len(subsys.Analytics.SubsysName) > 0
@@ -270,28 +270,30 @@ func ApplyTemplateVm(subsys *SubsysVm, outfiles map[string]string, tbox *rice.Bo
 
 	var outpath string
 
-	if isManagement {
+	if isManagement && !certsOnly {
 		outpath = fileName(outfiles[outdir], tagOutputFileName(outfiles[managementOut], subsys.Tag)) + shellext
 		writeTemplate(mgtt, outpath, subsys.Management)
 	}
 
-	if isAnalytics {
+	if isAnalytics && !certsOnly {
 		outpath = fileName(outfiles[outdir], tagOutputFileName(outfiles[analyticsOut], subsys.Tag)) + shellext
 		writeTemplate(analyt, outpath, subsys.Analytics)
 	}
 
-	if isPortal {
+	if isPortal && !certsOnly {
 		outpath = fileName(outfiles[outdir], tagOutputFileName(outfiles[portalOut], subsys.Tag)) + shellext
 		writeTemplate(ptl, outpath, subsys.Portal)
 	}
 
 	// this outputs default cloud-init file... each subsystem can have it's own
-	if isCloudInit {
+	if isCloudInit && !certsOnly {
 		outpath = fileName(outfiles[outdir], subsys.CloudInit.CloudInitFile)
 		writeTemplate(cloudinitt, outpath, subsys.CloudInit.InitValues)
 	}
 
 	// certs
-	updateCertSpecs(&subsys.Certs, &subsys.Management, &subsys.Analytics, &subsys.Portal, &subsys.Gateway, outfiles[commonCsrOutDir], outfiles[customCsrOutDir])
-	outputCerts(&subsys.Certs, outfiles, subsys.Tag, tbox)
+	if !subsysOnly {
+		updateCertSpecs(&subsys.Certs, &subsys.Management, &subsys.Analytics, &subsys.Portal, &subsys.Gateway, outfiles[commonCsrOutDir], outfiles[customCsrOutDir])
+		outputCerts(&subsys.Certs, outfiles, subsys.Tag, tbox)
+	}
 }

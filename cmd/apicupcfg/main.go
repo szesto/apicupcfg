@@ -12,7 +12,8 @@ func main() {
 	tbox := rice.MustFindBox("../../templates")
 
 	// input: configuration file, output dir, csr subdirectories
-	input, outdir, commonCsrSubdir, customCsrSubdir, projectSubdir, validateIp, initConfig, initConfigType := apicupcfg.Input()
+	input, outdir, commonCsrSubdir, customCsrSubdir, projectSubdir,
+	validateIp, initConfig, initConfigType, subsysOnly, certsOnly := apicupcfg.Input()
 
 	// output files
 	output := apicupcfg.OutputFiles(outdir, commonCsrSubdir, customCsrSubdir)
@@ -43,7 +44,7 @@ func main() {
 			}
 
 			// apply templates
-			apicupcfg.ApplyTemplateVm(subsysvm, output, tbox)
+			apicupcfg.ApplyTemplateVm(subsysvm, output, subsysOnly, certsOnly, tbox)
 		}
 
 	case apicupcfg.InstallTypeK8s:
@@ -62,7 +63,7 @@ func main() {
 			}
 
 			// apply templates
-			apicupcfg.ApplyTemplatesK8s(subsysk8s, output, tbox)
+			apicupcfg.ApplyTemplatesK8s(subsysk8s, output, subsysOnly, certsOnly, tbox)
 		}
 
 	case apicupcfg.InstallTypeInit:

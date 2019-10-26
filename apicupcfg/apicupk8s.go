@@ -184,7 +184,7 @@ func LoadSubsysK8s(jsonConfigFile string) *SubsysK8s {
 	return subsys
 }
 
-func ApplyTemplatesK8s(subsys *SubsysK8s, outfiles map[string]string, tbox *rice.Box)  {
+func ApplyTemplatesK8s(subsys *SubsysK8s, outfiles map[string]string, subsysOnly, certsOnly bool, tbox *rice.Box)  {
 
 	// parse templates
 	mgtt := parseTemplates(tbox, tpdir(tbox) + "management-k8s.tmpl", tpdir(tbox) + "helpers.tmpl")
@@ -203,7 +203,7 @@ func ApplyTemplatesK8s(subsys *SubsysK8s, outfiles map[string]string, tbox *rice
 
 	outpath := ""
 
-	if isManagement {
+	if isManagement && !certsOnly {
 		outpath = fileName(outfiles[outdir], tagOutputFileName(outfiles[managementOut], subsys.Tag)) + shellExt
 		writeTemplate(mgtt, outpath, subsys.Management)
 
@@ -213,7 +213,7 @@ func ApplyTemplatesK8s(subsys *SubsysK8s, outfiles map[string]string, tbox *rice
 		}
 	}
 
-	if isGateway {
+	if isGateway && !certsOnly {
 		outpath = fileName(outfiles[outdir], tagOutputFileName(outfiles[gatewayOut], subsys.Tag)) + shellExt
 		writeTemplate(gwyt, outpath, subsys.Gateway)
 
@@ -223,7 +223,7 @@ func ApplyTemplatesK8s(subsys *SubsysK8s, outfiles map[string]string, tbox *rice
 		}
 	}
 
-	if isAnalytics {
+	if isAnalytics && !certsOnly {
 		outpath = fileName(outfiles[outdir], tagOutputFileName(outfiles[analyticsOut], subsys.Tag)) + shellExt
 		writeTemplate(alytt, outpath, subsys.Analytics)
 
@@ -233,7 +233,7 @@ func ApplyTemplatesK8s(subsys *SubsysK8s, outfiles map[string]string, tbox *rice
 		}
 	}
 
-	if isPortal {
+	if isPortal && !certsOnly {
 		outpath = fileName(outfiles[outdir], tagOutputFileName(outfiles[portalOut], subsys.Tag)) + shellExt
 		writeTemplate(ptlt, outpath, subsys.Portal)
 
@@ -244,8 +244,10 @@ func ApplyTemplatesK8s(subsys *SubsysK8s, outfiles map[string]string, tbox *rice
 	}
 
 	// certs
-	updateCertSpecs(&subsys.Certs, &subsys.Management, &subsys.Analytics, &subsys.Portal, &subsys.Gateway,
-		outfiles[commonCsrOutDir], outfiles[customCsrOutDir])
+	if !subsysOnly {
+		updateCertSpecs(&subsys.Certs, &subsys.Management, &subsys.Analytics, &subsys.Portal, &subsys.Gateway,
+			outfiles[commonCsrOutDir], outfiles[customCsrOutDir])
 
-	outputCerts(&subsys.Certs, outfiles, subsys.Tag, tbox)
+		outputCerts(&subsys.Certs, outfiles, subsys.Tag, tbox)
+	}
 }
