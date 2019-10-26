@@ -40,6 +40,10 @@ type Certs struct {
 	K8sNamespace string
 	CaFile string
 
+	PublicUserFacingCerts bool
+	PublicCerts bool
+	CommonCerts bool
+
 	PublicUserFacingEkuServerAuth map[string]CertSpec
 	PublicEkuServerAuth map[string]CertSpec
 
@@ -110,101 +114,118 @@ func updateCertSpec(certs *Certs, subsysName string, certName string, certSpec *
 	}
 }
 
-func subsysNameForCertName(certName string, managementSubsysName string, analyticsSubsysName string,
-	portalSubsysName string, gatewaySusbsysName string) (string, bool) {
-
-	if
-		certName == CertKeyPlatformApi ||
-		certName == CertKeyConsumerApi ||
-		certName == CertKeyApiManagerUi ||
-		certName == CertKeyCloudAdminUi {
-
-		return managementSubsysName, true
-	} else if
-		certName == 	CertKeyPortalAdminIngress ||
-		certName == CertKeyPortalWwwIngress {
-
-		return portalSubsysName, true
-	} else if
-		certName == CertKeyAnalyticsClientIngress ||
-		certName == CertKeyAnalyticsIngestionIngress {
-
-		return analyticsSubsysName, true
-	} else if
-		certName == CertKeyApicGwServiceIngress {
-
-		return gatewaySusbsysName, true
-	} else if
-		certName == CertKeyPortalClient ||
-		certName == CertKeyAnalyticsClientClient ||
-		certName ==  CertKeyAnalyticsIngestionClient {
-
-		return managementSubsysName, true
-	}
-
-	return "", false
+func createCertMaps(certs *Certs) {
+	certs.PublicUserFacingEkuServerAuth = make(map[string]CertSpec)
+	certs.PublicEkuServerAuth = make(map[string]CertSpec)
+	certs.MutualAuthEkuServerAuth = make(map[string]CertSpec)
+	certs.CommonEkuClientAuth = make(map[string]CertSpec)
 }
 
-func updateCertSpecs(certs Certs, managementSubsysName string, analyticsSubsysName string,
-	portalSubsysName string, gatewaySusbsysName string,
-	commonCsrSubdir string, publicCsrSubdir string) Certs {
+func updateCertSpecs(certs *Certs, mgmt ManagementSubsysDescriptor, alyt AnalyticsSubsysDescriptor,
+	ptl PortalSubsysDescriptor, gwy GatewaySubsysDescriptor, commonCsrOutDir string, customCsrOutDir string) {
 
-	// output certs
-	outCerts := certs
+	certs.OsEnv.init()
+	createCertMaps(certs)
 
-	// public-user-facing-eku-server-auth
-	for certName, certSpec := range certs.PublicUserFacingEkuServerAuth {
+	isManagement := len(mgmt.GetManagementSubsysName()) > 0
+	isAnalytics := len(alyt.GetAnalyticsSubsysName()) > 0
+	isPortal := len(ptl.GetPortalSubsysName()) > 0
+	isGateway := len(gwy.GetGatewaySubsysName()) > 0
 
-		if subsysName, found := subsysNameForCertName(certName, managementSubsysName,
-			analyticsSubsysName, portalSubsysName, gatewaySusbsysName); found == true {
+	if isManagement && certs.PublicUserFacingCerts {
+		// management subsystem contributes public-user-facing certs
 
-			updateCertSpec(&certs, subsysName, certName, &certSpec, publicCsrSubdir)
+		// build cert specs
+		certmap := certs.PublicUserFacingEkuServerAuth
 
-			// copy updated spec
-			outCerts.PublicUserFacingEkuServerAuth[certName] = certSpec
-		}
+		certSpec := CertSpec{}
+		certSpec.Cn = mgmt.GetPlatformApiEndpoint()
+		updateCertSpec(certs, mgmt.GetManagementSubsysName(), CertKeyPlatformApi, &certSpec, customCsrOutDir)
+		certmap[CertKeyPlatformApi] = certSpec
+
+		certSpec = CertSpec{}
+		certSpec.Cn = mgmt.GetConsumerApiEndpoint()
+		updateCertSpec(certs, mgmt.GetManagementSubsysName(), CertKeyConsumerApi, &certSpec, customCsrOutDir)
+		certmap[CertKeyConsumerApi] = certSpec
+
+		certSpec = CertSpec{}
+		certSpec.Cn = mgmt.GetApiManagerUIEndpoint()
+		updateCertSpec(certs, mgmt.GetManagementSubsysName(), CertKeyApiManagerUi, &certSpec, customCsrOutDir)
+		certmap[CertKeyApiManagerUi] = certSpec
+
+		certSpec = CertSpec{}
+		certSpec.Cn = mgmt.GetCloudAdminUIEndpoint()
+		updateCertSpec(certs, mgmt.GetManagementSubsysName(), CertKeyCloudAdminUi, &certSpec, customCsrOutDir)
+		certmap[CertKeyCloudAdminUi] = certSpec
 	}
 
-	// public certs
-	for certName, certSpec := range certs.PublicEkuServerAuth {
+	if isPortal && certs.PublicUserFacingCerts {
+		// portal subsystem contributes public-user-facing certs
+		certmap := certs.PublicUserFacingEkuServerAuth
 
-		if subsysName, found := subsysNameForCertName(certName, managementSubsysName,
-			analyticsSubsysName, portalSubsysName, gatewaySusbsysName); found == true {
-
-			updateCertSpec(&certs, subsysName, certName, &certSpec, publicCsrSubdir)
-
-			// copy updated spec
-			outCerts.PublicEkuServerAuth[certName] = certSpec
-		}
+		certSpec := CertSpec{}
+		certSpec.Cn = ptl.GetPortalWWWEndpoint()
+		updateCertSpec(certs, ptl.GetPortalSubsysName(), CertKeyPortalWwwIngress, &certSpec, customCsrOutDir)
+		certmap[CertKeyPortalWwwIngress] = certSpec
 	}
 
-	// mutual auth certs
-	for certName, certSpec := range certs.MutualAuthEkuServerAuth {
+	if isGateway && certs.PublicCerts {
+		// gateway contributes to public certs
+		certmap := certs.PublicEkuServerAuth
 
-		if subsysName, found := subsysNameForCertName(certName, managementSubsysName,
-			analyticsSubsysName, portalSubsysName, gatewaySusbsysName); found == true {
-
-			updateCertSpec(&certs, subsysName, certName, &certSpec, commonCsrSubdir)
-
-			// copy updated spec
-			outCerts.MutualAuthEkuServerAuth[certName] = certSpec
-		}
+		certSpec := CertSpec{}
+		certSpec.Cn = CertKeyApicGwServiceIngress
+		updateCertSpec(certs, mgmt.GetManagementSubsysName(), CertKeyApicGwServiceIngress, &certSpec, commonCsrOutDir)
+		certmap[CertKeyApicGwServiceIngress] = certSpec
 	}
 
-	// common client certs
-	for certName, certSpec := range certs.CommonEkuClientAuth {
-		// common certs are set on the management subsystem
-		updateCertSpec(&certs, managementSubsysName, certName, &certSpec, commonCsrSubdir)
+	if isManagement && certs.CommonCerts {
+		// common certs are set on the management subystem
+		certmap := certs.CommonEkuClientAuth
 
-		// copy updated spec
-		outCerts.CommonEkuClientAuth[certName] = certSpec
+		certSpec := CertSpec{}
+		certSpec.Cn = CertKeyPortalClient
+		updateCertSpec(certs, mgmt.GetManagementSubsysName(), CertKeyPortalClient, &certSpec, commonCsrOutDir)
+		certmap[CertKeyPortalClient] = certSpec
+
+		certSpec = CertSpec{}
+		certSpec.Cn = CertKeyAnalyticsClientClient
+		updateCertSpec(certs, mgmt.GetManagementSubsysName(), CertKeyAnalyticsClientClient, &certSpec, commonCsrOutDir)
+		certmap[CertKeyAnalyticsClientClient] = certSpec
+
+		certSpec = CertSpec{}
+		certSpec.Cn = CertKeyAnalyticsIngestionClient
+		updateCertSpec(certs, mgmt.GetManagementSubsysName(), CertKeyAnalyticsIngestionClient, &certSpec, commonCsrOutDir)
+		certmap[CertKeyAnalyticsIngestionClient] = certSpec
 	}
 
-	outCerts.OsEnv.init()
-	return outCerts
+	if isPortal && certs.CommonCerts {
+		// portal subsystem contributes mutual auth server cert
+		certmap := certs.MutualAuthEkuServerAuth
+
+		certSpec := CertSpec{}
+		certSpec.Cn = ptl.GetPortalAdminEndpoint()
+		updateCertSpec(certs, ptl.GetPortalSubsysName(), CertKeyPortalAdminIngress, &certSpec, commonCsrOutDir)
+		certmap[CertKeyPortalAdminIngress] = certSpec
+	}
+
+	if isAnalytics && certs.CommonCerts {
+		// analytics subsystem contributes mutual auth server certs
+		certmap := certs.MutualAuthEkuServerAuth
+
+		certSpec := CertSpec{}
+		certSpec.Cn = alyt.GetAnalyticsIngestionEndpoint()
+		updateCertSpec(certs, alyt.GetAnalyticsSubsysName(), CertKeyAnalyticsIngestionIngress, &certSpec, commonCsrOutDir)
+		certmap[CertKeyAnalyticsIngestionIngress] = certSpec
+
+		certSpec = CertSpec{}
+		certSpec.Cn = alyt.GetAnalyticsClientEndpoint()
+		updateCertSpec(certs, alyt.GetAnalyticsSubsysName(), CertKeyAnalyticsClientIngress, &certSpec, commonCsrOutDir)
+		certmap[CertKeyAnalyticsClientIngress] = certSpec
+	}
 }
 
-func outputCerts(certs *Certs, outfiles map[string]string, tbox *rice.Box) {
+func outputCerts(certs *Certs, outfiles map[string]string, tag string, tbox *rice.Box) {
 
 	ekuServerAuth := parseTemplate(tbox, tpdir(tbox) + "csr-server-auth.tmpl")
 	ekuClientAuth := parseTemplate(tbox, tpdir(tbox) + "csr-client-auth.tmpl")
@@ -219,89 +240,107 @@ func outputCerts(certs *Certs, outfiles map[string]string, tbox *rice.Box) {
 	osenv.init()
 
 	// public-user-facing-eku-server-auth csr conf
-	for _, certSpec := range certs.PublicUserFacingEkuServerAuth {
+	if certs.PublicUserFacingCerts {
+		for _, certSpec := range certs.PublicUserFacingEkuServerAuth {
 
-		if len(certSpec.Cn) > 0 {
-			// csr
-			outpath = fileName(concatSubdir(outfiles[outdir], outfiles[customCsrOutDir]), certSpec.CsrConf)
-			writeTemplate(ekuServerAuth, outpath, certSpec)
+			if len(certSpec.Cn) > 0 {
+				// csr
+				outpath = fileName(concatSubdir(outfiles[outdir], outfiles[customCsrOutDir]), certSpec.CsrConf)
+				writeTemplate(ekuServerAuth, outpath, certSpec)
 
-			// key-pair
-			outpath = fileName(concatSubdir(outfiles[outdir], outfiles[customCsrOutDir]), certSpec.CsrConf + osenv.ShellExt)
-			writeTemplate(keypairTemplate, outpath, OsEnvCert{OsEnv: osenv, CertSpec: certSpec})
+				// key-pair
+				outpath = fileName(concatSubdir(outfiles[outdir], outfiles[customCsrOutDir]), certSpec.CsrConf + osenv.ShellExt)
+				writeTemplate(keypairTemplate, outpath, OsEnvCert{OsEnv: osenv, CertSpec: certSpec})
+			}
 		}
 	}
 
-	for _, certSpec := range certs.PublicEkuServerAuth {
+	if certs.PublicCerts {
+		for _, certSpec := range certs.PublicEkuServerAuth {
 
-		if len(certSpec.Cn) > 0 {
-			// csr
-			outpath = fileName(concatSubdir(outfiles[outdir], outfiles[customCsrOutDir]), certSpec.CsrConf)
-			writeTemplate(ekuServerAuth, outpath, certSpec)
+			if len(certSpec.Cn) > 0 {
+				// csr
+				outpath = fileName(concatSubdir(outfiles[outdir], outfiles[customCsrOutDir]), certSpec.CsrConf)
+				writeTemplate(ekuServerAuth, outpath, certSpec)
 
-			// key-pair
-			outpath = fileName(concatSubdir(outfiles[outdir], outfiles[customCsrOutDir]), certSpec.CsrConf + osenv.ShellExt)
-			writeTemplate(keypairTemplate, outpath, OsEnvCert{OsEnv: osenv, CertSpec: certSpec})
+				// key-pair
+				outpath = fileName(concatSubdir(outfiles[outdir], outfiles[customCsrOutDir]), certSpec.CsrConf + osenv.ShellExt)
+				writeTemplate(keypairTemplate, outpath, OsEnvCert{OsEnv: osenv, CertSpec: certSpec})
+			}
 		}
 	}
 
-	for _, certSpec := range certs.MutualAuthEkuServerAuth {
+	if certs.CommonCerts {
+		for _, certSpec := range certs.MutualAuthEkuServerAuth {
 
-		if len(certSpec.Cn) > 0 {
-			// csr
-			outpath = fileName(concatSubdir(outfiles[outdir], outfiles[commonCsrOutDir]), certSpec.CsrConf)
-			writeTemplate(ekuServerAuth, outpath, certSpec)
+			if len(certSpec.Cn) > 0 {
+				// csr
+				outpath = fileName(concatSubdir(outfiles[outdir], outfiles[commonCsrOutDir]), certSpec.CsrConf)
+				writeTemplate(ekuServerAuth, outpath, certSpec)
 
-			// key-pair
-			outpath = fileName(concatSubdir(outfiles[outdir], outfiles[commonCsrOutDir]), certSpec.CsrConf + osenv.ShellExt)
-			writeTemplate(keypairTemplate, outpath, OsEnvCert{OsEnv: osenv, CertSpec: certSpec})
+				// key-pair
+				outpath = fileName(concatSubdir(outfiles[outdir], outfiles[commonCsrOutDir]), certSpec.CsrConf + osenv.ShellExt)
+				writeTemplate(keypairTemplate, outpath, OsEnvCert{OsEnv: osenv, CertSpec: certSpec})
+			}
+		}
+
+		for _, certSpec := range certs.CommonEkuClientAuth {
+
+			if len(certSpec.Cn) > 0 {
+				// csr
+				outpath = fileName(concatSubdir(outfiles[outdir], outfiles[commonCsrOutDir]), certSpec.CsrConf)
+				writeTemplate(ekuClientAuth, outpath, certSpec)
+
+				// key-pair
+				outpath = fileName(concatSubdir(outfiles[outdir], outfiles[commonCsrOutDir]), certSpec.CsrConf + osenv.ShellExt)
+				writeTemplate(keypairTemplate, outpath, OsEnvCert{OsEnv: osenv, CertSpec: certSpec})
+			}
 		}
 	}
 
-	for _, certSpec := range certs.CommonEkuClientAuth {
-
-		if len(certSpec.Cn) > 0 {
-			// csr
-			outpath = fileName(concatSubdir(outfiles[outdir], outfiles[commonCsrOutDir]), certSpec.CsrConf)
-			writeTemplate(ekuClientAuth, outpath, certSpec)
-
-			// key-pair
-			outpath = fileName(concatSubdir(outfiles[outdir], outfiles[commonCsrOutDir]), certSpec.CsrConf + osenv.ShellExt)
-			writeTemplate(keypairTemplate, outpath, OsEnvCert{OsEnv: osenv, CertSpec: certSpec})
-		}
+	if certs.PublicUserFacingCerts {
+		// combine public-user-facing key and csr scripts
+		outpath = fileName(concatSubdir(outfiles[outdir], outfiles[customCsrOutDir]), tagOutputFileName("all-user-facing-public-csr", tag) + osenv.ShellExt)
+		writeTemplate(combinedCsrTemplate, outpath, OsEnvCerts{OsEnv: osenv, CertSpecs: certs.PublicUserFacingEkuServerAuth})
 	}
 
-	// combine public-user-facing key and csr scripts
-	outpath = fileName(concatSubdir(outfiles[outdir], outfiles[customCsrOutDir]), "all-user-facing-public-csr" + osenv.ShellExt)
-	writeTemplate(combinedCsrTemplate, outpath, OsEnvCerts{OsEnv: osenv, CertSpecs: certs.PublicUserFacingEkuServerAuth})
+	if certs.PublicCerts {
+		// combine public key and csr scripts
+		outpath = fileName(concatSubdir(outfiles[outdir], outfiles[customCsrOutDir]), tagOutputFileName("all-public-csr", tag) + osenv.ShellExt)
+		writeTemplate(combinedCsrTemplate, outpath, OsEnvCerts{OsEnv: osenv, CertSpecs: certs.PublicEkuServerAuth})
+	}
 
-	// combine public key and csr scripts
-	outpath = fileName(concatSubdir(outfiles[outdir], outfiles[customCsrOutDir]), "all-public-csr" + osenv.ShellExt)
-	writeTemplate(combinedCsrTemplate, outpath, OsEnvCerts{OsEnv: osenv, CertSpecs: certs.PublicEkuServerAuth})
+	if certs.CommonCerts {
+		// combine mutual-auth key and csr scripts
+		outpath = fileName(concatSubdir(outfiles[outdir], outfiles[commonCsrOutDir]), tagOutputFileName("all-mutual-auth-csr", tag) + osenv.ShellExt)
+		writeTemplate(combinedCsrTemplate, outpath, OsEnvCerts{OsEnv: osenv, CertSpecs: certs.MutualAuthEkuServerAuth})
 
-	// combine mutual-auth key and csr scripts
-	outpath = fileName(concatSubdir(outfiles[outdir], outfiles[commonCsrOutDir]), "all-mutual-auth-csr" + osenv.ShellExt)
-	writeTemplate(combinedCsrTemplate, outpath, OsEnvCerts{OsEnv: osenv, CertSpecs: certs.MutualAuthEkuServerAuth})
+		// combine common key and csr scripts
+		outpath = fileName(concatSubdir(outfiles[outdir], outfiles[commonCsrOutDir]), tagOutputFileName("all-common-csr", tag) + osenv.ShellExt)
+		writeTemplate(combinedCsrTemplate, outpath, OsEnvCerts{OsEnv: osenv, CertSpecs: certs.CommonEkuClientAuth})
+	}
 
-	// combine common key and csr scripts
-	outpath = fileName(concatSubdir(outfiles[outdir], outfiles[commonCsrOutDir]), "all-common-csr" + osenv.ShellExt)
-	writeTemplate(combinedCsrTemplate, outpath, OsEnvCerts{OsEnv: osenv, CertSpecs: certs.CommonEkuClientAuth})
+	if certs.PublicUserFacingCerts {
+		// apicup certs user-facing-public
+		outpath = fileName(outfiles["outdir"], tagOutputFileName(outfiles[userFacingPublicCertsOut], tag)) + osenv.ShellExt
+		writeTemplate(subsysCertsTemplate, outpath, OsEnvCerts{OsEnv: osenv, CertSpecs: certs.PublicUserFacingEkuServerAuth})
+	}
 
-	// apicup certs user-facing-public
-	outpath = fileName(outfiles["outdir"], outfiles[userFacingPublicCertsOut]) + osenv.ShellExt
-	writeTemplate(subsysCertsTemplate, outpath, OsEnvCerts{OsEnv: osenv, CertSpecs: certs.PublicUserFacingEkuServerAuth})
+	if certs.PublicCerts {
+		// apicup certs public
+		outpath = fileName(outfiles["outdir"], tagOutputFileName(outfiles[publicCertsOut], tag)) + osenv.ShellExt
+		writeTemplate(subsysCertsTemplate, outpath, OsEnvCerts{OsEnv: osenv, CertSpecs: certs.PublicEkuServerAuth})
+	}
 
-	// apicup certs public
-	outpath = fileName(outfiles["outdir"], outfiles[publicCertsOut]) + osenv.ShellExt
-	writeTemplate(subsysCertsTemplate, outpath, OsEnvCerts{OsEnv: osenv, CertSpecs: certs.PublicEkuServerAuth})
+	if certs.CommonCerts {
+		// apicup certs mutual auth
+		outpath = fileName(outfiles["outdir"], tagOutputFileName(outfiles[mutualAuthCertsOut], tag)) + osenv.ShellExt
+		writeTemplate(subsysCertsTemplate, outpath, OsEnvCerts{OsEnv: osenv, CertSpecs: certs.MutualAuthEkuServerAuth})
 
-	// apicup certs mutual auth
-	outpath = fileName(outfiles["outdir"], outfiles[mutualAuthCertsOut]) + osenv.ShellExt
-	writeTemplate(subsysCertsTemplate, outpath, OsEnvCerts{OsEnv: osenv, CertSpecs: certs.MutualAuthEkuServerAuth})
-
-	// apicup certs common
-	outpath = fileName(outfiles["outdir"], outfiles[commonCertsOut]) + osenv.ShellExt
-	writeTemplate(subsysCertsTemplate, outpath, OsEnvCerts{OsEnv: osenv, CertSpecs: certs.CommonEkuClientAuth})
+		// apicup certs common
+		outpath = fileName(outfiles["outdir"], tagOutputFileName(outfiles[commonCertsOut], tag)) + osenv.ShellExt
+		writeTemplate(subsysCertsTemplate, outpath, OsEnvCerts{OsEnv: osenv, CertSpecs: certs.CommonEkuClientAuth})
+	}
 
 	if len(certs.Certbot.CertDir) > 0 {
 
@@ -318,13 +357,17 @@ func outputCerts(certs *Certs, outfiles map[string]string, tbox *rice.Box) {
 		}
 
 		// apicup certs user-facing-public certbot
-		cbmap := updateFromCertbot(certs.PublicUserFacingEkuServerAuth, certs.Certbot)
-		outpath = fileName(outfiles["outdir"], outfiles[certbotUserFacingPublicCertOut]) + osenv.ShellExt
-		writeTemplate(subsysCertsTemplate, outpath, OsEnvCerts{OsEnv: osenv, CertSpecs: cbmap})
+		if certs.PublicUserFacingCerts {
+			cbmap := updateFromCertbot(certs.PublicUserFacingEkuServerAuth, certs.Certbot)
+			outpath = fileName(outfiles["outdir"], tagOutputFileName(outfiles[certbotUserFacingPublicCertOut], tag)) + osenv.ShellExt
+			writeTemplate(subsysCertsTemplate, outpath, OsEnvCerts{OsEnv: osenv, CertSpecs: cbmap})
+		}
 
 		// apicup certs public certbot
-		cbmap = updateFromCertbot(certs.PublicEkuServerAuth, certs.Certbot)
-		outpath = fileName(outfiles["outdir"], outfiles[certbotPublicCertOut]) + osenv.ShellExt
-		writeTemplate(subsysCertsTemplate, outpath, OsEnvCerts{OsEnv: osenv, CertSpecs: cbmap})
+		if certs.PublicCerts {
+			cbmap := updateFromCertbot(certs.PublicEkuServerAuth, certs.Certbot)
+			outpath = fileName(outfiles["outdir"], tagOutputFileName(outfiles[certbotPublicCertOut], tag)) + osenv.ShellExt
+			writeTemplate(subsysCertsTemplate, outpath, OsEnvCerts{OsEnv: osenv, CertSpecs: cbmap})
+		}
 	}
 }

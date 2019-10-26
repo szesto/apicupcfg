@@ -1,6 +1,7 @@
 {
     "InstallType": "k8s",
     "Version": {{ .Version | default "2018.1.x" | quote }},
+    "Tag": "tag",
 
     "Mode": {{ .Mode | default "dev|standard" | quote }},
 
@@ -22,29 +23,9 @@
             "CaChain": "chain.pem"
         },
 
-        "PublicUserFacingEkuServerAuth": {
-            "platform-api": {"Cn": "api.my.domain.com|blank"},
-            "consumer-api": {"Cn": "consumer.my.domain.com|blank"},
-            "api-manager-ui": {"Cn": "apim.my.domain.com|blank"},
-            "cloud-admin-ui": {"Cn": "cm.my.domain.com|blank"},
-            "portal-www-ingress": {"Cn": "portal.my.domain.com|blank"}
-        },
-
-        "PublicEkuServerAuth": {
-            "apic-gw-service-ingress": {"Cn": "gwd.my.domain.com|blank"}
-        },
-
-        "CommonEkuClientAuth": {
-            "portal-client": {"Cn": "portal-client"},
-            "analytics-client-client": {"Cn": "analytics-client-client"},
-            "analytics-ingestion-client": {"Cn": "analytics-ingestion-client"}
-        },
-
-        "MutualAuthEkuServerAuth": {
-            "portal-admin-ingress": {"Cn": "padmin.my.domain.com|blank"},
-            "analytics-client-ingress": {"Cn": "ac.my.domain.com|blank"},
-            "analytics-ingestion-ingress": {"Cn": "ai.my.domain.com|blank"}
-        }
+        "PublicUserFacingCerts": true,
+        "PublicCerts": false,
+        "CommonCerts": false
     },
 
     "Management": {

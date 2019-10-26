@@ -40,9 +40,9 @@ func OutputFiles(baseout string, commonCsrSubdir string, customCsrSubdir string)
 	return outfiles
 }
 
-func updateOutputFileName(outName string, subsysName string) string {
+func tagOutputFileName(outName string, tag string) string {
 	const dot = "."
-	return outName + dot + subsysName
+	return outName + dot + tag
 }
 
 func concatSubdir(dir1 string, dir2 string) string {

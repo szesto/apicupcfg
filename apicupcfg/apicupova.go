@@ -144,8 +144,15 @@ type PtlSubsysVm struct {
 	PortalWww string
 }
 
+type GwySubsysVm struct {
+	ApicGwService string
+}
+
 type SubsysVm struct {
 	InstallTypeHeader
+
+	Version string
+	Tag string
 
 	// defaults
 	Mode string // dev|standard
@@ -159,6 +166,7 @@ type SubsysVm struct {
 	Management MgtSubsysVm
 	Analytics  AltSubsysVm
 	Portal PtlSubsysVm
+	Gateway GwySubsysVm
 
 	OsEnv
 }
@@ -253,20 +261,19 @@ func ApplyTemplateVm(subsys *SubsysVm, outfiles map[string]string, tbox *rice.Bo
 	shellext := subsys.OsEnv.ShellExt
 
 	var outpath string
-	const dot = "."
 
 	if isManagement {
-		outpath = fileName(outfiles[outdir], updateOutputFileName(outfiles[managementOut], subsys.Management.SubsysName)) + shellext
+		outpath = fileName(outfiles[outdir], tagOutputFileName(outfiles[managementOut], subsys.Tag)) + shellext
 		writeTemplate(mgtt, outpath, subsys.Management)
 	}
 
 	if isAnalytics {
-		outpath = fileName(outfiles[outdir], updateOutputFileName(outfiles[analyticsOut], subsys.Analytics.SubsysName)) + shellext
+		outpath = fileName(outfiles[outdir], tagOutputFileName(outfiles[analyticsOut], subsys.Tag)) + shellext
 		writeTemplate(analyt, outpath, subsys.Analytics)
 	}
 
 	if isPortal {
-		outpath = fileName(outfiles[outdir], updateOutputFileName(outfiles[portalOut], subsys.Portal.SubsysName)) + shellext
+		outpath = fileName(outfiles[outdir], tagOutputFileName(outfiles[portalOut], subsys.Tag)) + shellext
 		writeTemplate(ptl, outpath, subsys.Portal)
 	}
 
@@ -276,12 +283,7 @@ func ApplyTemplateVm(subsys *SubsysVm, outfiles map[string]string, tbox *rice.Bo
 		writeTemplate(cloudinitt, outpath, subsys.CloudInit.InitValues)
 	}
 
-	// update cert specs
-	gwySubsysName := "gwy" // no gwy subystem in vm deployment
-
-	certs := updateCertSpecs(subsys.Certs, subsys.Management.SubsysName,
-		subsys.Analytics.SubsysName, subsys.Portal.SubsysName, gwySubsysName,
-		outfiles[commonCsrOutDir], outfiles[customCsrOutDir])
-
-	outputCerts(&certs, outfiles, tbox)
+	// certs
+	updateCertSpecs(&subsys.Certs, &subsys.Management, &subsys.Analytics, &subsys.Portal, &subsys.Gateway, outfiles[commonCsrOutDir], outfiles[customCsrOutDir])
+	outputCerts(&subsys.Certs, outfiles, subsys.Tag, tbox)
 }

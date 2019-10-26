@@ -148,6 +148,9 @@ type SubsysK8s struct {
 	InstallTypeHeader
 	OsEnv
 
+	Version string
+	Tag string
+
 	// defaults
 	Mode string
 	Namespace string
@@ -201,7 +204,7 @@ func ApplyTemplatesK8s(subsys *SubsysK8s, outfiles map[string]string, tbox *rice
 	outpath := ""
 
 	if isManagement {
-		outpath = fileName(outfiles[outdir], updateOutputFileName(outfiles[managementOut], subsys.Management.SubsysName)) + shellExt
+		outpath = fileName(outfiles[outdir], tagOutputFileName(outfiles[managementOut], subsys.Tag)) + shellExt
 		writeTemplate(mgtt, outpath, subsys.Management)
 
 		if len(subsys.Management.ExtraValuesFile) > 0 {
@@ -211,7 +214,7 @@ func ApplyTemplatesK8s(subsys *SubsysK8s, outfiles map[string]string, tbox *rice
 	}
 
 	if isGateway {
-		outpath = fileName(outfiles[outdir], updateOutputFileName(outfiles[gatewayOut], subsys.Gateway.SubsysName)) + shellExt
+		outpath = fileName(outfiles[outdir], tagOutputFileName(outfiles[gatewayOut], subsys.Tag)) + shellExt
 		writeTemplate(gwyt, outpath, subsys.Gateway)
 
 		if len(subsys.Gateway.ExtraValuesFile) > 0 {
@@ -221,7 +224,7 @@ func ApplyTemplatesK8s(subsys *SubsysK8s, outfiles map[string]string, tbox *rice
 	}
 
 	if isAnalytics {
-		outpath = fileName(outfiles[outdir], updateOutputFileName(outfiles[analyticsOut], subsys.Analytics.SubsysName)) + shellExt
+		outpath = fileName(outfiles[outdir], tagOutputFileName(outfiles[analyticsOut], subsys.Tag)) + shellExt
 		writeTemplate(alytt, outpath, subsys.Analytics)
 
 		if len(subsys.Analytics.ExtraValuesFile) > 0 {
@@ -231,7 +234,7 @@ func ApplyTemplatesK8s(subsys *SubsysK8s, outfiles map[string]string, tbox *rice
 	}
 
 	if isPortal {
-		outpath = fileName(outfiles[outdir], updateOutputFileName(outfiles[portalOut], subsys.Portal.SubsysName)) + shellExt
+		outpath = fileName(outfiles[outdir], tagOutputFileName(outfiles[portalOut], subsys.Tag)) + shellExt
 		writeTemplate(ptlt, outpath, subsys.Portal)
 
 		if len(subsys.Portal.ExtraValuesFile) > 0 {
@@ -241,9 +244,8 @@ func ApplyTemplatesK8s(subsys *SubsysK8s, outfiles map[string]string, tbox *rice
 	}
 
 	// certs
-	certs := updateCertSpecs(subsys.Certs, subsys.Management.SubsysName,
-		subsys.Analytics.SubsysName, subsys.Portal.SubsysName, subsys.Gateway.SubsysName,
+	updateCertSpecs(&subsys.Certs, &subsys.Management, &subsys.Analytics, &subsys.Portal, &subsys.Gateway,
 		outfiles[commonCsrOutDir], outfiles[customCsrOutDir])
 
-	outputCerts(&certs, outfiles, tbox)
+	outputCerts(&subsys.Certs, outfiles, subsys.Tag, tbox)
 }
