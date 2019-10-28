@@ -55,9 +55,9 @@ func Input() (input string, outdir string, commonCsrSubdir string, customCsrSubd
 	// define command line flags
 	inputArg := flag.String("config", "subsys-config.json", "-config input-file")
 	outdirArg := flag.String("out", "output", "-out output-directory")
-	commonCsrSubdirArg := flag.String("commoncsr", "common-csr", "-commoncsr subdir")
-	customCsrSubdirArg := flag.String("customcsr", "custom-csr", "-customcsr subdir")
-	projectSubdirArg := flag.String("project", "project", "-project subdir")
+	//commonCsrSubdirArg := flag.String("commoncsr", "common-csr", "-commoncsr subdir")
+	//customCsrSubdirArg := flag.String("customcsr", "custom-csr", "-customcsr subdir")
+	//projectSubdirArg := flag.String("project", "project", "-project subdir")
 
 	validateIpArg := flag.Bool("validateip", false, "-validateip [true] validate ip addresses")
 
@@ -72,9 +72,9 @@ func Input() (input string, outdir string, commonCsrSubdir string, customCsrSubd
 
 	input = *inputArg
 	outdir = *outdirArg
-	commonCsrSubdir = *commonCsrSubdirArg
-	customCsrSubdir = *customCsrSubdirArg
-	projectSubdir = *projectSubdirArg
+	commonCsrSubdir = "common-csr"
+	customCsrSubdir = "custom-csr"
+	projectSubdir = "project"
 	validateIp = *validateIpArg
 	initConfig = *initConfigArg
 	initConfigType = *initConfigTypeArg
