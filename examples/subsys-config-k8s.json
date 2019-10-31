@@ -54,6 +54,8 @@
         "ExternalCassandraHost": "ext.my.domain.com",
         "CreateCrd": true,
 
+        "CassandraEncryptionKeyFile": "encryption-secret.bin",
+
         "PlatformApi": "api.my.domain.com",
         "ApiManagerUi": "apim.my.domain.com",
         "CloudAdminUi": "cm.my.domain.com",

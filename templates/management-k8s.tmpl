@@ -51,3 +51,7 @@
 {{$apicup}} subsys set {{ $subsys }} api-manager-ui={{ .ApiManagerUi }}
 {{$apicup}} subsys set {{ $subsys }} cloud-admin-ui={{ .CloudAdminUi }}
 {{$apicup}} subsys set {{ $subsys }} consumer-api={{ .ConsumerApi }}
+
+{{ if .CassandraEncryptionKeyFile }}
+    {{$apicup}} certs set {{ $subsys }} encryption-secret ..{{$pathsep}}{{ .CassandraEncryptionKeyFile }}
+{{ end }}

@@ -120,6 +120,8 @@ type MgtSubsysVm struct {
 
 	CassandraBackup Backup
 
+	CassandraEncryptionKeyFile string
+
 	PlatformApi string
 	ApiManagerUi string
 	CloudAdminUi string

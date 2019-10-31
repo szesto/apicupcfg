@@ -78,6 +78,8 @@ type MgtSubsysK8s struct {
 	CassandraVolumeSizeGb int
 	ExternalCassandraHost string
 
+	CassandraEncryptionKeyFile string
+
 	CreateCrd bool
 
 	// endpoints
