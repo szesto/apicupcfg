@@ -24,46 +24,55 @@ func copyCert(certfile string, certs *Certs, mgmt ManagementSubsysDescriptor, al
 	// update cert specs
 	updateCertSpecs(certs, mgmt, alyt, ptl, gwy, commonCsrOutDir, customCsrOutDir)
 
+	// wildcard cert can match one or more hostnames
+	matchcount := 0
+
 	// public user facing certs
 	for _, certSpec := range certs.PublicUserFacingEkuServerAuth {
 		err := verifyCopyCertfile(certfile, cert, &certSpec)
-		if err == nil {
-			return
+		if err != nil {
+			verifyErrors = append(verifyErrors, err)
+		} else {
+			matchcount++
 		}
-		verifyErrors = append(verifyErrors, err)
 	}
 
 	// public certs
 	for _, certSpec := range certs.PublicEkuServerAuth {
 		err := verifyCopyCertfile(certfile, cert, &certSpec)
-		if err == nil {
-			return
+		if err != nil {
+			verifyErrors = append(verifyErrors, err)
+		} else {
+			matchcount++
 		}
-		verifyErrors = append(verifyErrors, err)
 	}
 
 	// mutual auth server auth
 	for _, certSpec := range certs.MutualAuthEkuServerAuth {
 		err := verifyCopyCertfile(certfile, cert, &certSpec)
-		if err == nil {
-			return
+		if err != nil {
+			verifyErrors = append(verifyErrors, err)
+		} else {
+			matchcount++
 		}
-		verifyErrors = append(verifyErrors, err)
 	}
 
 	// common client certs
 	for _, certSpec := range certs.CommonEkuClientAuth {
 		err := verifyCopyCertfile(certfile, cert, &certSpec)
-		if err == nil {
-			return
+		if err != nil {
+			verifyErrors = append(verifyErrors, err)
+		} else {
+			matchcount++
 		}
-		verifyErrors = append(verifyErrors, err)
 	}
 
 	// hostname did not verify for any cert
-	for _, err := range verifyErrors {
-		if err != nil {
-			fmt.Printf("failed verify... %v\n", err)
+	if matchcount == 0 {
+		for _, err := range verifyErrors {
+			if err != nil {
+				fmt.Printf("failed verify... %v\n", err)
+			}
 		}
 	}
 
