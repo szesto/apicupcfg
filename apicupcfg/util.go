@@ -65,6 +65,14 @@ func readFileBytes(file string) []byte {
 	return c
 }
 
+func writeFileBytes(file string, bytes []byte) {
+	err := ioutil.WriteFile(file, bytes, os.ModePerm)
+
+	if err != nil {
+		log.Fatal(err)
+	}
+}
+
 func CreateOutputDirectories(outdir string, commonCsrSubdir string, customCsrSubdir string, projectSubdir string) error {
 
 	basedir, err := filepath.Abs(outdir)
@@ -112,6 +120,11 @@ func readBytes(file string, tbox *rice.Box) []byte {
 		return bytesInBox(file, tbox)
 	}
 	return readFileBytes(file)
+}
+
+func copyFile(srcfile string, dstfile string) {
+	bytes := readFileBytes(srcfile)
+	writeFileBytes(dstfile, bytes)
 }
 
 func parseTemplate(tbox *rice.Box, file string) *template.Template {

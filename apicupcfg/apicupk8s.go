@@ -248,8 +248,13 @@ func ApplyTemplatesK8s(subsys *SubsysK8s, outfiles map[string]string, subsysOnly
 	// certs
 	if !subsysOnly {
 		updateCertSpecs(&subsys.Certs, &subsys.Management, &subsys.Analytics, &subsys.Portal, &subsys.Gateway,
-			outfiles[commonCsrOutDir], outfiles[customCsrOutDir])
+			outfiles[CommonCsrOutDir], outfiles[CustomCsrOutDir])
 
 		outputCerts(&subsys.Certs, outfiles, subsys.Tag, tbox)
 	}
+}
+
+func CopyCertK8s(copycert string, subsys *SubsysK8s, commonCsrDir string, customCsrDir string) {
+	copyCert(copycert, &subsys.Certs, &subsys.Management, &subsys.Analytics,
+		&subsys.Portal, &subsys.Gateway, commonCsrDir, customCsrDir)
 }

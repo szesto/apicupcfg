@@ -12,11 +12,10 @@ func main() {
 	tbox := rice.MustFindBox("../../templates")
 
 	// input: configuration file, output dir, csr subdirectories
-	input, outdir, commonCsrSubdir, customCsrSubdir, projectSubdir,
-	validateIp, initConfig, initConfigType, subsysOnly, certsOnly := apicupcfg.Input()
+	input, outdir, validateIp, initConfig, initConfigType, subsysOnly, certsOnly, copycert := apicupcfg.Input()
 
 	// output files
-	output := apicupcfg.OutputFiles(outdir, commonCsrSubdir, customCsrSubdir)
+	output := apicupcfg.OutputFiles(outdir)
 
 	// install type
 	installType := apicupcfg.InstallTypeUknown
@@ -38,13 +37,21 @@ func main() {
 
 		} else {
 			// create output directories
-			err := apicupcfg.CreateOutputDirectories(outdir, commonCsrSubdir, customCsrSubdir, projectSubdir)
+			err := apicupcfg.CreateOutputDirectories(outdir, apicupcfg.CommonCsrOutDir,
+				apicupcfg.CustomCsrOutDir, apicupcfg.ProjectOutDir)
+
 			if err != nil {
 				log.Fatal(err)
 			}
 
-			// apply templates
-			apicupcfg.ApplyTemplateVm(subsysvm, output, subsysOnly, certsOnly, tbox)
+			if len(copycert) > 0 {
+				// copy certs
+				apicupcfg.CopyCertVm(copycert, subsysvm, apicupcfg.CommonCsrOutDir, apicupcfg.CustomCsrOutDir)
+
+			} else {
+				// apply templates
+				apicupcfg.ApplyTemplateVm(subsysvm, output, subsysOnly, certsOnly, tbox)
+			}
 		}
 
 	case apicupcfg.InstallTypeK8s:
@@ -57,13 +64,21 @@ func main() {
 
 		} else {
 			// create output directories
-			err := apicupcfg.CreateOutputDirectories(outdir, commonCsrSubdir, customCsrSubdir, projectSubdir)
+			err := apicupcfg.CreateOutputDirectories(outdir, apicupcfg.CommonCsrOutDir,
+				apicupcfg.CustomCsrOutDir, apicupcfg.ProjectOutDir)
+
 			if err != nil {
 				log.Fatal(err)
 			}
 
-			// apply templates
-			apicupcfg.ApplyTemplatesK8s(subsysk8s, output, subsysOnly, certsOnly, tbox)
+			if len(copycert) > 0 {
+				// copy certs
+				apicupcfg.CopyCertK8s(copycert, subsysk8s, apicupcfg.CommonCsrOutDir, apicupcfg.CustomCsrOutDir)
+
+			} else {
+				// apply templates
+				apicupcfg.ApplyTemplatesK8s(subsysk8s, output, subsysOnly, certsOnly, tbox)
+			}
 		}
 
 	case apicupcfg.InstallTypeInit:

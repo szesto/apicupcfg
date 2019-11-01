@@ -260,11 +260,11 @@ func outputCerts(certs *Certs, outfiles map[string]string, tag string, tbox *ric
 
 			if len(certSpec.Cn) > 0 {
 				// csr
-				outpath = fileName(concatSubdir(outfiles[outdir], outfiles[customCsrOutDir]), certSpec.CsrConf)
+				outpath = fileName(concatSubdir(outfiles[outdir], outfiles[CustomCsrOutDir]), certSpec.CsrConf)
 				writeTemplate(ekuServerAuth, outpath, certSpec)
 
 				// key-pair
-				outpath = fileName(concatSubdir(outfiles[outdir], outfiles[customCsrOutDir]), certSpec.CsrConf + osenv.ShellExt)
+				outpath = fileName(concatSubdir(outfiles[outdir], outfiles[CustomCsrOutDir]), certSpec.CsrConf + osenv.ShellExt)
 				writeTemplate(keypairTemplate, outpath, OsEnvCert{OsEnv: osenv, CertSpec: certSpec})
 			}
 		}
@@ -275,11 +275,11 @@ func outputCerts(certs *Certs, outfiles map[string]string, tag string, tbox *ric
 
 			if len(certSpec.Cn) > 0 {
 				// csr
-				outpath = fileName(concatSubdir(outfiles[outdir], outfiles[customCsrOutDir]), certSpec.CsrConf)
+				outpath = fileName(concatSubdir(outfiles[outdir], outfiles[CustomCsrOutDir]), certSpec.CsrConf)
 				writeTemplate(ekuServerAuth, outpath, certSpec)
 
 				// key-pair
-				outpath = fileName(concatSubdir(outfiles[outdir], outfiles[customCsrOutDir]), certSpec.CsrConf + osenv.ShellExt)
+				outpath = fileName(concatSubdir(outfiles[outdir], outfiles[CustomCsrOutDir]), certSpec.CsrConf + osenv.ShellExt)
 				writeTemplate(keypairTemplate, outpath, OsEnvCert{OsEnv: osenv, CertSpec: certSpec})
 			}
 		}
@@ -290,11 +290,11 @@ func outputCerts(certs *Certs, outfiles map[string]string, tag string, tbox *ric
 
 			if len(certSpec.Cn) > 0 {
 				// csr
-				outpath = fileName(concatSubdir(outfiles[outdir], outfiles[commonCsrOutDir]), certSpec.CsrConf)
+				outpath = fileName(concatSubdir(outfiles[outdir], outfiles[CommonCsrOutDir]), certSpec.CsrConf)
 				writeTemplate(ekuServerAuth, outpath, certSpec)
 
 				// key-pair
-				outpath = fileName(concatSubdir(outfiles[outdir], outfiles[commonCsrOutDir]), certSpec.CsrConf + osenv.ShellExt)
+				outpath = fileName(concatSubdir(outfiles[outdir], outfiles[CommonCsrOutDir]), certSpec.CsrConf + osenv.ShellExt)
 				writeTemplate(keypairTemplate, outpath, OsEnvCert{OsEnv: osenv, CertSpec: certSpec})
 			}
 		}
@@ -303,11 +303,11 @@ func outputCerts(certs *Certs, outfiles map[string]string, tag string, tbox *ric
 
 			if len(certSpec.Cn) > 0 {
 				// csr
-				outpath = fileName(concatSubdir(outfiles[outdir], outfiles[commonCsrOutDir]), certSpec.CsrConf)
+				outpath = fileName(concatSubdir(outfiles[outdir], outfiles[CommonCsrOutDir]), certSpec.CsrConf)
 				writeTemplate(ekuClientAuth, outpath, certSpec)
 
 				// key-pair
-				outpath = fileName(concatSubdir(outfiles[outdir], outfiles[commonCsrOutDir]), certSpec.CsrConf + osenv.ShellExt)
+				outpath = fileName(concatSubdir(outfiles[outdir], outfiles[CommonCsrOutDir]), certSpec.CsrConf + osenv.ShellExt)
 				writeTemplate(keypairTemplate, outpath, OsEnvCert{OsEnv: osenv, CertSpec: certSpec})
 			}
 		}
@@ -315,23 +315,23 @@ func outputCerts(certs *Certs, outfiles map[string]string, tag string, tbox *ric
 
 	if certs.PublicUserFacingCerts {
 		// combine public-user-facing key and csr scripts
-		outpath = fileName(concatSubdir(outfiles[outdir], outfiles[customCsrOutDir]), tagOutputFileName("all-user-facing-public-csr", tag) + osenv.ShellExt)
+		outpath = fileName(concatSubdir(outfiles[outdir], outfiles[CustomCsrOutDir]), tagOutputFileName("all-user-facing-public-csr", tag) + osenv.ShellExt)
 		writeTemplate(combinedCsrTemplate, outpath, OsEnvCerts{OsEnv: osenv, CertSpecs: certs.PublicUserFacingEkuServerAuth})
 	}
 
 	if certs.PublicCerts {
 		// combine public key and csr scripts
-		outpath = fileName(concatSubdir(outfiles[outdir], outfiles[customCsrOutDir]), tagOutputFileName("all-public-csr", tag) + osenv.ShellExt)
+		outpath = fileName(concatSubdir(outfiles[outdir], outfiles[CustomCsrOutDir]), tagOutputFileName("all-public-csr", tag) + osenv.ShellExt)
 		writeTemplate(combinedCsrTemplate, outpath, OsEnvCerts{OsEnv: osenv, CertSpecs: certs.PublicEkuServerAuth})
 	}
 
 	if certs.CommonCerts {
 		// combine mutual-auth key and csr scripts
-		outpath = fileName(concatSubdir(outfiles[outdir], outfiles[commonCsrOutDir]), tagOutputFileName("all-mutual-auth-csr", tag) + osenv.ShellExt)
+		outpath = fileName(concatSubdir(outfiles[outdir], outfiles[CommonCsrOutDir]), tagOutputFileName("all-mutual-auth-csr", tag) + osenv.ShellExt)
 		writeTemplate(combinedCsrTemplate, outpath, OsEnvCerts{OsEnv: osenv, CertSpecs: certs.MutualAuthEkuServerAuth})
 
 		// combine common key and csr scripts
-		outpath = fileName(concatSubdir(outfiles[outdir], outfiles[commonCsrOutDir]), tagOutputFileName("all-common-csr", tag) + osenv.ShellExt)
+		outpath = fileName(concatSubdir(outfiles[outdir], outfiles[CommonCsrOutDir]), tagOutputFileName("all-common-csr", tag) + osenv.ShellExt)
 		writeTemplate(combinedCsrTemplate, outpath, OsEnvCerts{OsEnv: osenv, CertSpecs: certs.CommonEkuClientAuth})
 	}
 

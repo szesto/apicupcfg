@@ -295,7 +295,12 @@ func ApplyTemplateVm(subsys *SubsysVm, outfiles map[string]string, subsysOnly, c
 
 	// certs
 	if !subsysOnly {
-		updateCertSpecs(&subsys.Certs, &subsys.Management, &subsys.Analytics, &subsys.Portal, &subsys.Gateway, outfiles[commonCsrOutDir], outfiles[customCsrOutDir])
+		updateCertSpecs(&subsys.Certs, &subsys.Management, &subsys.Analytics, &subsys.Portal, &subsys.Gateway, outfiles[CommonCsrOutDir], outfiles[CustomCsrOutDir])
 		outputCerts(&subsys.Certs, outfiles, subsys.Tag, tbox)
 	}
+}
+
+func CopyCertVm(copycert string, subsys *SubsysVm, commonCsrDir string, customCsrDir string) {
+	copyCert(copycert, &subsys.Certs, &subsys.Management, &subsys.Analytics,
+		&subsys.Portal, &subsys.Gateway, commonCsrDir, customCsrDir)
 }
