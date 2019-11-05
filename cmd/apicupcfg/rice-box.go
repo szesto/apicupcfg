@@ -48,9 +48,9 @@ func init() {
 	}
 	file8 := &embedded.EmbeddedFile{
 		Filename:    "extra-values.tmpl",
-		FileModTime: time.Unix(1571805848, 0),
+		FileModTime: time.Unix(1572973028, 0),
 
-		Content: string("---\n{{- $a := list 0 . }}\n{{- template \"map2yml\" $a }}\n..."),
+		Content: string("{{- $a := list 0 . }}\n{{- template \"map2yml\" $a }}"),
 	}
 	file9 := &embedded.EmbeddedFile{
 		Filename:    "gateway-k8s.tmpl",
@@ -116,7 +116,7 @@ func init() {
 	// define dirs
 	dir1 := &embedded.EmbeddedDir{
 		Filename:   "",
-		DirModTime: time.Unix(1572486449, 0),
+		DirModTime: time.Unix(1572973028, 0),
 		ChildFiles: []*embedded.EmbeddedFile{
 			file2, // "analytics-k8s.tmpl"
 			file3, // "analytics-vm.tmpl"
@@ -145,7 +145,7 @@ func init() {
 	// register embeddedBox
 	embedded.RegisterEmbeddedBox(`../../templates`, &embedded.EmbeddedBox{
 		Name: `../../templates`,
-		Time: time.Unix(1572486449, 0),
+		Time: time.Unix(1572973028, 0),
 		Dirs: map[string]*embedded.EmbeddedDir{
 			"": dir1,
 		},
