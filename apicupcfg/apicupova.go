@@ -300,7 +300,14 @@ func ApplyTemplateVm(subsys *SubsysVm, outfiles map[string]string, subsysOnly, c
 	}
 }
 
-func CopyCertVm(copycert string, subsys *SubsysVm, commonCsrDir string, customCsrDir string) {
-	copyCert(copycert, &subsys.Certs, &subsys.Management, &subsys.Analytics,
-		&subsys.Portal, &subsys.Gateway, commonCsrDir, customCsrDir)
+func CopyCertVm(certfile string, isdir bool, subsys *SubsysVm, commonCsrDir string, customCsrDir string) error {
+
+	if isdir {
+		return copyCerts(certfile, &subsys.Certs, &subsys.Management, &subsys.Analytics,
+			&subsys.Portal, &subsys.Gateway, commonCsrDir, customCsrDir)
+
+	} else {
+		return copyCert(certfile, &subsys.Certs, &subsys.Management, &subsys.Analytics,
+			&subsys.Portal, &subsys.Gateway, commonCsrDir, customCsrDir)
+	}
 }

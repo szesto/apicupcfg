@@ -5,18 +5,69 @@ import (
 	"encoding/pem"
 	"errors"
 	"fmt"
-	"log"
+	"io/ioutil"
 	"os"
 	"strings"
 )
 
+func copyCerts(certdir string, certs *Certs, mgmt ManagementSubsysDescriptor, alyt AnalyticsSubsysDescriptor,
+	ptl PortalSubsysDescriptor, gwy GatewaySubsysDescriptor, commonCsrOutDir string, customCsrOutDir string) error {
+
+	// read certs dir
+	infos, err := ioutil.ReadDir(certdir)
+	if err != nil {
+		return err
+	}
+
+	for _, info := range infos {
+
+		if info.IsDir() {
+			continue
+		}
+
+		certfile := certdir + string(os.PathSeparator) + info.Name()
+
+		err = copyCert(certfile, certs, mgmt, alyt, ptl, gwy, commonCsrOutDir, customCsrOutDir)
+		if err != nil {
+			fmt.Printf("%v\n", err)
+		}
+	}
+
+	return nil
+}
+
 func copyCert(certfile string, certs *Certs, mgmt ManagementSubsysDescriptor, alyt AnalyticsSubsysDescriptor,
-	ptl PortalSubsysDescriptor, gwy GatewaySubsysDescriptor, commonCsrOutDir string, customCsrOutDir string) {
+	ptl PortalSubsysDescriptor, gwy GatewaySubsysDescriptor, commonCsrOutDir string, customCsrOutDir string) error {
+
+	fmt.Printf("\nprocessing file... '%s'\n", certfile)
 
 	// parse cert file
-	cert, err := ParseCertFile(certfile)
+	// cert file could be a chain with the cert and ca
+	certlist, blockTypes, err := ParseCertFile2(certfile)
 	if err != nil {
-		log.Fatalf("%v\n", err)
+		return err
+		//log.Fatalf("%v\n", err)
+	}
+
+	// it is possible that certlist is empty eg for private key file
+	if len(certlist) == 0 {
+		fmt.Printf("%s\n", "skip...")
+		return nil
+	}
+
+	// todo: copy first cert only...
+	if len(certlist) > 1 {
+		return fmt.Errorf("file '%s' is a cert chain... %v, one cert expected", certfile, blockTypes)
+		//log.Fatalf("file '%s' is a cert chain... %v, one cert expected...\n", certfile, blockTypes)
+	}
+
+	cert := certlist[0]
+
+	if cert.IsCA {
+		return fmt.Errorf("file '%s' is ca cert..., Subject CN: %v, Issuer CN: %v",
+			certfile, cert.Subject.CommonName, cert.Issuer.CommonName)
+		//log.Fatalf("file '%s' is ca cert..., Subject CN: %v, Issuer CN: %v\n",
+		//	certfile, cert.Subject.CommonName, cert.Issuer.CommonName)
 	}
 
 	var verifyErrors []error = make([]error, 100)
@@ -67,7 +118,7 @@ func copyCert(certfile string, certs *Certs, mgmt ManagementSubsysDescriptor, al
 		}
 	}
 
-	// hostname did not verify for any cert
+	// no hostname match for the cert, show errors
 	if matchcount == 0 {
 		for _, err := range verifyErrors {
 			if err != nil {
@@ -76,7 +127,7 @@ func copyCert(certfile string, certs *Certs, mgmt ManagementSubsysDescriptor, al
 		}
 	}
 
-	return
+	return nil
 }
 
 func verifyCopyCertfile(certfile string, cert *x509.Certificate, certSpec *CertSpec) error {
@@ -97,15 +148,85 @@ func verifyCopyCertfile(certfile string, cert *x509.Certificate, certSpec *CertS
 
 	//fmt.Printf("failed hostname verify %s..., %v\n", certSpec.Cn, err)
 	return err
+}
 
+func ParseCertFile2(certfile string) ([]*x509.Certificate, []string, error) {
+
+	blocks, err := ReadDecodeCertFile2(certfile)
+
+	if err != nil {
+		return nil, nil, err
+	}
+
+	certs, blockTypes, err := ParseCertBytes2(blocks)
+	return certs, blockTypes, err
+}
+
+func ReadDecodeCertFile2(certfile string) ([]*pem.Block, error) {
+
+	certbytes := readFileBytes(certfile)
+
+	bytes := certbytes
+
+	blocks := make([]*pem.Block, 0, 10)
+
+	for {
+		block, rest := pem.Decode(bytes)
+
+		if block == nil {
+			var b strings.Builder
+			_, _ = fmt.Fprintf(&b, "failed to pem decode file %s", certfile)
+			//fmt.Printf("%s\n", b.String())
+			return nil, errors.New(b.String())
+		}
+
+		blocks = append(blocks, block)
+
+		if rest != nil && len(rest) > 0 {
+			bytes = rest
+
+		} else {
+			// done...
+			return blocks, nil
+		}
+	}
+}
+
+func ParseCertBytes2(blocks []*pem.Block) ([]*x509.Certificate, []string, error) {
+
+	certs := make([]*x509.Certificate, 0, 100)
+	blockTypes := make([]string, 0, 100)
+
+	for _, block := range blocks {
+		//fmt.Printf("parsing block... %v\n", block.Type)
+
+		if block.Type == "PRIVATE KEY" {
+			// skip
+			continue
+		}
+
+		cert, err := x509.ParseCertificate(block.Bytes)
+		if err != nil {
+			return nil, nil, err
+		}
+
+		certs = append(certs, cert)
+		blockTypes = append(blockTypes, block.Type)
+	}
+
+	return certs, blockTypes, nil
 }
 
 func ParseCertFile(certfile string) (*x509.Certificate, error) {
+
 	bytes, err := ReadDecodeCertFile(certfile)
-	if err == nil {
-		return ParseCertBytes(bytes)
+
+	if err != nil {
+		return nil, err
 	}
-	return nil, err
+
+	certs, err := ParseCertBytes(bytes)
+	return certs, err
 }
 
 func ReadDecodeCertFile(certfile string) ([]byte, error) {
@@ -115,8 +236,8 @@ func ReadDecodeCertFile(certfile string) ([]byte, error) {
 	block, _ := pem.Decode(certbytes)
 	if block == nil {
 		var b strings.Builder
-		_, _ = fmt.Fprintf(&b, "failed to pem decode cert file %s", certfile)
-		fmt.Printf("%s\n", b.String())
+		_, _ = fmt.Fprintf(&b, "failed to pem decode file %s", certfile)
+		//fmt.Printf("%s\n", b.String())
 		return nil, errors.New(b.String())
 	}
 

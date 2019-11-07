@@ -52,7 +52,7 @@ func concatSubdir(dir1 string, dir2 string) string {
 }
 
 func Input() (input string, outdir string, validateIp bool, initConfig bool, initConfigType string,
-	subsysOnly bool, certsOnly bool, copycert string) {
+	subsysOnly bool, certsOnly bool, certcopy string, certdir string) {
 
 	// define command line flags
 	inputArg := flag.String("config", "subsys-config.json", "-config input-file")
@@ -69,7 +69,8 @@ func Input() (input string, outdir string, validateIp bool, initConfig bool, ini
 	subsysOnlyArg := flag.Bool("subsys", false, "-subsys [true] generate subsystem scripts only")
 	certsOnlyArg := flag.Bool("certs", false, "-certs [true] generate certs scripts only")
 
-	copyCertArg := flag.String("copycert", "", "-copycert certfile copy certificate to destination")
+	certCopyArg := flag.String("certcopy", "", "-certcopy certfile copy certificate to destination")
+	certDirArg := flag.String("certdir", "","-certdir dir copy all certificate files in dir to destination")
 
 	// scan command line args
 	flag.Parse()
@@ -84,7 +85,8 @@ func Input() (input string, outdir string, validateIp bool, initConfig bool, ini
 	initConfigType = *initConfigTypeArg
 	subsysOnly = *subsysOnlyArg
 	certsOnly = *certsOnlyArg
-	copycert = *copyCertArg
+	certcopy = *certCopyArg
+	certdir = *certDirArg
 
-	return input, outdir, validateIp, initConfig, initConfigType, subsysOnly, certsOnly, copycert
+	return input, outdir, validateIp, initConfig, initConfigType, subsysOnly, certsOnly, certcopy, certdir
 }

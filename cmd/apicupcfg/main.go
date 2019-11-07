@@ -12,7 +12,7 @@ func main() {
 	tbox := rice.MustFindBox("../../templates")
 
 	// input: configuration file, output dir, csr subdirectories
-	input, outdir, validateIp, initConfig, initConfigType, subsysOnly, certsOnly, copycert := apicupcfg.Input()
+	input, outdir, validateIp, initConfig, initConfigType, subsysOnly, certsOnly, certcopy, certdir := apicupcfg.Input()
 
 	// output files
 	output := apicupcfg.OutputFiles(outdir)
@@ -44,9 +44,31 @@ func main() {
 				log.Fatal(err)
 			}
 
-			if len(copycert) > 0 {
+			if len(certcopy) > 0 {
+
+				if len(certcopy) > 0 && len(certdir) > 0 {
+					log.Fatalf("%s\n", "-certcopy and -certdir options are mutually exclusive...")
+				}
+
 				// copy certs
-				apicupcfg.CopyCertVm(copycert, subsysvm, apicupcfg.CommonCsrOutDir, apicupcfg.CustomCsrOutDir)
+				err = apicupcfg.CopyCertVm(certcopy, false, subsysvm, apicupcfg.CommonCsrOutDir, apicupcfg.CustomCsrOutDir)
+
+				if err != nil {
+					log.Fatal(err)
+				}
+
+			} else if len(certdir) > 0 {
+
+				if len(certcopy) > 0 && len(certdir) > 0 {
+					log.Fatalf("%s\n", "-certcopy and -certdir options are mutually exclusive...")
+				}
+
+				// copy certs in cert dir
+				err = apicupcfg.CopyCertVm(certdir, true, subsysvm, apicupcfg.CommonCsrOutDir, apicupcfg.CustomCsrOutDir)
+
+				if err != nil {
+					log.Fatal(err)
+				}
 
 			} else {
 				// apply templates
@@ -71,9 +93,31 @@ func main() {
 				log.Fatal(err)
 			}
 
-			if len(copycert) > 0 {
+			if len(certcopy) > 0 {
+
+				if len(certcopy) > 0 && len(certdir) > 0 {
+					log.Fatalf("%s\n", "-certcopy and -certdir options are mutually exclusive...")
+				}
+
 				// copy certs
-				apicupcfg.CopyCertK8s(copycert, subsysk8s, apicupcfg.CommonCsrOutDir, apicupcfg.CustomCsrOutDir)
+				err = apicupcfg.CopyCertK8s(certcopy, false, subsysk8s, apicupcfg.CommonCsrOutDir, apicupcfg.CustomCsrOutDir)
+
+				if err != nil {
+					log.Fatal(err)
+				}
+
+			} else if len(certdir) > 0 {
+
+				if len(certcopy) > 0 && len(certdir) > 0 {
+					log.Fatalf("%s\n", "-certcopy and -certdir options are mutually exclusive...")
+				}
+
+				// copy certs in cert dir
+				err = apicupcfg.CopyCertK8s(certdir, true, subsysk8s, apicupcfg.CommonCsrOutDir, apicupcfg.CustomCsrOutDir)
+
+				if err != nil {
+					log.Fatal(err)
+				}
 
 			} else {
 				// apply templates

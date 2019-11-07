@@ -254,7 +254,14 @@ func ApplyTemplatesK8s(subsys *SubsysK8s, outfiles map[string]string, subsysOnly
 	}
 }
 
-func CopyCertK8s(copycert string, subsys *SubsysK8s, commonCsrDir string, customCsrDir string) {
-	copyCert(copycert, &subsys.Certs, &subsys.Management, &subsys.Analytics,
-		&subsys.Portal, &subsys.Gateway, commonCsrDir, customCsrDir)
+func CopyCertK8s(certfile string, isdir bool, subsys *SubsysK8s, commonCsrDir string, customCsrDir string) error {
+
+	if isdir {
+		return copyCerts(certfile, &subsys.Certs, &subsys.Management, &subsys.Analytics,
+			&subsys.Portal, &subsys.Gateway, commonCsrDir, customCsrDir)
+
+	} else {
+		return copyCert(certfile, &subsys.Certs, &subsys.Management, &subsys.Analytics,
+			&subsys.Portal, &subsys.Gateway, commonCsrDir, customCsrDir)
+	}
 }

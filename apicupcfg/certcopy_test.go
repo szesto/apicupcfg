@@ -33,3 +33,15 @@ func TestCertCopy1(t *testing.T) {
 		}
 	}
 }
+
+func TestCertVerify1(t *testing.T) {
+
+	certfile := "/Users/simon/local/aws/certbot/letsencrypt/live/apim.cloud/cert.pem"
+	chain := "/Users/simon/local/aws/certbot/letsencrypt/live/apim.cloud/chain.pem"
+	//rootca := "/Users/simon/local/aws/certbot/letsencrypt/live/apim.cloud/fullchain.pem"
+	rootca := "/Users/simon/local/aws/certbot/letsencrypt/live/apim.cloud/rootca.pem"
+
+	err := CertVerify(certfile, chain, rootca)
+
+	fmt.Printf("%v\n", err)
+}
