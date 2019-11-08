@@ -16,6 +16,21 @@ func main() {
 	certcopy, certdir, certverify, certfile, cafile, rootcafile, noexpire, certconcat,
 	gen := apicupcfg.Input()
 
+	// input actions
+	isValidateIpActionf := func() bool {return validateIp}
+	isCertCopyActionf := func() bool {return len(certcopy) > 0}
+	isCertDirActionf := func() bool {return len(certdir) > 0}
+	isCertVerifyActionf := func() bool {return certverify}
+	isCertConcatActionf := func() bool {return certconcat}
+	isGenActionf := func() bool {return gen}
+
+	// check input actions
+	if !isValidateIpActionf() && !isCertCopyActionf() && !isCertDirActionf() &&
+		!isCertVerifyActionf() && !isCertConcatActionf() && !isGenActionf() {
+
+		log.Fatalf("no action specified... use apicupcfg -h for help...")
+	}
+
 	// output files
 	output := apicupcfg.OutputFiles(outdir)
 
@@ -27,20 +42,6 @@ func main() {
 
 	} else {
 		installType = apicupcfg.InstallType(input)
-	}
-
-	// top level actions
-	isValidateIpActionf := func() bool {return validateIp}
-	isCertCopyActionf := func() bool {return len(certcopy) > 0}
-	isCertDirActionf := func() bool {return len(certdir) > 0}
-	isCertVerifyActionf := func() bool {return certverify}
-	isCertConcatActionf := func() bool {return certconcat}
-	isGenActionf := func() bool {return gen}
-
-	if !isValidateIpActionf() && !isCertCopyActionf() && !isCertDirActionf() &&
-		!isCertVerifyActionf() && !isCertConcatActionf() && !isGenActionf() {
-
-		log.Fatalf("no action specified... use apicupcfg -h for help...")
 	}
 
 	switch installType {
