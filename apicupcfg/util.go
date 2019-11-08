@@ -127,6 +127,24 @@ func copyFile(srcfile string, dstfile string) {
 	writeFileBytes(dstfile, bytes)
 }
 
+func concatFiles(srcfile1 string, srcfile2 string, dstfile string) {
+
+	bytes1 := readFileBytes(srcfile1)
+	bytes2 := readFileBytes(srcfile2)
+
+	bytes := make([]byte, 0, len(bytes1) + len(bytes2))
+
+	for _, b := range bytes1 {
+		bytes = append(bytes, b)
+	}
+
+	for _, b := range bytes2 {
+		bytes = append(bytes, b)
+	}
+
+	writeFileBytes(dstfile, bytes)
+}
+
 func parseTemplate(tbox *rice.Box, file string) *template.Template {
 
 	str := string(readBytes(file, tbox))

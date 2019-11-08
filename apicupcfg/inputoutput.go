@@ -52,7 +52,9 @@ func concatSubdir(dir1 string, dir2 string) string {
 }
 
 func Input() (input string, outdir string, validateIp bool, initConfig bool, initConfigType string,
-	subsysOnly bool, certsOnly bool, certcopy string, certdir string) {
+	subsysOnly bool, certsOnly bool, certcopy string, certdir string,
+	certverify bool, certfile, cafile string, rootcafile string, noexpire bool,
+	certconcat bool, gen bool) {
 
 	// define command line flags
 	inputArg := flag.String("config", "subsys-config.json", "-config input-file")
@@ -72,6 +74,20 @@ func Input() (input string, outdir string, validateIp bool, initConfig bool, ini
 	certCopyArg := flag.String("certcopy", "", "-certcopy certfile copy certificate to destination")
 	certDirArg := flag.String("certdir", "","-certdir dir copy all certificate files in dir to destination")
 
+	// -certverify [-cert] ... -ca ... -rootca ... -noexpire
+	// -certconcat -ca ... -rootca ... -noexpire
+	// -gen
+
+	certverifyArg := flag.Bool("certverify", false, "-certvalidate, validate cert")
+	certfileArg := flag.String("cert", "", "-cert cerfile, cert file name")
+	cafileArg := flag.String("ca", "", "-ca cafile, ca file, use with -certverify")
+	rootcafileArg := flag.String("rootca", "", "-rootca file, root ca file, use with -certverify")
+	noexpireArg := flag.Bool("noexpire", false,"-noexpire, check for cert expiration")
+
+	certconcatArg := flag.Bool("certconcat", false, "-certconcat, concatinate ca certs")
+
+	genArg := flag.Bool("gen", false, "-gen, generate scripts")
+
 	// scan command line args
 	flag.Parse()
 
@@ -88,5 +104,14 @@ func Input() (input string, outdir string, validateIp bool, initConfig bool, ini
 	certcopy = *certCopyArg
 	certdir = *certDirArg
 
-	return input, outdir, validateIp, initConfig, initConfigType, subsysOnly, certsOnly, certcopy, certdir
+	certverify = *certverifyArg
+	certfile = *certfileArg
+	cafile = *cafileArg
+	rootcafile = *rootcafileArg
+	noexpire = *noexpireArg
+	certconcat = *certconcatArg
+	gen = *genArg
+
+	return input, outdir, validateIp, initConfig, initConfigType, subsysOnly, certsOnly, certcopy, certdir,
+		certverify, certfile, cafile, rootcafile, noexpire, certconcat, gen
 }

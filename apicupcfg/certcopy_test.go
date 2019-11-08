@@ -41,7 +41,27 @@ func TestCertVerify1(t *testing.T) {
 	//rootca := "/Users/simon/local/aws/certbot/letsencrypt/live/apim.cloud/fullchain.pem"
 	rootca := "/Users/simon/local/aws/certbot/letsencrypt/live/apim.cloud/rootca.pem"
 
-	err := CertVerify(certfile, chain, rootca)
+	noexpire := true
+	isvalid, err := CertVerify(certfile, chain, rootca, noexpire)
 
-	fmt.Printf("%v\n", err)
+	if err != nil {
+		fmt.Printf("%v\n", err)
+
+	} else if isvalid {
+		fmt.Printf("certificate '%s' verifies...\n", certfile)
+
+	} else {
+		fmt.Printf("certificate '%s' does not verify...\n", certfile)
+	}
+}
+
+func TestCertConcat1(t *testing.T) {
+
+	chain := "/Users/simon/local/aws/certbot/letsencrypt/live/apim.cloud/chain.pem"
+	rootca := "/Users/simon/local/aws/certbot/letsencrypt/live/apim.cloud/rootca.pem"
+
+	err := CertConcat(chain, rootca, "ca-root-first.crt", "/tmp", "common-csr", "custom-csr")
+	if err != nil {
+		fmt.Printf("%v\n", err)
+	}
 }

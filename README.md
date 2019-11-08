@@ -81,10 +81,13 @@ To validate ip configuration for ova deployments:
 `apicupcfg -config /path-to/apicup-out-vm/subsys-input-vm.json -validateip true`
 
 Certificate scripts are separate from subsystem configuration scripts.
-`apicupcfg -certcopy cerftile.pem`
-`apicupcfg -certdir certdir`
 
 **Command line reference.**
+
+`apicupcfg -certcopy cerftile.pem`
+`apicupcfg -certdir certdir`
+`apicupcfg -certvalidate [-cert cert.pem] -ca ca.pem -root rootca.pem`
+`apicupcfg -certconcat -ca ca.pem -root rootca.pem`
 
 @todo
 
