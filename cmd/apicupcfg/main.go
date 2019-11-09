@@ -109,7 +109,7 @@ func main() {
 				// cert concat action
 
 				err = apicupcfg.CertConcat(cafile, rootcafile, subsysvm.Certs.CaFile, outdir,
-					apicupcfg.CommonCsrOutDir, apicupcfg.CustomCsrOutDir)
+					apicupcfg.CommonCsrOutDir, apicupcfg.CustomCsrOutDir, input)
 
 				if err != nil {
 					log.Fatal(err)
@@ -187,7 +187,7 @@ func main() {
 				// cert concat action
 
 				err = apicupcfg.CertConcat(cafile, rootcafile, subsysk8s.Certs.CaFile, outdir,
-					apicupcfg.CommonCsrOutDir, apicupcfg.CustomCsrOutDir)
+					apicupcfg.CommonCsrOutDir, apicupcfg.CustomCsrOutDir, input)
 
 				if err != nil {
 					log.Fatal(err)
