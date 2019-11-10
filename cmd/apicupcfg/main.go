@@ -55,7 +55,7 @@ func main() {
 		} else {
 			// create output directories
 			err := apicupcfg.CreateOutputDirectories(outdir, apicupcfg.CommonCsrOutDir,
-				apicupcfg.CustomCsrOutDir, apicupcfg.ProjectOutDir)
+				apicupcfg.CustomCsrOutDir, apicupcfg.SharedCsrOutDir, apicupcfg.ProjectOutDir)
 
 			if err != nil {
 				log.Fatal(err)
@@ -135,7 +135,7 @@ func main() {
 		} else {
 			// create output directories
 			err := apicupcfg.CreateOutputDirectories(outdir, apicupcfg.CommonCsrOutDir,
-				apicupcfg.CustomCsrOutDir, apicupcfg.ProjectOutDir)
+				apicupcfg.CustomCsrOutDir, apicupcfg.SharedCsrOutDir, apicupcfg.ProjectOutDir)
 
 			if err != nil {
 				log.Fatal(err)

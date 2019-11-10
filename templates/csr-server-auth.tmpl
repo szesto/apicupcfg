@@ -31,9 +31,8 @@ CN = {{ .Cn }}
 [req_ext]
 extendedKeyUsage = serverAuth
 # update subject alt name
-{{- $isclusterdns := or (eq .CertName "analytics-client-ingress") (eq .CertName "analytics-ingestion-ingress")}}
-{{- if $isclusterdns }}
-subjectAltName = DNS:{{.Cn}},DNS:*.{{.K8sNamespace}},DNS:*.{{.K8sNamespace}}.svc,DNS:*.{{.K8sNamespace}}.svc.cluster.local
-{{- else}}
+{{- if len .AltCns }}
+subjectAltName = DNS:{{.Cn}},DNS:{{ join ",DNS:" .AltCns }}
+{{- else }}
 subjectAltName = DNS:{{.Cn}}
-{{- end}}
+{{- end }}

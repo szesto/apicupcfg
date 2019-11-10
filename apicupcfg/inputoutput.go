@@ -14,11 +14,15 @@ const userFacingPublicCertsOut = "userfacingpubliccerts"
 const publicCertsOut = "publiccerts"
 const mutualAuthCertsOut = "mutualauthcerts"
 const commonCertsOut = "commoncerts"
-const certbotUserFacingPublicCertOut = "certbotuserfacingpubliccert"
-const certbotPublicCertOut = "certbotpubliccert"
+const certbotUserFacingPublicCertOut = "certbotuserfacingpubliccerts"
+const certbotPublicCertOut = "certbotpubliccerts"
+const etUserFacingPublicCertsOut = "shared-endpoint-trust-userfacingpubliccerts"
+const etPublicCertsOut = "shared-endpoint-trust-publiccerts"
+const etMutualAuthCertsOut = "shared-endpoint-trust-mutualauthcerts"
 
 const CommonCsrOutDir = "common-csr"
 const CustomCsrOutDir = "custom-csr"
+const SharedCsrOutDir = "shared-csr"
 const ProjectOutDir = "project"
 
 func OutputFiles(baseout string) map[string]string {
@@ -35,8 +39,12 @@ func OutputFiles(baseout string) map[string]string {
 		commonCertsOut:                 "apicup-certs-set-common",
 		CommonCsrOutDir:                CommonCsrOutDir,
 		CustomCsrOutDir:                CustomCsrOutDir,
+		SharedCsrOutDir:				SharedCsrOutDir,
 		certbotUserFacingPublicCertOut: "apicup-certs-set-certbot-user-facing-public",
 		certbotPublicCertOut:           "apicup-certs-set-certbot-public",
+		etUserFacingPublicCertsOut:		"apicup-certs-set-shared-trust-user-facing-public",
+		etPublicCertsOut:				"apicup-certs-set-shared-trust-public",
+		etMutualAuthCertsOut:			"apicup-certs-set-shared-trust-mutual-auth",
 	}
 
 	return outfiles

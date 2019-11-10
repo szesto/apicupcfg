@@ -73,7 +73,7 @@ func writeFileBytes(file string, bytes []byte) {
 	}
 }
 
-func CreateOutputDirectories(outdir string, commonCsrSubdir string, customCsrSubdir string, projectSubdir string) error {
+func CreateOutputDirectories(outdir, commonCsrSubdir, customCsrSubdir, sharedCsrSubdir, projectSubdir string) error {
 
 	basedir, err := filepath.Abs(outdir)
 	if err != nil {
@@ -91,6 +91,11 @@ func CreateOutputDirectories(outdir string, commonCsrSubdir string, customCsrSub
 
 	customCsrDir := concatSubdir(basedir, customCsrSubdir)
 	if err = os.MkdirAll(customCsrDir, os.ModePerm); err != nil {
+		return err
+	}
+
+	sharedCsrDir := concatSubdir(basedir, sharedCsrSubdir)
+	if err = os.MkdirAll(sharedCsrDir, os.ModePerm); err != nil {
 		return err
 	}
 

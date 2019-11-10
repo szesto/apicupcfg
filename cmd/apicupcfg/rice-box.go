@@ -24,9 +24,9 @@ func init() {
 	}
 	file4 := &embedded.EmbeddedFile{
 		Filename:    "cloud-init-vm.tmpl",
-		FileModTime: time.Unix(1571805848, 0),
+		FileModTime: time.Unix(1573371241, 0),
 
-		Content: string("---\n{{- $a := list 0 . }}\n{{- template \"map2yml\" $a }}\n...\n"),
+		Content: string("{{- $a := list 0 . }}\n{{- template \"map2yml\" $a }}\n"),
 	}
 	file5 := &embedded.EmbeddedFile{
 		Filename:    "combined-csr.tmpl",
@@ -42,9 +42,9 @@ func init() {
 	}
 	file7 := &embedded.EmbeddedFile{
 		Filename:    "csr-server-auth.tmpl",
-		FileModTime: time.Unix(1571805848, 0),
+		FileModTime: time.Unix(1573284287, 0),
 
-		Content: string("[req]\n# default key length for rsa key\ndefault_bits = 2048\n\n# do not encrypt private key\nencrypt_key = no\nencrypt_rsa_key = no\n\n# default message digest alg for signing certs and cert reqs\ndefault_md = sha256\n\n# cert request extensions section\nreq_extensions = req_ext\n\n# self-signed cert extensions section\n#x509_extensions = self_signed_extensions\n\n# do not prompt for the dn\nprompt = no\n\n# section name for dn fields\ndistinguished_name = dn\n\n# make sure dn components match ca policy\n[dn]\n{{- range .DnFields | reverse }}\n    {{- nindent 0 . }}\n{{- end }}\nCN = {{ .Cn }}\n\n[req_ext]\nextendedKeyUsage = serverAuth\n# update subject alt name\n{{- $isclusterdns := or (eq .CertName \"analytics-client-ingress\") (eq .CertName \"analytics-ingestion-ingress\")}}\n{{- if $isclusterdns }}\nsubjectAltName = DNS:{{.Cn}},DNS:*.{{.K8sNamespace}},DNS:*.{{.K8sNamespace}}.svc,DNS:*.{{.K8sNamespace}}.svc.cluster.local\n{{- else}}\nsubjectAltName = DNS:{{.Cn}}\n{{- end}}\n"),
+		Content: string("[req]\n# default key length for rsa key\ndefault_bits = 2048\n\n# do not encrypt private key\nencrypt_key = no\nencrypt_rsa_key = no\n\n# default message digest alg for signing certs and cert reqs\ndefault_md = sha256\n\n# cert request extensions section\nreq_extensions = req_ext\n\n# self-signed cert extensions section\n#x509_extensions = self_signed_extensions\n\n# do not prompt for the dn\nprompt = no\n\n# section name for dn fields\ndistinguished_name = dn\n\n# make sure dn components match ca policy\n[dn]\n{{- range .DnFields | reverse }}\n    {{- nindent 0 . }}\n{{- end }}\nCN = {{ .Cn }}\n\n[req_ext]\nextendedKeyUsage = serverAuth\n# update subject alt name\n{{- if len .AltCns }}\nsubjectAltName = DNS:{{.Cn}},DNS:{{ join \",DNS:\" .AltCns }}\n{{- else }}\nsubjectAltName = DNS:{{.Cn}}\n{{- end }}"),
 	}
 	file8 := &embedded.EmbeddedFile{
 		Filename:    "extra-values.tmpl",
@@ -96,9 +96,9 @@ func init() {
 	}
 	fileg := &embedded.EmbeddedFile{
 		Filename:    "subsys-certs.tmpl",
-		FileModTime: time.Unix(1571805848, 0),
+		FileModTime: time.Unix(1573365115, 0),
 
-		Content: string("{{$pathsep := .OsEnv.PathSeparator}}\n{{$apicup := .OsEnv.BinApicup}}\n\n{{ template \"scriptheader\" .OsEnv }}\n\n{{ range .CertSpecs}}\n    {{ $certSpec := .}}\n    {{$apicup}} certs set {{ $certSpec.SubsysName}} {{$certSpec.CertName}} ..{{$pathsep}}{{$certSpec.CsrSubdir}}{{$pathsep}}{{$certSpec.CertFile}} ..{{$pathsep}}{{$certSpec.CsrSubdir}}{{$pathsep}}{{$certSpec.KeyFile}} ..{{$pathsep}}{{$certSpec.CsrSubdir}}{{$pathsep}}{{$certSpec.CaFile}}\n{{ end }}\n"),
+		Content: string("{{$pathsep := .OsEnv.PathSeparator}}\n{{$apicup := .OsEnv.BinApicup}}\n\n{{ template \"scriptheader\" .OsEnv }}\n\n{{ range .CertSpecs}}\n    {{ $certSpec := .}}\n    {{$apicup}} certs set {{ $certSpec.SubsysName}} {{$certSpec.CertName}} ..{{$pathsep}}{{$certSpec.CertSubdir}}{{$pathsep}}{{$certSpec.CertFile}} ..{{$pathsep}}{{$certSpec.KeySubdir}}{{$pathsep}}{{$certSpec.KeyFile}} ..{{$pathsep}}{{$certSpec.CaSubdir}}{{$pathsep}}{{$certSpec.CaFile}}\n{{ end }}\n"),
 	}
 	fileh := &embedded.EmbeddedFile{
 		Filename:    "subsys-config-k8s.tmpl",
@@ -116,7 +116,7 @@ func init() {
 	// define dirs
 	dir1 := &embedded.EmbeddedDir{
 		Filename:   "",
-		DirModTime: time.Unix(1572973028, 0),
+		DirModTime: time.Unix(1573371241, 0),
 		ChildFiles: []*embedded.EmbeddedFile{
 			file2, // "analytics-k8s.tmpl"
 			file3, // "analytics-vm.tmpl"
@@ -145,7 +145,7 @@ func init() {
 	// register embeddedBox
 	embedded.RegisterEmbeddedBox(`../../templates`, &embedded.EmbeddedBox{
 		Name: `../../templates`,
-		Time: time.Unix(1572973028, 0),
+		Time: time.Unix(1573371241, 0),
 		Dirs: map[string]*embedded.EmbeddedDir{
 			"": dir1,
 		},
