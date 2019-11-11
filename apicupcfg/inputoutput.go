@@ -86,7 +86,7 @@ func Input() (input string, outdir string, validateIp bool, initConfig bool, ini
 	// -certconcat -ca ... -rootca ... -noexpire
 	// -gen
 
-	certverifyArg := flag.Bool("certverify", false, "-certvalidate, validate cert")
+	certverifyArg := flag.Bool("certverify", false, "-certverify, verify cert")
 	certfileArg := flag.String("cert", "", "-cert cerfile, cert file name")
 	cafileArg := flag.String("ca", "", "-ca cafile, ca file, use with -certverify")
 	rootcafileArg := flag.String("rootca", "", "-rootca file, root ca file, use with -certverify")

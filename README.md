@@ -204,8 +204,8 @@ Note that default output directory is output. We normally pass current directory
 - copy certificate(s) to correct destination:  
 `apicupcfg -certcopy cerftile.pem -out . [-config subsys-config.json]`  
 `apicupcfg -certdir certdir -out . [-config subsys-config.json]`  
-- validate certificate:  
-`apicupcfg -certvalidate [-noexpire] [-cert cert.pem] -ca ca.pem -rootca rootca.pem`  
+- verify certificate:  
+`apicupcfg -certverify [-noexpire] [-cert cert.pem] -ca ca.pem -rootca rootca.pem`  
 - concatenate intermediate and root ca certs and copy to the destination:  
 `apicupcfg -certconcat -ca ca.pem -rootca rootca.pem -out .`  
 - validate subsystem ip addresses (ova install only):  
