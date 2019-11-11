@@ -1,10 +1,10 @@
-** Running apicupcfg tool **
+**Running apicupcfg tool**
 
-apcupcfg is a tool to generate configuration scripts for the IBM API Connect 2018.4.1.x installation.
+`apcupcfg` is a tool to generate configuration scripts for the IBM API Connect 2018.4.1.x installation.
 
 Both Kubernetes and OVA installation types are supported.
 
-apicupcfg tool generates all subsystem and certificate scripts, all supportring certificate configuration
+`apicupcfg` generates all subsystem and certificate scripts, all supportring certificate configuration
 scripts, and provides a number of validation options.
 
 To see all available command line options run:
@@ -129,7 +129,7 @@ To process all certificates received from the ca together, place them in a direc
 
 This command will copy all certificates in the directory to the correct destination.
 
-** Copying ca trust file **
+**Copying ca trust file**
 
 You must create a file that concatenates intermidiate ca certificate and root ca certificate and copy it to the correct destination.
 This could be done manually but it is error prone.
@@ -192,16 +192,24 @@ in the cmd/apicupcfg directory:
 Note that default output directory is output. We normally pass current directory as output: -out .
 (Default output directory may change from *output* to *current directory*)
 
+- help:  
 `apicupcfg -help`  
+- init config:  
 `apicupcfg -gen -initconfig -configtype ova|k8s [-config subsys-config.json]`  
-`apicupcfg -gen -out . [-config subsys-config]`  
+- generate subsys and cert scripts:  
+`apicupcfg -gen -out . [-config subsys-config.json]`  
+- generate subsys or certs only:  
+`apicupcfg -gen -subsys -out . [-config subsys-config.json]`
+`apicupcfg -gen -certs -out . [-config subsys-config.json]`
+- copy certificate(s) from ca to correct destination:  
 `apicupcfg -certcopy cerftile.pem -out . [-config subsys-config.json]`  
 `apicupcfg -certdir certdir -out . [-config subsys-config.json]`  
+- validate certifiacte:  
 `apicupcfg -certvalidate [-noexpire] [-cert cert.pem] -ca ca.pem -rootca rootca.pem`  
+- concatenate intermediate and root ca certs and copy to the destination:  
 `apicupcfg -certconcat -ca ca.pem -rootca rootca.pem -out .`  
-`apicupcfg -validateip [-config subsys-config.json]`  
-
-@todo
+- validate ip subsystem ip addresses (ova install only):  
+`apicupcfg -validateip [-config subsys-config.json]`
 
 **Configuraton reference.**
 
