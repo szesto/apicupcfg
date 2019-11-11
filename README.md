@@ -201,10 +201,10 @@ Note that default output directory is output. We normally pass current directory
 - generate subsys or certs only:  
 `apicupcfg -gen -subsys -out . [-config subsys-config.json]`
 `apicupcfg -gen -certs -out . [-config subsys-config.json]`
-- copy certificate(s) from ca to correct destination:  
+- copy certificate(s) to correct destination:  
 `apicupcfg -certcopy cerftile.pem -out . [-config subsys-config.json]`  
 `apicupcfg -certdir certdir -out . [-config subsys-config.json]`  
-- validate certifiacte:  
+- validate certificate:  
 `apicupcfg -certvalidate [-noexpire] [-cert cert.pem] -ca ca.pem -rootca rootca.pem`  
 - concatenate intermediate and root ca certs and copy to the destination:  
 `apicupcfg -certconcat -ca ca.pem -rootca rootca.pem -out .`  
