@@ -112,20 +112,20 @@ The common-csr subdirectory contains `all-mutual-auth-csr.tag.(sh|bat)` and `all
 Run these scripts to generate key pairs and csr's. Submit csr's to the certifiacte authority to get signed certificates.
 Copy received certificates to the correct destination.
 
-** Copying certificates to the correct files **.
+**Copying certificates to the correct files**.
 
 Certificate settings scripts expect to find certificates, private keys and root certificates at specific locations.
 Certificates recieved from the ca can be manually copied to the correct destination but this is error prone.
 
 To copy a certificate received from the ca to the correct destination:
-`apicupcfg -certcopy path-to-certificate-file.pem [-config subsys-config.json]`
+`apicupcfg -certcopy path-to-certificate-file.pem -out outdir [-config subsys-config.json]`
 
-This command will introspect the certificate match it with endpoints defined in the configuration file
+This command will introspect the certificate, match it with endpoints defined in the configuration file
 and copy certificate to the correct destination. Note that if certificate matches mulitple endpoints
 (wildcard or shared trust) then a separate copy will be made for each endpoint.
 
 To process all certificates received from the ca together, place them in a directory and run:
-`apicupcfg -certdir path-to-a-directory-with-certificates [-config subsys-config.json]`
+`apicupcfg -certdir path-to-a-directory-with-certificates -out outdir [-config subsys-config.json]`
 
 This command will copy all certificates in the directory to the correct destination.
 
@@ -135,7 +135,7 @@ You must create a file that concatenates intermidiate ca certificate and root ca
 This could be done manually but it is error prone.
 
 To concatenate intermediate ca cert and root ca cert and copy this file to correct destination:
-`apicupcfg -certconcat -ca path-to-ca.pem -rootca path-to-root-ca.pem`
+`apicupcfg -certconcat -ca path-to-ca.pem -rootca path-to-root-ca.pem -out outdir`
 
 This command will verify certificates and if valid copy combined file to a destination specified
 in the Certs.CaFile value. Combined file will be copied to the custom-csr and common-csr subdirectories.
@@ -189,13 +189,16 @@ in the cmd/apicupcfg directory:
 
 **Command line reference.**
 
+Note that default output directory is output. We normally pass current directory as output: -out .
+(Default output directory may change from *output* to *current directory*)
+
 `apicupcfg -help`
 `apicupcfg -gen -initconfig -configtype ova|k8s [-config subsys-config.json]`
 `apicupcfg -gen -out . [-config subsys-config]`
-`apicupcfg -certcopy cerftile.pem [-config subsys-config.json]`
-`apicupcfg -certdir certdir [-config subsys-config.json]`
+`apicupcfg -certcopy cerftile.pem -out . [-config subsys-config.json]`
+`apicupcfg -certdir certdir -out . [-config subsys-config.json]`
 `apicupcfg -certvalidate [-noexpire] [-cert cert.pem] -ca ca.pem -rootca rootca.pem`
-`apicupcfg -certconcat -ca ca.pem -rootca rootca.pem`
+`apicupcfg -certconcat -ca ca.pem -rootca rootca.pem -out .`
 `apicupcfg -validateip [-config subsys-config.json]`
 
 @todo
