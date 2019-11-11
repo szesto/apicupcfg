@@ -199,7 +199,7 @@ Note that default output directory is output. We normally pass current directory
 - generate subsys and cert scripts:  
 `apicupcfg -gen -out . [-config subsys-config.json]`  
 - generate subsys or certs only:  
-`apicupcfg -gen -subsys -out . [-config subsys-config.json]`
+`apicupcfg -gen -subsys -out . [-config subsys-config.json]`  
 `apicupcfg -gen -certs -out . [-config subsys-config.json]`
 - copy certificate(s) to correct destination:  
 `apicupcfg -certcopy cerftile.pem -out . [-config subsys-config.json]`  
