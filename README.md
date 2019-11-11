@@ -192,14 +192,14 @@ in the cmd/apicupcfg directory:
 Note that default output directory is output. We normally pass current directory as output: -out .
 (Default output directory may change from *output* to *current directory*)
 
-`apicupcfg -help`
-`apicupcfg -gen -initconfig -configtype ova|k8s [-config subsys-config.json]`
-`apicupcfg -gen -out . [-config subsys-config]`
-`apicupcfg -certcopy cerftile.pem -out . [-config subsys-config.json]`
-`apicupcfg -certdir certdir -out . [-config subsys-config.json]`
-`apicupcfg -certvalidate [-noexpire] [-cert cert.pem] -ca ca.pem -rootca rootca.pem`
-`apicupcfg -certconcat -ca ca.pem -rootca rootca.pem -out .`
-`apicupcfg -validateip [-config subsys-config.json]`
+`apicupcfg -help`  
+`apicupcfg -gen -initconfig -configtype ova|k8s [-config subsys-config.json]`  
+`apicupcfg -gen -out . [-config subsys-config]`  
+`apicupcfg -certcopy cerftile.pem -out . [-config subsys-config.json]`  
+`apicupcfg -certdir certdir -out . [-config subsys-config.json]`  
+`apicupcfg -certvalidate [-noexpire] [-cert cert.pem] -ca ca.pem -rootca rootca.pem`  
+`apicupcfg -certconcat -ca ca.pem -rootca rootca.pem -out .`  
+`apicupcfg -validateip [-config subsys-config.json]`  
 
 @todo
 
