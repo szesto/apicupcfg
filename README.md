@@ -140,7 +140,7 @@ To concatenate intermediate ca cert and root ca cert and copy this file to corre
 This command will verify certificates and if valid copy combined file to a destination specified
 in the Certs.CaFile value. Combined file will be copied to the custom-csr and common-csr subdirectories.
 
-** Verifying certificates **/
+**Verifying certificates**
 
 To verify certificate:
 `apicupcfg -certverify [-noexpire] -cert path-to-cert.pem -ca path-to-intermediate-ca.pem -rootca path-to-root-ca.pem`
@@ -208,7 +208,7 @@ Note that default output directory is output. We normally pass current directory
 `apicupcfg -certvalidate [-noexpire] [-cert cert.pem] -ca ca.pem -rootca rootca.pem`  
 - concatenate intermediate and root ca certs and copy to the destination:  
 `apicupcfg -certconcat -ca ca.pem -rootca rootca.pem -out .`  
-- validate ip subsystem ip addresses (ova install only):  
+- validate subsystem ip addresses (ova install only):  
 `apicupcfg -validateip [-config subsys-config.json]`
 
 **Configuraton reference.**
