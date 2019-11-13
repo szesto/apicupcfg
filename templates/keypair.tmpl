@@ -3,4 +3,18 @@
 
 {{ template "scriptheader1" .OsEnv }}
 
+{{ if .OsEnv.IsWindows }}
+    IF EXIST {{.CertSpec.KeyFile}} (
+echo Private key file {{.CertSpec.KeyFile}} already exists... Skip key pair and csr generation...
+    ) ELSE (
 openssl req -config {{.CertSpec.CsrConf}} -out {{.CertSpec.CertFile}}.csr -outform PEM -new -keyout {{.CertSpec.KeyFile}}
+openssl req -x509 -config {{.CertSpec.CsrConf}} -out {{.CertSpec.CertFile}}.self -outform PEM -new -key {{.CertSpec.KeyFile}}
+    )
+{{ else }}
+    if [[ -f {{.CertSpec.KeyFile}} ]]; then
+echo Private key file {{.CertSpec.KeyFile}} already exists... Skip key pair and csr generation...
+    else
+openssl req -config {{.CertSpec.CsrConf}} -out {{.CertSpec.CertFile}}.csr -outform PEM -new -keyout {{.CertSpec.KeyFile}}
+openssl req -x509 -config {{.CertSpec.CsrConf}} -out {{.CertSpec.CertFile}}.self -outform PEM -new -key {{.CertSpec.KeyFile}}
+    fi
+{{ end }}

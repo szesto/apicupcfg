@@ -156,6 +156,13 @@ type GwySubsysVm struct {
 
 	ApiGateway string
 	ApicGwService string
+
+	// apic datapower domain
+	DatapowerDomain string
+
+	// apic configuration sequence
+	ConfigurationSequenceName string
+	ConfigurationExecutionInterval int
 }
 
 type SubsysVm struct {
@@ -298,6 +305,9 @@ func ApplyTemplateVm(subsys *SubsysVm, outfiles map[string]string, subsysOnly, c
 		updateCertSpecs(&subsys.Certs, &subsys.Management, &subsys.Analytics, &subsys.Portal, &subsys.Gateway, outfiles[CommonCsrOutDir], outfiles[CustomCsrOutDir])
 		outputCerts(&subsys.Certs, outfiles, subsys.Tag, tbox)
 	}
+
+	// datapower
+
 }
 
 func CopyCertVm(certfile string, isdir bool, subsys *SubsysVm, commonCsrDir string, customCsrDir string) error {
