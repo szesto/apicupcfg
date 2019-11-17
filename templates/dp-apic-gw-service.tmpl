@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<SOAP-ENV:Envelope xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/"
+                   xmlns:ma="http://www.datapower.com/schemas/management">
+    <SOAP-ENV:Header/>
+    <SOAP-ENV:Body>
+        <ma:request domain="{{.Domain}}">
+            <ma:set-config>
+                <APIConnectGatewayService name="{{.Name}}">
+                    <mAdminState>enabled</mAdminState>
+                    <UserSummary>APIC gw service</UserSummary>
+                    <LocalAddress>{{.LocalAddress}}</LocalAddress>
+                    <LocalPort>{{.LocalPort}}</LocalPort>
+                    <SSLClient>{{.SSLClientProfile}}</SSLClient>
+                    <SSLServer>{{.SSLServerProfile}}</SSLServer>
+                    <APIGatewayAddress>{{.ApiGateway}}</APIGatewayAddress>
+                    <APIGatewayPort>{{.ApiGatewayPort}}</APIGatewayPort>
+                    <GatewayPeering>{{.GwdPeering}}</GatewayPeering>
+                    <GatewayPeeringManager>{{.GwPeeringManager}}</GatewayPeeringManager>
+                    <V5CompatibilityMode>off</V5CompatibilityMode>
+                    <UserDefinedPolicies></UserDefinedPolicies>
+                    <V5CSlmMode>autounicast</V5CSlmMode>
+                    <IPMulticast></IPMulticast>
+                    <IPUnicast></IPUnicast>
+                </APIConnectGatewayService>
+            </ma:set-config>
+        </ma:request>
+    </SOAP-ENV:Body>
+</SOAP-ENV:Envelope>

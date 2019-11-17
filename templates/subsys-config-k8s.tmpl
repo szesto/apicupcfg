@@ -1,6 +1,6 @@
 {
     "InstallType": "k8s",
-    "Version": {{ .Version | default "2018.1.x" | quote }},
+    "Version": {{ .Version | default "2018.4.1.x" | quote }},
     "Tag": "tag",
 
     "Mode": {{ .Mode | default "dev|standard" | quote }},
@@ -22,6 +22,8 @@
             "Key": "privkey.pem",
             "CaChain": "chain.pem"
         },
+
+        "SharedEndpointTrust": false,
 
         "PublicUserFacingCerts": true,
         "PublicCerts": false,

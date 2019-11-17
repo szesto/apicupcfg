@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<SOAP-ENV:Envelope xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/"
+                   xmlns:ma="http://www.datapower.com/schemas/management">
+    <SOAP-ENV:Header/>
+    <SOAP-ENV:Body>
+        <ma:request domain="{{.Domain}}">
+            <ma:set-file name="{{.Directory}}:///{{.FileName}}">{{ b64enc .FileContent}}</ma:set-file>
+        </ma:request>
+    </SOAP-ENV:Body>
+</SOAP-ENV:Envelope>

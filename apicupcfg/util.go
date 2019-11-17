@@ -73,7 +73,7 @@ func writeFileBytes(file string, bytes []byte) {
 	}
 }
 
-func CreateOutputDirectories(outdir, commonCsrSubdir, customCsrSubdir, sharedCsrSubdir, projectSubdir string) error {
+func CreateOutputDirectories(outdir, commonCsrSubdir, customCsrSubdir, sharedCsrSubdir, projectSubdir, datapowerSubdir string) error {
 
 	basedir, err := filepath.Abs(outdir)
 	if err != nil {
@@ -108,6 +108,14 @@ func CreateOutputDirectories(outdir, commonCsrSubdir, customCsrSubdir, sharedCsr
 	binDir := concatSubdir(basedir, "bin")
 	if err = os.MkdirAll(binDir, os.ModePerm); err != nil {
 		return err
+	}
+
+	// datapower subdirectory
+	if len(datapowerSubdir) > 0 {
+		datapowerDir := concatSubdir(basedir, datapowerSubdir)
+		if err = os.MkdirAll(datapowerDir, os.ModePerm); err != nil {
+			return err
+		}
 	}
 
 	return err
@@ -212,6 +220,12 @@ func copySlices(dst []string, src []string) []string {
 }
 
 func executeTemplate(t *template.Template, obj interface{}) []string {
+
+	b := executeTemplate2(t, obj)
+	return strings.Split(b, "\n")
+}
+
+func executeTemplate2(t *template.Template, obj interface{}) string {
 	b := &strings.Builder{}
 
 	err := t.Execute(b, obj)
@@ -219,7 +233,7 @@ func executeTemplate(t *template.Template, obj interface{}) []string {
 		log.Fatal(err)
 	}
 
-	return strings.Split(b.String(), "\n")
+	return b.String()
 }
 
 func writeLines(lines []string, file string) {
@@ -280,6 +294,11 @@ func writeLines(lines []string, file string) {
 func writeTemplate(t *template.Template, file string, obj interface{}) {
 	lines := executeTemplate(t, obj)
 	writeLines(lines, file)
+}
+
+func writeTemplate2(t *template.Template, file string, xf func(buf string) string, obj interface{}) {
+	buf := executeTemplate2(t, obj)
+	writeFileBytes(file, []byte(xf(buf)))
 }
 
 func unmarshallJsonFile(file string, objptr interface{}) {

@@ -60,7 +60,7 @@ func TestCertConcat1(t *testing.T) {
 	chain := "/Users/simon/local/aws/certbot/letsencrypt/live/apim.cloud/chain.pem"
 	rootca := "/Users/simon/local/aws/certbot/letsencrypt/live/apim.cloud/rootca.pem"
 
-	err := CertConcat(chain, rootca, "ca-root-first.crt", "/tmp", "common-csr", "custom-csr")
+	err := CertConcat(chain, rootca, "ca-root-first.crt", "/tmp", "common-csr", "custom-csr", "subsys-config.json")
 	if err != nil {
 		fmt.Printf("%v\n", err)
 	}

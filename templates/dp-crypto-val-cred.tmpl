@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<SOAP-ENV:Envelope xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/"
+                   xmlns:ma="http://www.datapower.com/schemas/management">
+    <SOAP-ENV:Header/>
+    <SOAP-ENV:Body>
+        <ma:request>
+            <ma:set-config>
+                <CryptoValCred name="{{ .CryptoValCredName }}">
+                    <mAdminState>enabled</mAdminState>
+                    <Certificate></Certificate>
+                    <CertValidationMode>pkix</CertValidationMode>
+                    <UseCRL>off</UseCRL>
+                    <RequireCRL>off</RequireCRL>
+                    <CRLDPHandling>ignore</CRLDPHandling>
+                    <InitialPolicySet></InitialPolicySet>
+                    <ExplicitPolicy>off</ExplicitPolicy>
+                    <CheckDates>on</CheckDates>
+                </CryptoValCred>
+            </ma:set-config>
+        </ma:request>
+    </SOAP-ENV:Body>
+</SOAP-ENV:Envelope>

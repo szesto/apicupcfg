@@ -1,0 +1,38 @@
+[req]
+# default key length for rsa key
+default_bits = 2048
+
+# do not encrypt private key
+encrypt_key = no
+encrypt_rsa_key = no
+
+# default message digest alg for signing certs and cert reqs
+default_md = sha256
+
+# cert request extensions section
+req_extensions = req_ext
+
+# self-signed cert extensions section
+x509_extensions = req_ext
+
+# do not prompt for the dn
+prompt = no
+
+# section name for dn fields
+distinguished_name = dn
+
+# make sure dn components match ca policy
+[dn]
+{{- range .DnFields | reverse }}
+    {{- nindent 0 . }}
+{{- end }}
+CN = {{ .Cn }}
+
+[req_ext]
+extendedKeyUsage = serverAuth,clientAuth
+# update subject alt name
+{{- if len .AltCns }}
+    subjectAltName = DNS:{{.Cn}},DNS:{{ join ",DNS:" .AltCns }}
+{{- else }}
+    subjectAltName = DNS:{{.Cn}}
+{{- end }}

@@ -25,6 +25,8 @@ const CustomCsrOutDir = "custom-csr"
 const SharedCsrOutDir = "shared-csr"
 const ProjectOutDir = "project"
 
+const DatapowerOutDir = "datapower"
+
 func OutputFiles(baseout string) map[string]string {
 
 	outfiles := map[string]string{
@@ -45,6 +47,7 @@ func OutputFiles(baseout string) map[string]string {
 		etUserFacingPublicCertsOut:		"apicup-certs-set-shared-trust-user-facing-public",
 		etPublicCertsOut:				"apicup-certs-set-shared-trust-public",
 		etMutualAuthCertsOut:			"apicup-certs-set-shared-trust-mutual-auth",
+		DatapowerOutDir:				DatapowerOutDir,
 	}
 
 	return outfiles
@@ -59,10 +62,10 @@ func concatSubdir(dir1 string, dir2 string) string {
 	return dir1 + string(os.PathSeparator) + dir2
 }
 
-func Input() (input string, outdir string, validateIp bool, initConfig bool, initConfigType string,
+func Input() (input string, outdir1 string, validateIp bool, initConfig bool, initConfigType string,
 	subsysOnly bool, certsOnly bool, certcopy string, certdir string,
-	certverify bool, certfile, cafile string, rootcafile string, noexpire bool,
-	certconcat bool, gen bool) {
+	certverify bool, certfile, cafile string, rootcafile string, noexpire bool, certconcat bool, gen bool,
+	soma bool, req string, auth string, url string, setfile string, dpdir string, dpfile string) {
 
 	// define command line flags
 	inputArg := flag.String("config", "subsys-config.json", "-config input-file")
@@ -96,11 +99,19 @@ func Input() (input string, outdir string, validateIp bool, initConfig bool, ini
 
 	genArg := flag.Bool("gen", false, "-gen, generate scripts")
 
+	somaArg := flag.Bool("soma", false, "-soma, datapower soma request")
+	reqArg := flag.String("req", "", "-req somareq.xml, soma request file")
+	authArg := flag.String("auth", "dp.env", "-auth envfile, datapower auth file with user and password")
+	urlArg := flag.String("url","", "-url datapower soma url")
+	setfileArg := flag.String("setfile", "", "-setfile filename, filename to upload to datapower")
+	dpdirArg := flag.String("dpdir", "", "-dpdir cert|local|..., datapower directory")
+	dpfileArg := flag.String("dpfile","","-dpfile datapower file name")
+
 	// scan command line args
 	flag.Parse()
 
 	input = *inputArg
-	outdir = *outdirArg
+	outdir1 = *outdirArg
 	//commonCsrSubdir = commonCsrOutDir
 	//customCsrSubdir = customCsrOutDir
 	//projectSubdir = projectOutDir
@@ -120,6 +131,15 @@ func Input() (input string, outdir string, validateIp bool, initConfig bool, ini
 	certconcat = *certconcatArg
 	gen = *genArg
 
-	return input, outdir, validateIp, initConfig, initConfigType, subsysOnly, certsOnly, certcopy, certdir,
-		certverify, certfile, cafile, rootcafile, noexpire, certconcat, gen
+	soma = *somaArg
+	req = *reqArg
+	auth = *authArg
+	url = *urlArg
+	setfile = *setfileArg
+	dpdir = *dpdirArg
+	dpfile = *dpfileArg
+
+	return input, outdir1, validateIp, initConfig, initConfigType, subsysOnly, certsOnly, certcopy, certdir,
+		certverify, certfile, cafile, rootcafile, noexpire, certconcat, gen,
+		soma, req, auth, url, setfile, dpdir, dpfile
 }

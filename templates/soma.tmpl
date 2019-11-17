@@ -1,0 +1,39 @@
+{{$pathsep := .OsEnv.PathSeparator}}
+{{$config := .Config}}
+{{$iswin := .OsEnv.IsWindows}}
+
+{{ template "scriptheader1" .OsEnv }}
+
+{{ if $iswin }}
+    set apicupcfg=apicupcfg.exe
+    IF EXIST ..\apicupcfg.exe (
+        set apicupcfg=..\apicupcfg.exe
+    )
+{{else}}
+    apicupcfg=apicupcfg
+    if [[ -f ../apicupcfg ]]; then
+        apicupcfg=../apicupcfg
+    fi
+{{ end }}
+
+{{range .SetFileSpecs}}
+    {{$spec := .}}
+
+    {{ if $iswin }}
+        %apicupcfg% -config ..\{{$config}} -soma -setfile {{$spec.File}} -dpdir {{$spec.Dpdir}} -dpfile {{$spec.Dpfile}} -auth {{$spec.Auth}} -url {{$spec.Url}}
+    {{else}}
+        $apicupcfg -config ../{{$config}} -soma -setfile {{$spec.File}} -dpdir {{$spec.Dpdir}} -dpfile {{$spec.Dpfile}} -auth {{$spec.Auth}} -url {{$spec.Url}}
+    {{ end }}
+
+{{end}}
+
+{{range .ReqSpecs}}
+    {{$spec := .}}
+
+    {{ if $iswin }}
+        %apicupcfg% -config ..\{{$config}} -soma -req {{$spec.Req}} -auth {{$spec.Auth}} -url {{$spec.Url}}
+    {{else}}
+        $apicupcfg -config ../{{$config}} -soma -req {{$spec.Req}} -auth {{$spec.Auth}} -url {{$spec.Url}}
+    {{end}}
+
+{{end}}

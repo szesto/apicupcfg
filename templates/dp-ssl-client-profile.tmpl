@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<SOAP-ENV:Envelope xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/"
+                   xmlns:ma="http://www.datapower.com/schemas/management">
+    <SOAP-ENV:Header/>
+    <SOAP-ENV:Body>
+        <ma:request domain="{{.Domain}}">
+            <ma:set-config>
+                <SSLClientProfile name="{{.Name}}">
+                    <mAdminState>enabled</mAdminState>
+                    <UserSummary>gwd client profile</UserSummary>
+                    <Protocols>
+                        <SSLv3>off</SSLv3>
+                        <TLSv1d0>on</TLSv1d0>
+                        <TLSv1d1>on</TLSv1d1>
+                        <TLSv1d2>on</TLSv1d2>
+                    </Protocols>
+                    <Ciphers>DHE_DSS_EXPORT_WITH_DES40_CBC_SHA</Ciphers>
+                    <Idcred>{{.CryptoIdentCreds}}</Idcred>
+                    <ValidateServerCert>off</ValidateServerCert>
+                    <Valcred>{{.CryptoValCreds}}</Valcred>
+                    <Caching>on</Caching>
+                    <CacheTimeout>300</CacheTimeout>
+                    <CacheSize>100</CacheSize>
+                    <SSLClientFeatures>
+                        <use-sni>on</use-sni>
+                        <permit-insecure-servers>off</permit-insecure-servers>
+                        <compression>off</compression>
+                    </SSLClientFeatures>
+                    <EllipticCurves>secp521r1</EllipticCurves>
+                    <EllipticCurves>secp384r1</EllipticCurves>
+                    <EllipticCurves>secp256k1</EllipticCurves>
+                    <EllipticCurves>secp256r1</EllipticCurves>
+                    <UseCustomSNIHostname>no</UseCustomSNIHostname>
+                    <CustomSNIHostname></CustomSNIHostname>
+                    <ValidateHostname>off</ValidateHostname>
+                    <HostnameValidationFlags>
+                        <X509_CHECK_FLAG_ALWAYS_CHECK_SUBJECT>off</X509_CHECK_FLAG_ALWAYS_CHECK_SUBJECT>
+                        <X509_CHECK_FLAG_NO_WILDCARDS>off</X509_CHECK_FLAG_NO_WILDCARDS>
+                        <X509_CHECK_FLAG_NO_PARTIAL_WILDCARDS>off</X509_CHECK_FLAG_NO_PARTIAL_WILDCARDS>
+                        <X509_CHECK_FLAG_MULTI_LABEL_WILDCARDS>off</X509_CHECK_FLAG_MULTI_LABEL_WILDCARDS>
+                        <X509_CHECK_FLAG_SINGLE_LABEL_SUBDOMAINS>off</X509_CHECK_FLAG_SINGLE_LABEL_SUBDOMAINS>
+                    </HostnameValidationFlags>
+                    <HostnameValidationFailOnError>off</HostnameValidationFailOnError>
+                </SSLClientProfile>
+            </ma:set-config>
+        </ma:request>
+    </SOAP-ENV:Body>
+</SOAP-ENV:Envelope>

@@ -163,6 +163,14 @@ type GwySubsysVm struct {
 	// apic configuration sequence
 	ConfigurationSequenceName string
 	ConfigurationExecutionInterval int
+
+	// API gateway
+	DatapowerApiGatewayPort int
+	DatapowerApiGatewayAddress string // host-alias
+
+	// API connect gateway service
+	DatapowerApicGwServicePort int // 3000
+	DatapowerApicGwServiceAddress string // host-alias
 }
 
 type SubsysVm struct {
@@ -186,6 +194,9 @@ type SubsysVm struct {
 	Gateway GwySubsysVm
 
 	OsEnv
+
+	// config file from which this config was loaded
+	configFileName string
 }
 
 func ValidateHostIpVm(subsys *SubsysVm) {
@@ -226,6 +237,9 @@ func LoadSubsysVm(jsonConfigFile string) *SubsysVm {
 	subsys.OsEnv.init()
 
 	unmarshallJsonFile(jsonConfigFile, &subsys)
+
+	// save input config file
+	subsys.configFileName = jsonConfigFile
 
 	isManagement := len(subsys.Management.SubsysName) > 0
 	isAnalytics := len(subsys.Analytics.SubsysName) > 0
@@ -307,7 +321,7 @@ func ApplyTemplateVm(subsys *SubsysVm, outfiles map[string]string, subsysOnly, c
 	}
 
 	// datapower
-
+	datapowerCluster(subsys, outfiles, tbox)
 }
 
 func CopyCertVm(certfile string, isdir bool, subsys *SubsysVm, commonCsrDir string, customCsrDir string) error {
@@ -320,4 +334,10 @@ func CopyCertVm(certfile string, isdir bool, subsys *SubsysVm, commonCsrDir stri
 		return copyCert(certfile, &subsys.Certs, &subsys.Management, &subsys.Analytics,
 			&subsys.Portal, &subsys.Gateway, commonCsrDir, customCsrDir)
 	}
+}
+
+func SomaUpload(subsys *SubsysVm, uploadfile, dpdir, dpfile, dpenv, url string, tbox *rice.Box) (status string, statusCode int, reply string, err error) {
+
+	dpdomain := subsys.Gateway.DatapowerDomain
+	return SomaUploadFile(uploadfile, dpdir, dpfile, dpdomain, dpenv, url, tbox)
 }

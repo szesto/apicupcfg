@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<SOAP-ENV:Envelope xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/"
+                   xmlns:ma="http://www.datapower.com/schemas/management">
+    <SOAP-ENV:Header/>
+    <SOAP-ENV:Body>
+        <ma:request domain="{{.Domain}}">
+            <ma:set-config>
+                <CryptoIdentCred name="{{ .Name }}">
+                    <mAdminState>enabled</mAdminState>
+                    <Key>{{.CryptoKeyName}}</Key>
+                    <Certificate>{{.CryptoCertName}}</Certificate>
+                    <CA>{{.CaName}}</CA>
+                </CryptoIdentCred>
+            </ma:set-config>
+        </ma:request>
+    </SOAP-ENV:Body>
+</SOAP-ENV:Envelope>

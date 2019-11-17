@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<SOAP-ENV:Envelope xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/"
+                   xmlns:ma="http://www.datapower.com/schemas/management">
+    <SOAP-ENV:Header/>
+    <SOAP-ENV:Body>
+        <ma:request domain="{{.Domain}}">
+            <ma:set-config>
+                <GatewayPeering name="{{.Name}}">
+                    <mAdminState>enabled</mAdminState>
+                    <UserSummary>{{.Summary | default "APIC gateway peering"}}</UserSummary>
+                    <LocalAddress>{{.LocalAddress}}</LocalAddress>
+                    <LocalPort>{{.LocalPort}}</LocalPort>
+                    <MonitorPort>{{.MonitorPort}}</MonitorPort>
+                    <EnablePeerGroup>{{.PeerGroupSwitch | default "on"}}</EnablePeerGroup>
+                    <Peers>{{.Peer1}}</Peers>
+                    <Peers>{{.Peer2}}</Peers>
+                    <Priority>{{.Priority}}</Priority>
+                    <EnableSSL>{{.SSLSwitch}}</EnableSSL>
+                    <Idcred>{{.CryptoIdentCreds}}</Idcred>
+                    <Valcred>{{.CryptoValCreds}}</Valcred>
+                    <PersistenceLocation>{{.PersistenceLocation | default "memory"}}</PersistenceLocation>
+                    <LocalDirectory>{{.LocalDirectory}}</LocalDirectory>
+                </GatewayPeering>
+            </ma:set-config>
+        </ma:request>
+    </SOAP-ENV:Body>
+</SOAP-ENV:Envelope>
