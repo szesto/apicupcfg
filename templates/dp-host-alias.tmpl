@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<SOAP-ENV:Envelope xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/"
+                   xmlns:ma="http://www.datapower.com/schemas/management">
+    <SOAP-ENV:Header/>
+    <SOAP-ENV:Body>
+        <ma:request domain="default">
+            <ma:set-config>
+                <HostAlias>
+                    <mAdminState>enabled</mAdminState>
+                    <UserSummary>{{.Alias}}</UserSummary>
+                    <IPAddress>{{.IPAddress}}</IPAddress>
+                </HostAlias>
+            </ma:set-config>
+        </ma:request>
+    </SOAP-ENV:Body>
+</SOAP-ENV:Envelope>

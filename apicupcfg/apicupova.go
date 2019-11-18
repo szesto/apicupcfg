@@ -261,7 +261,7 @@ func LoadSubsysVm(jsonConfigFile string) *SubsysVm {
 	return subsys
 }
 
-func ApplyTemplateVm(subsys *SubsysVm, outfiles map[string]string, subsysOnly, certsOnly bool, tbox *rice.Box) {
+func ApplyTemplateVm(subsys *SubsysVm, outfiles map[string]string, subsysOnly, certsOnly, datapowerOnly bool, tbox *rice.Box) {
 
 	isManagement := len(subsys.Management.SubsysName) > 0
 	isAnalytics := len(subsys.Analytics.SubsysName) > 0
@@ -293,35 +293,37 @@ func ApplyTemplateVm(subsys *SubsysVm, outfiles map[string]string, subsysOnly, c
 
 	var outpath string
 
-	if isManagement && !certsOnly {
+	if isManagement && !certsOnly && !datapowerOnly {
 		outpath = fileName(outfiles[outdir], tagOutputFileName(outfiles[managementOut], subsys.Tag)) + shellext
 		writeTemplate(mgtt, outpath, subsys.Management)
 	}
 
-	if isAnalytics && !certsOnly {
+	if isAnalytics && !certsOnly && !datapowerOnly {
 		outpath = fileName(outfiles[outdir], tagOutputFileName(outfiles[analyticsOut], subsys.Tag)) + shellext
 		writeTemplate(analyt, outpath, subsys.Analytics)
 	}
 
-	if isPortal && !certsOnly {
+	if isPortal && !certsOnly && !datapowerOnly {
 		outpath = fileName(outfiles[outdir], tagOutputFileName(outfiles[portalOut], subsys.Tag)) + shellext
 		writeTemplate(ptl, outpath, subsys.Portal)
 	}
 
 	// this outputs default cloud-init file... each subsystem can have it's own
-	if isCloudInit && !certsOnly {
+	if isCloudInit && !certsOnly && !datapowerOnly {
 		outpath = fileName(outfiles[outdir], subsys.CloudInit.CloudInitFile)
 		writeTemplate(cloudinitt, outpath, subsys.CloudInit.InitValues)
 	}
 
 	// certs
-	if !subsysOnly {
+	if  !subsysOnly && !datapowerOnly {
 		updateCertSpecs(&subsys.Certs, &subsys.Management, &subsys.Analytics, &subsys.Portal, &subsys.Gateway, outfiles[CommonCsrOutDir], outfiles[CustomCsrOutDir])
 		outputCerts(&subsys.Certs, outfiles, subsys.Tag, tbox)
 	}
 
 	// datapower
-	datapowerCluster(subsys, outfiles, tbox)
+	if !subsysOnly && !certsOnly {
+		datapowerCluster(subsys, outfiles, tbox)
+	}
 }
 
 func CopyCertVm(certfile string, isdir bool, subsys *SubsysVm, commonCsrDir string, customCsrDir string) error {

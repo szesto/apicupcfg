@@ -14,7 +14,7 @@ func main() {
 	// input: configuration file, output dir, csr subdirectories
 	input, outdir, validateIp, initConfig, initConfigType, subsysOnly, certsOnly,
 	certcopy, certdir, certverify, certfile, cafile, rootcafile, noexpire, certconcat, gen,
-	soma, req, auth, url, setfile, dpdir, dpfile := apicupcfg.Input()
+	soma, req, auth, url, setfile, dpdir, dpfile, datapowerOnly := apicupcfg.Input()
 
 	// input actions
 	isValidateIpActionf := func() bool {return validateIp}
@@ -172,7 +172,7 @@ func main() {
 				// gen action
 
 				// apply templates
-				apicupcfg.ApplyTemplateVm(subsysvm, output, subsysOnly, certsOnly, tbox)
+				apicupcfg.ApplyTemplateVm(subsysvm, output, subsysOnly, certsOnly, datapowerOnly, tbox)
 			}
 		}
 

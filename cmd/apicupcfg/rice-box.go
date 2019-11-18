@@ -107,90 +107,114 @@ func init() {
 		Content: string("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<SOAP-ENV:Envelope xmlns:SOAP-ENV=\"http://schemas.xmlsoap.org/soap/envelope/\"\n                   xmlns:ma=\"http://www.datapower.com/schemas/management\">\n    <SOAP-ENV:Header/>\n    <SOAP-ENV:Body>\n        <ma:request domain=\"{{.Domain}}\">\n            <ma:set-config>\n                <GatewayPeering name=\"{{.Name}}\">\n                    <mAdminState>enabled</mAdminState>\n                    <UserSummary>{{.Summary | default \"APIC gateway peering\"}}</UserSummary>\n                    <LocalAddress>{{.LocalAddress}}</LocalAddress>\n                    <LocalPort>{{.LocalPort}}</LocalPort>\n                    <MonitorPort>{{.MonitorPort}}</MonitorPort>\n                    <EnablePeerGroup>{{.PeerGroupSwitch | default \"on\"}}</EnablePeerGroup>\n                    <Peers>{{.Peer1}}</Peers>\n                    <Peers>{{.Peer2}}</Peers>\n                    <Priority>{{.Priority}}</Priority>\n                    <EnableSSL>{{.SSLSwitch}}</EnableSSL>\n                    <Idcred>{{.CryptoIdentCreds}}</Idcred>\n                    <Valcred>{{.CryptoValCreds}}</Valcred>\n                    <PersistenceLocation>{{.PersistenceLocation | default \"memory\"}}</PersistenceLocation>\n                    <LocalDirectory>{{.LocalDirectory}}</LocalDirectory>\n                </GatewayPeering>\n            </ma:set-config>\n        </ma:request>\n    </SOAP-ENV:Body>\n</SOAP-ENV:Envelope>\n"),
 	}
 	filei := &embedded.EmbeddedFile{
+		Filename:    "dp-host-alias.tmpl",
+		FileModTime: time.Unix(1574064926, 0),
+
+		Content: string("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<SOAP-ENV:Envelope xmlns:SOAP-ENV=\"http://schemas.xmlsoap.org/soap/envelope/\"\n                   xmlns:ma=\"http://www.datapower.com/schemas/management\">\n    <SOAP-ENV:Header/>\n    <SOAP-ENV:Body>\n        <ma:request domain=\"default\">\n            <ma:set-config>\n                <HostAlias>\n                    <mAdminState>enabled</mAdminState>\n                    <UserSummary>{{.Alias}}</UserSummary>\n                    <IPAddress>{{.IPAddress}}</IPAddress>\n                </HostAlias>\n            </ma:set-config>\n        </ma:request>\n    </SOAP-ENV:Body>\n</SOAP-ENV:Envelope>\n"),
+	}
+	filej := &embedded.EmbeddedFile{
+		Filename:    "dp-ntp-service.tmpl",
+		FileModTime: time.Unix(1574065772, 0),
+
+		Content: string("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<SOAP-ENV:Envelope xmlns:SOAP-ENV=\"http://schemas.xmlsoap.org/soap/envelope/\"\n                   xmlns:ma=\"http://www.datapower.com/schemas/management\">\n    <SOAP-ENV:Header/>\n    <SOAP-ENV:Body>\n        <ma:request domain=\"default\">\n            <ma:set-config>\n                <NTPService>\n                    <mAdminState>enabled</mAdminState>\n                    <UserSummary></UserSummary>\n                    <RemoteServer>{{.NTPServer | default \"pool.ntp.org\"}}</RemoteServer>\n                    <RefreshInterval>900</RefreshInterval>\n                </NTPService>\n            </ma:set-config>\n        </ma:request>\n    </SOAP-ENV:Body>\n</SOAP-ENV:Envelope>\n"),
+	}
+	filek := &embedded.EmbeddedFile{
+		Filename:    "dp-save-config.tmpl",
+		FileModTime: time.Unix(1574062978, 0),
+
+		Content: string("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<SOAP-ENV:Envelope xmlns:SOAP-ENV=\"http://schemas.xmlsoap.org/soap/envelope/\"\n                   xmlns:ma=\"http://www.datapower.com/schemas/management\">\n    <SOAP-ENV:Header/>\n    <SOAP-ENV:Body>\n        <ma:request domain=\"{{.Domain}}\">\n            <ma:do-action>\n                <SaveConfig></SaveConfig>\n            </ma:do-action>\n        </ma:request>\n    </SOAP-ENV:Body>\n</SOAP-ENV:Envelope>\n"),
+	}
+	filel := &embedded.EmbeddedFile{
 		Filename:    "dp-set-file.tmpl",
 		FileModTime: time.Unix(1573937722, 0),
 
 		Content: string("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<SOAP-ENV:Envelope xmlns:SOAP-ENV=\"http://schemas.xmlsoap.org/soap/envelope/\"\n                   xmlns:ma=\"http://www.datapower.com/schemas/management\">\n    <SOAP-ENV:Header/>\n    <SOAP-ENV:Body>\n        <ma:request domain=\"{{.Domain}}\">\n            <ma:set-file name=\"{{.Directory}}:///{{.FileName}}\">{{ b64enc .FileContent}}</ma:set-file>\n        </ma:request>\n    </SOAP-ENV:Body>\n</SOAP-ENV:Envelope>\n"),
 	}
-	filej := &embedded.EmbeddedFile{
+	filem := &embedded.EmbeddedFile{
 		Filename:    "dp-ssl-client-profile.tmpl",
 		FileModTime: time.Unix(1573871584, 0),
 
 		Content: string("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<SOAP-ENV:Envelope xmlns:SOAP-ENV=\"http://schemas.xmlsoap.org/soap/envelope/\"\n                   xmlns:ma=\"http://www.datapower.com/schemas/management\">\n    <SOAP-ENV:Header/>\n    <SOAP-ENV:Body>\n        <ma:request domain=\"{{.Domain}}\">\n            <ma:set-config>\n                <SSLClientProfile name=\"{{.Name}}\">\n                    <mAdminState>enabled</mAdminState>\n                    <UserSummary>gwd client profile</UserSummary>\n                    <Protocols>\n                        <SSLv3>off</SSLv3>\n                        <TLSv1d0>on</TLSv1d0>\n                        <TLSv1d1>on</TLSv1d1>\n                        <TLSv1d2>on</TLSv1d2>\n                    </Protocols>\n                    <Ciphers>DHE_DSS_EXPORT_WITH_DES40_CBC_SHA</Ciphers>\n                    <Idcred>{{.CryptoIdentCreds}}</Idcred>\n                    <ValidateServerCert>off</ValidateServerCert>\n                    <Valcred>{{.CryptoValCreds}}</Valcred>\n                    <Caching>on</Caching>\n                    <CacheTimeout>300</CacheTimeout>\n                    <CacheSize>100</CacheSize>\n                    <SSLClientFeatures>\n                        <use-sni>on</use-sni>\n                        <permit-insecure-servers>off</permit-insecure-servers>\n                        <compression>off</compression>\n                    </SSLClientFeatures>\n                    <EllipticCurves>secp521r1</EllipticCurves>\n                    <EllipticCurves>secp384r1</EllipticCurves>\n                    <EllipticCurves>secp256k1</EllipticCurves>\n                    <EllipticCurves>secp256r1</EllipticCurves>\n                    <UseCustomSNIHostname>no</UseCustomSNIHostname>\n                    <CustomSNIHostname></CustomSNIHostname>\n                    <ValidateHostname>off</ValidateHostname>\n                    <HostnameValidationFlags>\n                        <X509_CHECK_FLAG_ALWAYS_CHECK_SUBJECT>off</X509_CHECK_FLAG_ALWAYS_CHECK_SUBJECT>\n                        <X509_CHECK_FLAG_NO_WILDCARDS>off</X509_CHECK_FLAG_NO_WILDCARDS>\n                        <X509_CHECK_FLAG_NO_PARTIAL_WILDCARDS>off</X509_CHECK_FLAG_NO_PARTIAL_WILDCARDS>\n                        <X509_CHECK_FLAG_MULTI_LABEL_WILDCARDS>off</X509_CHECK_FLAG_MULTI_LABEL_WILDCARDS>\n                        <X509_CHECK_FLAG_SINGLE_LABEL_SUBDOMAINS>off</X509_CHECK_FLAG_SINGLE_LABEL_SUBDOMAINS>\n                    </HostnameValidationFlags>\n                    <HostnameValidationFailOnError>off</HostnameValidationFailOnError>\n                </SSLClientProfile>\n            </ma:set-config>\n        </ma:request>\n    </SOAP-ENV:Body>\n</SOAP-ENV:Envelope>\n"),
 	}
-	filek := &embedded.EmbeddedFile{
+	filen := &embedded.EmbeddedFile{
 		Filename:    "dp-ssl-server-profile.tmpl",
 		FileModTime: time.Unix(1573869703, 0),
 
 		Content: string("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<SOAP-ENV:Envelope xmlns:SOAP-ENV=\"http://schemas.xmlsoap.org/soap/envelope/\"\n                   xmlns:ma=\"http://www.datapower.com/schemas/management\">\n    <SOAP-ENV:Header/>\n    <SOAP-ENV:Body>\n        <ma:request domain=\"{{.Domain}}\">\n            <ma:set-config>\n                <SSLServerProfile name=\"{{.Name}}\">\n                    <mAdminState>enabled</mAdminState>\n                    <UserSummary>Gwd server profile</UserSummary>\n                    <Protocols>\n                        <SSLv3>off</SSLv3>\n                        <TLSv1d0>on</TLSv1d0>\n                        <TLSv1d1>on</TLSv1d1>\n                        <TLSv1d2>on</TLSv1d2>\n                    </Protocols>\n                    <Ciphers>ECDHE_ECDSA_WITH_AES_256_GCM_SHA384</Ciphers>\n                    <Ciphers>ECDHE_RSA_WITH_AES_256_GCM_SHA384</Ciphers>\n                    <Ciphers>ECDHE_ECDSA_WITH_AES_256_CBC_SHA384</Ciphers>\n                    <Ciphers>ECDHE_RSA_WITH_AES_256_CBC_SHA384</Ciphers>\n                    <Ciphers>ECDHE_ECDSA_WITH_AES_256_CBC_SHA</Ciphers>\n                    <Ciphers>ECDHE_RSA_WITH_AES_256_CBC_SHA</Ciphers>\n                    <Ciphers>DHE_DSS_WITH_AES_256_GCM_SHA384</Ciphers>\n                    <Ciphers>DHE_RSA_WITH_AES_256_GCM_SHA384</Ciphers>\n                    <Ciphers>DHE_RSA_WITH_AES_256_CBC_SHA256</Ciphers>\n                    <Ciphers>DHE_DSS_WITH_AES_256_CBC_SHA256</Ciphers>\n                    <Ciphers>DHE_RSA_WITH_AES_256_CBC_SHA</Ciphers>\n                    <Ciphers>DHE_DSS_WITH_AES_256_CBC_SHA</Ciphers>\n                    <Ciphers>RSA_WITH_AES_256_GCM_SHA384</Ciphers>\n                    <Ciphers>RSA_WITH_AES_256_CBC_SHA256</Ciphers>\n                    <Ciphers>RSA_WITH_AES_256_CBC_SHA</Ciphers>\n                    <Ciphers>ECDHE_ECDSA_WITH_AES_128_GCM_SHA256</Ciphers>\n                    <Ciphers>ECDHE_RSA_WITH_AES_128_GCM_SHA256</Ciphers>\n                    <Ciphers>ECDHE_ECDSA_WITH_AES_128_CBC_SHA256</Ciphers>\n                    <Ciphers>ECDHE_RSA_WITH_AES_128_CBC_SHA256</Ciphers>\n                    <Ciphers>ECDHE_ECDSA_WITH_AES_128_CBC_SHA</Ciphers>\n                    <Ciphers>ECDHE_RSA_WITH_AES_128_CBC_SHA</Ciphers>\n                    <Ciphers>DHE_DSS_WITH_AES_128_GCM_SHA256</Ciphers>\n                    <Ciphers>DHE_RSA_WITH_AES_128_GCM_SHA256</Ciphers>\n                    <Ciphers>DHE_RSA_WITH_AES_128_CBC_SHA256</Ciphers>\n                    <Ciphers>DHE_DSS_WITH_AES_128_CBC_SHA256</Ciphers>\n                    <Ciphers>DHE_RSA_WITH_AES_128_CBC_SHA</Ciphers>\n                    <Ciphers>DHE_DSS_WITH_AES_128_CBC_SHA</Ciphers>\n                    <Ciphers>RSA_WITH_AES_128_GCM_SHA256</Ciphers>\n                    <Ciphers>RSA_WITH_AES_128_CBC_SHA256</Ciphers>\n                    <Ciphers>RSA_WITH_AES_128_CBC_SHA</Ciphers>\n                    <Ciphers>ECDHE_ECDSA_WITH_3DES_EDE_CBC_SHA</Ciphers>\n                    <Ciphers>ECDHE_RSA_WITH_3DES_EDE_CBC_SHA</Ciphers>\n                    <Ciphers>DHE_RSA_WITH_3DES_EDE_CBC_SHA</Ciphers>\n                    <Ciphers>DHE_DSS_WITH_3DES_EDE_CBC_SHA</Ciphers>\n                    <Ciphers>RSA_WITH_3DES_EDE_CBC_SHA</Ciphers>\n                    <Idcred>{{.CryptoIdentCreds}}</Idcred>\n                    <RequestClientAuth>off</RequestClientAuth>\n                    <RequireClientAuth>off</RequireClientAuth>\n                    <ValidateClientCert>off</ValidateClientCert>\n                    <SendClientAuthCAList>on</SendClientAuthCAList>\n                    <Valcred>{{.CryptoValCreds}}</Valcred>\n                    <Caching>on</Caching>\n                    <CacheTimeout>300</CacheTimeout>\n                    <CacheSize>20</CacheSize>\n                    <SSLOptions>\n                        <max-duration>off</max-duration>\n                        <max-renegotiation>off</max-renegotiation>\n                    </SSLOptions>\n                    <MaxSSLDuration>60</MaxSSLDuration>\n                    <NumberOfRenegotiationAllowed>0</NumberOfRenegotiationAllowed>\n                    <ProhibitResumeOnReneg>off</ProhibitResumeOnReneg>\n                    <Compression>off</Compression>\n                    <AllowLegacyRenegotiation>off</AllowLegacyRenegotiation>\n                    <PreferServerCiphers>on</PreferServerCiphers>\n                    <EllipticCurves>secp521r1</EllipticCurves>\n                    <EllipticCurves>secp384r1</EllipticCurves>\n                    <EllipticCurves>secp256k1</EllipticCurves>\n                    <EllipticCurves>secp256r1</EllipticCurves>\n                </SSLServerProfile>\n            </ma:set-config>\n        </ma:request>\n    </SOAP-ENV:Body>\n</SOAP-ENV:Envelope>"),
 	}
-	filel := &embedded.EmbeddedFile{
+	fileo := &embedded.EmbeddedFile{
+		Filename:    "dp-system-settings.tmpl",
+		FileModTime: time.Unix(1574065195, 0),
+
+		Content: string("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<SOAP-ENV:Envelope xmlns:SOAP-ENV=\"http://schemas.xmlsoap.org/soap/envelope/\"\n                   xmlns:ma=\"http://www.datapower.com/schemas/management\">\n    <SOAP-ENV:Header/>\n    <SOAP-ENV:Body>\n        <ma:request domain=\"default\">\n            <ma:set-config>\n                <SystemSettings>\n                    <mAdminState>enabled</mAdminState>\n                    <UserSummary></UserSummary>\n                    <SystemName>{{.SystemName}}</SystemName>\n                </SystemSettings>\n            </ma:set-config>\n        </ma:request>\n    </SOAP-ENV:Body>\n</SOAP-ENV:Envelope>\n"),
+	}
+	filep := &embedded.EmbeddedFile{
 		Filename:    "extra-values.tmpl",
 		FileModTime: time.Unix(1572973028, 0),
 
 		Content: string("{{- $a := list 0 . }}\n{{- template \"map2yml\" $a }}"),
 	}
-	filem := &embedded.EmbeddedFile{
+	fileq := &embedded.EmbeddedFile{
 		Filename:    "gateway-k8s.tmpl",
 		FileModTime: time.Unix(1571805848, 0),
 
 		Content: string("{{$subsys := .SubsysName}}\n\n{{$pathsep := .OsEnv.PathSeparator}}\n{{$apicup := .OsEnv.BinApicup}}\n\n{{ template \"scriptheader\" .OsEnv }}\n\n{{$apicup}} subsys create {{$subsys}} gateway --k8s\n\n{{if len .ExtraValuesFile}}\n{{$apicup}} subsys set {{$subsys}} extra-values-file=..{{$pathsep}}{{.ExtraValuesFile}}\n{{end}}\n\n{{$apicup}} subsys set {{$subsys}} api-gateway={{.ApiGateway}}\n{{$apicup}} subsys set {{$subsys}} apic-gw-service={{.ApicGwService}}\n\n{{$apicup}} subsys set {{$subsys}} namespace={{.Namespace}}\n\n{{if len .RegistryUrl}}\n{{$apicup}} subsys set {{$subsys}} registry={{.RegistryUrl}}\n{{end}}\n{{if len .RegistrySecret}}\n{{$apicup}} subsys set {{$subsys}} registry-secret={{.RegistrySecret}}\n{{end}}\n\n{{$apicup}} subsys set {{$subsys}} image-pull-policy={{.ImagePullPolicy | default \"IfNotPresent\"}}\n\n{{$apicup}} subsys set {{$subsys}} replica-count={{.ReplicaCount | default 3}}\n{{$apicup}} subsys set {{$subsys}} max-cpu={{.MaxCpu | default 4}}\n{{$apicup}} subsys set gwy max-memory-gb={{.MaxMemoryGb | default 6}}\n\n{{$apicup}} subsys set {{$subsys}} storage-class={{.StorageClass}}\n\n{{$apicup}} subsys set {{$subsys}} v5-compatibility-mode={{.V5CompatibilityMode | default false}}\n{{$apicup}} subsys set {{$subsys}} enable-tms={{.EnableTms}}\n{{$apicup}} subsys set {{$subsys}} tms-peering-storage-size-gb={{.TmsPeeringStorageSizeGb | default 10}}\n{{$apicup}} subsys set {{$subsys}} enable-high-performance-peering={{.EnableHighPerformancePeering | quote}}\n\n{{$apicup}} subsys set {{$subsys}} license-version={{.LicenseVersion}}\n{{$apicup}} subsys set {{$subsys}} mode={{.Mode}}\n{{$apicup}} subsys set {{$subsys}} ingress-type={{.IngressType | default \"ingress\"}}\n"),
 	}
-	filen := &embedded.EmbeddedFile{
+	filer := &embedded.EmbeddedFile{
 		Filename:    "helpers.tmpl",
 		FileModTime: time.Unix(1571805848, 0),
 
 		Content: string("{{/* write out script header. pass OsEnv as scope */}}\n{{ define \"scriptheader\"}}\n    {{ if .IsLinux }}\n        #!/bin/bash\n        # run this script from project directory\n        set -x\n    {{else}}\n        rem run this script from project directory\n    {{end}}\n{{ end }}\n\n{{ define \"scriptheader1\"}}\n    {{ if .IsLinux }}\n        #!/bin/bash\n        # run this script from current directory\n        set -x\n    {{else}}\n        rem run this script from current directory\n    {{end}}\n{{ end }}\n\n{{- /* print out map as yml... pass list as scope: [depth, map] */}}\n{{- define \"map2yml\" }}\n    {{- $d := first . }}\n    {{- $m := last . }}\n    {{- range $k, $v := $m }}\n        {{- $vt := typeOf $v }}\n        {{- if eq $vt \"map[string]interface {}\" }}\n            {{- /*(key-depth -- {{$d}})*/}}\n            {{- $s := int $d}}\n            {{- nindent $s $k}}:\n            {{- $d1 := add1 $d}}\n            {{- $a := list $d1 $v}}\n            {{- template \"map2yml\" $a }}\n        {{- else}}\n            {{- /*(key-val-depth -- {{$d}})*/}}\n            {{- $s := int $d }}\n            {{- nindent $s $k }}: {{$v}}\n        {{- end}}\n    {{- end }}\n{{- end }}\n"),
 	}
-	fileo := &embedded.EmbeddedFile{
+	files := &embedded.EmbeddedFile{
 		Filename:    "keypair.tmpl",
 		FileModTime: time.Unix(1573620739, 0),
 
 		Content: string("{{$pathsep := .OsEnv.PathSeparator}}\n{{$shellext := .OsEnv.ShellExt}}\n\n{{ template \"scriptheader1\" .OsEnv }}\n\n{{ if .OsEnv.IsWindows }}\n    IF EXIST {{.CertSpec.KeyFile}} (\necho Private key file {{.CertSpec.KeyFile}} already exists... Skip key pair and csr generation...\n    ) ELSE (\nopenssl req -config {{.CertSpec.CsrConf}} -out {{.CertSpec.CertFile}}.csr -outform PEM -new -keyout {{.CertSpec.KeyFile}}\nopenssl req -x509 -config {{.CertSpec.CsrConf}} -out {{.CertSpec.CertFile}}.self -outform PEM -new -key {{.CertSpec.KeyFile}}\n    )\n{{ else }}\n    if [[ -f {{.CertSpec.KeyFile}} ]]; then\necho Private key file {{.CertSpec.KeyFile}} already exists... Skip key pair and csr generation...\n    else\nopenssl req -config {{.CertSpec.CsrConf}} -out {{.CertSpec.CertFile}}.csr -outform PEM -new -keyout {{.CertSpec.KeyFile}}\nopenssl req -x509 -config {{.CertSpec.CsrConf}} -out {{.CertSpec.CertFile}}.self -outform PEM -new -key {{.CertSpec.KeyFile}}\n    fi\n{{ end }}\n"),
 	}
-	filep := &embedded.EmbeddedFile{
+	filet := &embedded.EmbeddedFile{
 		Filename:    "management-k8s.tmpl",
 		FileModTime: time.Unix(1572486449, 0),
 
 		Content: string("{{ $subsys := .SubsysName }}\n\n{{$pathsep := .OsEnv.PathSeparator}}\n{{$apicup := .OsEnv.BinApicup}}\n\n{{ template \"scriptheader\" .OsEnv }}\n\n{{$apicup}} subsys create {{ $subsys }} management --k8s\n\n{{$apicup}} subsys set {{ $subsys }} mode={{ .Mode }}\n\n{{$apicup}} subsys set {{ $subsys }} ingress-type={{ .IngressType }}\n{{$apicup}} subsys set {{ $subsys }} namespace={{ .Namespace }}\n{{$apicup}} subsys set {{ $subsys }} registry={{ .RegistryUrl }}\n{{$apicup}} subsys set {{ $subsys }} registry-secret={{ .RegistrySecret }}\n{{$apicup}} subsys set {{ $subsys }} storage-class={{ .StorageClass }}\n\n{{ if len .ExtraValuesFile -}}\n    {{$apicup}} subsys set {{ $subsys }} extra-values-file=..{{$pathsep}}{{ .ExtraValuesFile | quote }}\n{{ end -}}\n\n{{ with .CassandraBackup }}\n    {{ if .BackupProtocol | lower | eq \"sftp\" -}}\n        {{$apicup}} subsys set {{ $subsys }} cassandra-backup-protocol=sftp\n        {{$apicup}} subsys set {{ $subsys }} cassandra-backup-host={{ .BackupHost }}\n        {{$apicup}} subsys set {{ $subsys }} cassandra-backup-port={{ .BackupPort | default 22 }}\n        {{$apicup}} subsys set {{ $subsys }} cassandra-backup-auth-user={{ .BackupAuthUser }}\n        {{$apicup}} subsys set {{ $subsys }} cassandra-backup-auth-pass={{ .BackupAuthPass }}\n        {{$apicup}} subsys set {{ $subsys }} cassandra-backup-path={{ .BackupPath }}\n        {{$apicup}} subsys set {{ $subsys }} cassandra-backup-schedule={{ .BackupSchedule | quote }}\n    {{ else if .BackupProtocol | lower | eq \"objstore\" -}}\n        {{$apicup}} subsys set {{ $subsys }} cassandra-backup-protocol=objstore\n        {{$apicup}} subsys set {{ $subsys }} cassandra-backup-host={{ .ObjstoreEndpointRegion }}\n        {{$apicup}} subsys set {{ $subsys }} cassandra-backup-auth-user={{ .ObjstoreS3SecretKeyId }}\n        {{$apicup}} subsys set {{ $subsys }} cassandra-backup-auth-pass={{ .ObjstoreS3SecretAccessKey }}\n        {{$apicup}} subsys set {{ $subsys }} cassandra-backup-path={{ .ObjstoreBucketSubfolder }}\n        {{$apicup}} subsys set {{ $subsys }} cassandra-backup-schedule={{ .BackupSchedule | quote }}\n    {{- end }}\n{{- end }}\n\n{{$apicup}} subsys set {{ $subsys }} cassandra-max-memory-gb={{ .CassandraMaxMemoryGb | default 9 }}\n{{$apicup}} subsys set {{ $subsys }} cassandra-cluster-size={{ .CassandraClusterSize }}\n{{$apicup}} subsys set {{ $subsys }} cassandra-volume-size-gb={{ .CassandraVolumeSizeGb }}\n{{ if .ExternalCassandraHost }}\n    {{$apicup}} subsys set {{ $subsys }} external-cassandra-host={{ .ExternalCassandraHost }}\n{{ end }}\n\n{{$apicup}} subsys set {{ $subsys }} create-crd={{ .CreateCrd | default true }}\n\n{{$apicup}} subsys set {{ $subsys }} platform-api={{ .PlatformApi }}\n{{$apicup}} subsys set {{ $subsys }} api-manager-ui={{ .ApiManagerUi }}\n{{$apicup}} subsys set {{ $subsys }} cloud-admin-ui={{ .CloudAdminUi }}\n{{$apicup}} subsys set {{ $subsys }} consumer-api={{ .ConsumerApi }}\n\n{{ if .CassandraEncryptionKeyFile }}\n    {{$apicup}} certs set {{ $subsys }} encryption-secret ..{{$pathsep}}{{ .CassandraEncryptionKeyFile }}\n{{ end }}"),
 	}
-	fileq := &embedded.EmbeddedFile{
+	fileu := &embedded.EmbeddedFile{
 		Filename:    "management-vm.tmpl",
 		FileModTime: time.Unix(1572486425, 0),
 
 		Content: string("{{- $subsys := .SubsysName}}\n\n{{$pathsep := .OsEnv.PathSeparator}}\n{{$apicup := .OsEnv.BinApicup}}\n{{$islinux := .OsEnv.IsLinux}}\n\n{{ template \"scriptheader\" .OsEnv }}\n\n{{$apicup}} subsys create {{ $subsys }} management\n\n{{$apicup}} subsys set {{ $subsys }} mode={{ .Mode }}\n\n{{ with .CloudInit }}\n    {{- if len .CloudInitFile }}\n        {{$apicup}} subsys set {{ $subsys }} additional-cloud-init-file=..{{$pathsep}}{{ .CloudInitFile }}\n    {{- end }}\n{{ end }}\n\n{{$apicup}} subsys set {{ $subsys }} search-domain={{ join \",\" .SearchDomains | trim | quote }}\n\n{{ with .VmFirstBoot }}\n    {{$apicup}} subsys set {{ $subsys }} dns-servers={{ join \",\" .DnsServers | trim | quote }}\n\n    {{- if $islinux }}\n        {{$apicup}} subsys set {{ $subsys }} default-password={{ .VmwareConsolePasswordHash | squote }}\n    {{- else }}\n        {{$apicup}} subsys set {{ $subsys }} default-password={{ .VmwareConsolePasswordHash | quote }}\n    {{- end }}\n\n    {{ with .IpRanges }}\n        {{- if len .PodNetwork }}\n            {{$apicup}} subsys set {{ $subsys }} k8s-pod-network={{ .PodNetwork | quote }}\n        {{- end}}\n        {{- if len .ServiceNetwork }}\n            {{$apicup}} subsys set {{ $subsys }} k8s-service-network={{ .ServiceNetwork | quote }}\n        {{- end }}\n    {{ end }}\n\n    {{ range .Hosts}}\n        {{- $h := .}}\n        {{$apicup}} hosts create {{$subsys}} {{$h.Name}} {{$h.HardDiskPassword}}\n        {{$apicup}} iface create {{$subsys}} {{$h.Name}} {{$h.Device}} {{$h.IpAddress}}/{{$h.SubnetMask}} {{$h.Gateway}}\n    {{ end}}\n\n{{ end}}\n\n{{$apicup}} subsys set {{ $subsys }} ssh-keyfiles=..{{$pathsep}}{{ .SshPublicKeyFile }}\n\n{{ with .CassandraBackup }}\n    {{- if .BackupProtocol | lower | eq \"sftp\" }}\n        {{$apicup}} subsys set {{ $subsys }} cassandra-backup-protocol=sftp\n        {{$apicup}} subsys set {{ $subsys }} cassandra-backup-host={{ .BackupHost }}\n        {{$apicup}} subsys set {{ $subsys }} cassandra-backup-port={{ .BackupPort | default 22 }}\n        {{$apicup}} subsys set {{ $subsys }} cassandra-backup-auth-user={{ .BackupAuthUser }}\n        {{$apicup}} subsys set {{ $subsys }} cassandra-backup-auth-pass={{ .BackupAuthPass }}\n        {{$apicup}} subsys set {{ $subsys }} cassandra-backup-path={{ .BackupPath }}\n        {{$apicup}} subsys set {{ $subsys }} cassandra-backup-schedule={{ .BackupSchedule | quote }}\n    {{- else if .BackupProtocol | lower | eq \"objstore\" }}\n        {{$apicup}} subsys set {{ $subsys }} cassandra-backup-protocol=objstore\n        {{$apicup}} subsys set {{ $subsys }} cassandra-backup-host={{ .ObjstoreEndpointRegion }}\n        {{$apicup}} subsys set {{ $subsys }} cassandra-backup-auth-user={{ .ObjstoreS3SecretKeyId }}\n        {{$apicup}} subsys set {{ $subsys }} cassandra-backup-auth-pass={{ .ObjstoreS3SecretAccessKey }}\n        {{$apicup}} subsys set {{ $subsys }} cassandra-backup-path={{ .ObjstoreBucketSubfolder }}\n        {{$apicup}} subsys set {{ $subsys }} cassandra-backup-schedule={{ .BackupSchedule | quote }}\n    {{- end }}\n{{ end }}\n\n{{$apicup}} subsys set {{ $subsys }} platform-api={{ .PlatformApi }}\n{{$apicup}} subsys set {{ $subsys }} api-manager-ui={{ .ApiManagerUi }}\n{{$apicup}} subsys set {{ $subsys }} cloud-admin-ui={{ .CloudAdminUi }}\n{{$apicup}} subsys set {{ $subsys }} consumer-api={{ .ConsumerApi }}\n\n{{ if .CassandraEncryptionKeyFile }}\n    {{$apicup}} certs set {{ $subsys }} encryption-secret ..{{$pathsep}}{{ .CassandraEncryptionKeyFile }}\n{{ end }}"),
 	}
-	filer := &embedded.EmbeddedFile{
+	filev := &embedded.EmbeddedFile{
 		Filename:    "portal-k8s.tmpl",
 		FileModTime: time.Unix(1571805848, 0),
 
 		Content: string("{{ $subsys := .SubsysName}}\n\n{{$pathsep := .OsEnv.PathSeparator}}\n{{$apicup := .OsEnv.BinApicup}}\n\n{{ template \"scriptheader\" .OsEnv }}\n\n{{$apicup}} subsys create {{$subsys}} portal --k8s\n\n{{$apicup}} subsys set {{$subsys}} mode={{.Mode}}\n{{$apicup}} subsys set {{$subsys}} extra-values-file=..{{$pathsep}}{{.ExtraValuesFile | quote}}\n\n{{$apicup}} subsys set {{$subsys}} ingress-type={{.IngressType}}\n{{$apicup}} subsys set {{$subsys}} namespace={{ .Namespace }}\n{{$apicup}} subsys set {{$subsys}} storage-class={{ .StorageClass }}\n\n{{$apicup}} subsys set {{$subsys}} registry={{ .RegistryUrl }}\n{{$apicup}} subsys set {{$subsys}} registry-secret={{ .RegistrySecret }}\n\n{{$apicup}} subsys set {{$subsys}} portal-admin={{ .PortalAdmin }}\n{{$apicup}} subsys set {{$subsys}} portal-www={{ .PortalWWW }}\n\n{{$apicup}} subsys set {{$subsys}} www-storage-size-gb={{ .WwwStorageSizeGb | default 5 }}\n{{$apicup}} subsys set {{$subsys}} backup-storage-size-gb={{ .BackupStorageSizeGb | default 5 }}\n{{$apicup}} subsys set {{$subsys}} db-storage-size-gb={{ .DbStorageSizeGb | default 12 }}\n{{$apicup}} subsys set {{$subsys}} db-logs-storage-size-gb={{ .DbLogsStorageSizeGb | default 12 }}\n{{/*apicup subsys set {{$subsys}} admin-storage-size-gb={{ .AdminStorageSizeGb | default 1 }}*/}}\n\n{{ with .SiteBackup }}\n{{ if .BackupProtocol | lower | eq \"sftp\" }}\n{{$apicup}} subsys set {{$subsys}} site-backup-protocol=sftp\n{{$apicup}} subsys set {{$subsys}} site-backup-host={{.BackupHost}}\n{{$apicup}} subsys set {{$subsys}} site-backup-port={{.BackupPort | default 22}}\n{{$apicup}} subsys set {{$subsys}} site-backup-auth-user={{.BackupAuthUser}}\n{{$apicup}} subsys set {{$subsys}} site-backup-auth-pass={{.BackupAuthPass}}\n{{$apicup}} subsys set {{$subsys}} site-backup-path={{.BackupPath }}\n{{$apicup}} subsys set {{$subsys}} site-backup-schedule={{.BackupSchedule | quote}}\n{{ else if .BackupProtocol | lower | eq \"objstore\" }}\n{{$apicup}} subsys set {{$subsys}} site-backup-protocol=objstore\n{{$apicup}} subsys set {{$subsys}} site-backup-host={{ .ObjstoreEndpointRegion }}\n{{$apicup}} subsys set {{$subsys}} site-backup-auth-user={{ .ObjstoreS3SecretKeyId }}\n{{$apicup}} subsys set {{$subsys}} site-backup-auth-pass={{ .ObjstoreS3SecretAccessKey }}\n{{$apicup}} subsys set {{$subsys}} site-backup-path={{ .ObjstoreBucketSubfolder }}\n{{$apicup}} subsys set {{$subsys}} site-backup-schedule={{ .BackupSchedule | quote }}\n{{ end }}\n{{ end }}"),
 	}
-	files := &embedded.EmbeddedFile{
+	filew := &embedded.EmbeddedFile{
 		Filename:    "portal-vm.tmpl",
 		FileModTime: time.Unix(1571805848, 0),
 
 		Content: string("{{$subsys := .SubsysName}}\n\n{{$pathsep := .OsEnv.PathSeparator}}\n{{$apicup := .OsEnv.BinApicup}}\n{{$islinux := .OsEnv.IsLinux}}\n\n{{ template \"scriptheader\" .OsEnv }}\n\n{{$apicup}} subsys create {{ $subsys }} portal\n{{$apicup}} subsys set {{ $subsys }} mode={{ .Mode }}\n\n{{ with .CloudInit }}\n{{ if len .CloudInitFile }}\n{{$apicup}} subsys set {{ $subsys }} additional-cloud-init-file=..{{$pathsep}}{{ .CloudInitFile }}\n{{ end }}\n{{ end }}\n\n{{$apicup}} subsys set {{ $subsys }} search-domain={{ join \",\" .SearchDomains | trim | quote }}\n\n{{$apicup}} subsys set {{ $subsys }} ssh-keyfiles=..{{$pathsep}}{{ .SshPublicKeyFile }}\n\n{{ with .VmFirstBoot }}\n{{$apicup}} subsys set {{ $subsys }} dns-servers={{ join \",\" .DnsServers | trim | quote }}\n\n{{ if $islinux }}\n{{$apicup}} subsys set {{ $subsys }} default-password={{ .VmwareConsolePasswordHash | squote }}\n{{ else}}\n{{$apicup}} subsys set {{ $subsys }} default-password={{ .VmwareConsolePasswordHash | quote }}\n{{end}}\n\n{{ with .IpRanges }}\n{{ if len .PodNetwork }}\n{{$apicup}} subsys set {{ $subsys }} k8s-pod-network={{ .PodNetwork | quote }}\n{{ end}}\n{{ if len .ServiceNetwork }}\n{{$apicup}} subsys set {{ $subsys }} k8s-service-network={{ .ServiceNetwork | quote }}\n{{ end}}\n{{ end}}\n\n{{range .Hosts}}\n{{$h := .}}\n{{$apicup}} hosts create {{$subsys}} {{$h.Name}} {{$h.HardDiskPassword}}\n{{$apicup}} iface create {{$subsys}} {{$h.Name}} {{$h.Device}} {{$h.IpAddress}}/{{$h.SubnetMask}} {{$h.Gateway}}\n{{ end}}\n\n{{ end}}\n\n{{ with .SiteBackup }}\n    {{ if .BackupProtocol | lower | eq \"sftp\" }}\n        {{$apicup}} subsys set {{ $subsys }} site-backup-protocol=sftp\n        {{$apicup}} subsys set {{ $subsys }} site-backup-host={{ .BackupHost }}\n        {{$apicup}} subsys set {{ $subsys }} site-backup-port={{ .BackupPort | default 22 }}\n        {{$apicup}} subsys set {{ $subsys }} site-backup-auth-user={{ .BackupAuthUser }}\n        {{$apicup}} subsys set {{ $subsys }} site-backup-auth-pass={{ .BackupAuthPass }}\n        {{$apicup}} subsys set {{ $subsys }} site-backup-path={{ .BackupPath }}\n        {{$apicup}} subsys set {{ $subsys }} site-backup-schedule={{ .BackupSchedule | quote }}\n    {{ else if .BackupProtocol | lower | eq \"objstore\" }}\n        {{$apicup}} subsys set {{ $subsys }} site-backup-protocol=objstore\n        {{$apicup}} subsys set {{ $subsys }} site-backup-host={{ .ObjstoreEndpointRegion }}\n        {{$apicup}} subsys set {{ $subsys }} site-backup-auth-user={{ .ObjstoreS3SecretKeyId }}\n        {{$apicup}} subsys set {{ $subsys }} site-backup-auth-pass={{ .ObjstoreS3SecretAccessKey }}\n        {{$apicup}} subsys set {{ $subsys }} site-backup-path={{ .ObjstoreBucketSubfolder }}\n        {{$apicup}} subsys set {{ $subsys }} site-backup-schedule={{ .BackupSchedule | quote }}\n    {{ end }}\n{{ end }}\n\n{{$apicup}} subsys set {{ $subsys }} portal-admin={{ .PortalAdmin }}\n{{$apicup}} subsys set {{ $subsys }} portal-www={{ .PortalWww }}\n"),
 	}
-	filet := &embedded.EmbeddedFile{
+	filex := &embedded.EmbeddedFile{
 		Filename:    "soma.tmpl",
 		FileModTime: time.Unix(1573971814, 0),
 
 		Content: string("{{$pathsep := .OsEnv.PathSeparator}}\n{{$config := .Config}}\n{{$iswin := .OsEnv.IsWindows}}\n\n{{ template \"scriptheader1\" .OsEnv }}\n\n{{ if $iswin }}\n    set apicupcfg=apicupcfg.exe\n    IF EXIST ..\\apicupcfg.exe (\n        set apicupcfg=..\\apicupcfg.exe\n    )\n{{else}}\n    apicupcfg=apicupcfg\n    if [[ -f ../apicupcfg ]]; then\n        apicupcfg=../apicupcfg\n    fi\n{{ end }}\n\n{{range .SetFileSpecs}}\n    {{$spec := .}}\n\n    {{ if $iswin }}\n        %apicupcfg% -config ..\\{{$config}} -soma -setfile {{$spec.File}} -dpdir {{$spec.Dpdir}} -dpfile {{$spec.Dpfile}} -auth {{$spec.Auth}} -url {{$spec.Url}}\n    {{else}}\n        $apicupcfg -config ../{{$config}} -soma -setfile {{$spec.File}} -dpdir {{$spec.Dpdir}} -dpfile {{$spec.Dpfile}} -auth {{$spec.Auth}} -url {{$spec.Url}}\n    {{ end }}\n\n{{end}}\n\n{{range .ReqSpecs}}\n    {{$spec := .}}\n\n    {{ if $iswin }}\n        %apicupcfg% -config ..\\{{$config}} -soma -req {{$spec.Req}} -auth {{$spec.Auth}} -url {{$spec.Url}}\n    {{else}}\n        $apicupcfg -config ../{{$config}} -soma -req {{$spec.Req}} -auth {{$spec.Auth}} -url {{$spec.Url}}\n    {{end}}\n\n{{end}}"),
 	}
-	fileu := &embedded.EmbeddedFile{
+	filey := &embedded.EmbeddedFile{
 		Filename:    "subsys-certs.tmpl",
 		FileModTime: time.Unix(1573365115, 0),
 
 		Content: string("{{$pathsep := .OsEnv.PathSeparator}}\n{{$apicup := .OsEnv.BinApicup}}\n\n{{ template \"scriptheader\" .OsEnv }}\n\n{{ range .CertSpecs}}\n    {{ $certSpec := .}}\n    {{$apicup}} certs set {{ $certSpec.SubsysName}} {{$certSpec.CertName}} ..{{$pathsep}}{{$certSpec.CertSubdir}}{{$pathsep}}{{$certSpec.CertFile}} ..{{$pathsep}}{{$certSpec.KeySubdir}}{{$pathsep}}{{$certSpec.KeyFile}} ..{{$pathsep}}{{$certSpec.CaSubdir}}{{$pathsep}}{{$certSpec.CaFile}}\n{{ end }}\n"),
 	}
-	filev := &embedded.EmbeddedFile{
+	filez := &embedded.EmbeddedFile{
 		Filename:    "subsys-config-k8s.tmpl",
 		FileModTime: time.Unix(1573975981, 0),
 
 		Content: string("{\n    \"InstallType\": \"k8s\",\n    \"Version\": {{ .Version | default \"2018.4.1.x\" | quote }},\n    \"Tag\": \"tag\",\n\n    \"Mode\": {{ .Mode | default \"dev|standard\" | quote }},\n\n    \"Namespace\": {{ .Namespace | default \"apic\" | quote }},\n    \"RegistryUrl\": \"container-image-registry-url\",\n    \"RegistrySecret\": \"container-image-registry-secret\",\n    \"IngressType\": \"ingress|route\",\n    \"StorageClass\": \"gp2|etc\",\n\n    \"Certs\": {\n        \"DnFields\": [\"O=APIC|match ca reqs\",\"C=US|match ca reqs\"],\n        \"K8sNamespace\": {{ .Namespace | default \"apic\" | quote }},\n        \"CaFile\": \"ca-chain-root-last.crt\",\n\n        \"Certbot\": {\n            \"CertDir\": \"letsencrypt/live/my.domain.com\",\n            \"Cert\": \"cert.pem\",\n            \"Key\": \"privkey.pem\",\n            \"CaChain\": \"chain.pem\"\n        },\n\n        \"SharedEndpointTrust\": false,\n\n        \"PublicUserFacingCerts\": true,\n        \"PublicCerts\": false,\n        \"CommonCerts\": false\n    },\n\n    \"Management\": {\n        \"SubsysName\": \"mgmt\",\n        \"ExtraValuesFile\": \"mgmt-values.yaml\",\n        \"ExtraValues\": {},\n\n        \"CassandraBackup\": {\n            \"BackupProtocol\": \"sftp|objstore\",\n            \"BackupAuthUser\": \"admin\",\n            \"BackupAuthPass\": \"secret\",\n            \"BackupHost\": \"backup.my.domain.com\",\n            \"BackupPort\": 1022,\n            \"BackupPath\": \"/backup\",\n            \"ObjstoreS3SecretKeyId\": \"\",\n            \"ObjstoreS3SecretAccessKey\": \"\",\n            \"ObjstoreEndpointRegion\": \"\",\n            \"ObjstoreBucketSubfolder\": \"\",\n            \"BackupEncoding\": \"min(0-59) hour(0-23) dayofmonth(1-31) month(1-12) dayofweek(0-6)\",\n            \"BackupSchedule\": \"0 0 * * 0\"\n        },\n\n        \"CassandraMaxMemoryGb\": 9,\n        \"CassandraVolumeSizeGb\": 50,\n        \"CassandraClusterSize\": 3,\n        \"ExternalCassandraHost\": \"ext.my.domain.com\",\n        \"CreateCrd\": true,\n\n        \"CassandraEncryptionKeyFile\": \"encryption-secret.bin\",\n\n        \"PlatformApi\": \"api.my.domain.com\",\n        \"ApiManagerUi\": \"apim.my.domain.com\",\n        \"CloudAdminUi\": \"cm.my.domain.com\",\n        \"ConsumerApi\": \"consumer.my.domain.com\"\n    },\n\n    \"Analytics\": {\n        \"SubsysName\": \"analyt\",\n        \"ExtraValuesFile\": \"analyt-values.yaml\",\n        \"ExtraValues\": {},\n\n        \"CoordinatingMaxMemoryGb\": 12,\n        \"DataMaxMemoryGb\": 12,\n        \"DataStorageSizeGb\": 200,\n        \"MasterMaxMemoryGb\": 12,\n        \"MasterStorageSizeGb\": 5,\n\n        \"EnableMessageQueue\": false,\n\n        \"EsStorageClass\": \"\",\n        \"MqStorageClass\": \"\",\n\n        \"AnalyticsIngestionEndpoint\": \"ai.my.domain.com\",\n        \"AnalyticsClientEndpoint\": \"ac.my.domain.com\"\n    },\n\n    \"Portal\": {\n        \"SubsysName\": \"ptl\",\n\n        \"ExtraValuesFile\": \"ptl-values.yaml\",\n        \"ExtraValues\": {},\n\n        \"SiteBackup\": {\n            \"BackupProtocol\": \"sftp|objstore\",\n            \"BackupAuthUser\": \"admin\",\n            \"BackupAuthPass\": \"secret\",\n            \"BackupHost\": \"backup.my.domain.com\",\n            \"BackupPort\": 1022,\n            \"BackupPath\": \"/backup\",\n            \"ObjstoreS3SecretKeyId\": \"\",\n            \"ObjstoreS3SecretAccessKey\": \"\",\n            \"ObjstoreEndpointRegion\": \"\",\n            \"ObjstoreBucketSubfolder\": \"\",\n            \"BackupEncoding\": \"min(0-59) hour(0-23) dayofmonth(1-31) month(1-12) dayofweek(0-6)\",\n            \"BackupSchedule\": \"0 0 * * 0\"\n        },\n\n        \"WwwStorageSizeGb\": 5,\n        \"BackupStorageSizeGb\": 5,\n        \"DbStorageSizeGb\": 12,\n\n        \"Fixed\": {\n            \"DbLogsStorageSizeGb\": 2,\n            \"AdminStorageSizeGb\": 1\n        },\n\n        \"PortalAdmin\": \"padmin.my.domain.com\",\n        \"PortalWWW\": \"portal.my.domain.com\"\n    },\n\n    \"Gateway\": {\n        \"SubsysName\": \"gwy\",\n        \"Mode\": \"dev\",\n\n        \"ExtraValuesFile\": \"gwy-values.yaml\",\n        \"ExtraValues\": {\n            \"datapower\": {\n                \"webGuiManagementState\": \"enabled\",\n                \"apiDebugProbe\": \"enabled\"\n            }\n        },\n\n        \"LicenseVersion\": \"Production|Development\",\n        \"ImagePullPolicy\": \"IfNotPresent\",\n\n        \"ReplicaCount\": 3,\n        \"MaxCpu\": 4,\n        \"MaxMemoryGb\": 6,\n\n        \"V5ComatabilityMode\": false,\n        \"EnableTms\": true,\n        \"TmsPeeringStorageSizeGb\": 10,\n        \"EnableHighPerformancePeering\": \"true\",\n\n        \"ApiGateway\": \"gw.my.domain.com\",\n        \"ApicGwService\": \"gwd.my.domain.com\"\n    }\n}"),
 	}
-	filew := &embedded.EmbeddedFile{
+	file10 := &embedded.EmbeddedFile{
 		Filename:    "subsys-config-ova.tmpl",
 		FileModTime: time.Unix(1573976188, 0),
 
@@ -200,39 +224,43 @@ func init() {
 	// define dirs
 	dir1 := &embedded.EmbeddedDir{
 		Filename:   "",
-		DirModTime: time.Unix(1573976188, 0),
+		DirModTime: time.Unix(1574065772, 0),
 		ChildFiles: []*embedded.EmbeddedFile{
-			file2, // "analytics-k8s.tmpl"
-			file3, // "analytics-vm.tmpl"
-			file4, // "cloud-init-vm.tmpl"
-			file5, // "combined-csr.tmpl"
-			file6, // "csr-client-auth.tmpl"
-			file7, // "csr-server-auth.tmpl"
-			file8, // "csr-server-client-eku.tmpl"
-			file9, // "dp-apic-gw-service.tmpl"
-			filea, // "dp-config-sequence.tmpl"
-			fileb, // "dp-create-config-seq.tmpl"
-			filec, // "dp-crypto-certificate.tmpl"
-			filed, // "dp-crypto-ident-cred.tmpl"
-			filee, // "dp-crypto-key.tmpl"
-			filef, // "dp-crypto-val-cred.tmpl"
-			fileg, // "dp-gateway-peering-manager.tmpl"
-			fileh, // "dp-gateway-peering.tmpl"
-			filei, // "dp-set-file.tmpl"
-			filej, // "dp-ssl-client-profile.tmpl"
-			filek, // "dp-ssl-server-profile.tmpl"
-			filel, // "extra-values.tmpl"
-			filem, // "gateway-k8s.tmpl"
-			filen, // "helpers.tmpl"
-			fileo, // "keypair.tmpl"
-			filep, // "management-k8s.tmpl"
-			fileq, // "management-vm.tmpl"
-			filer, // "portal-k8s.tmpl"
-			files, // "portal-vm.tmpl"
-			filet, // "soma.tmpl"
-			fileu, // "subsys-certs.tmpl"
-			filev, // "subsys-config-k8s.tmpl"
-			filew, // "subsys-config-ova.tmpl"
+			file2,  // "analytics-k8s.tmpl"
+			file3,  // "analytics-vm.tmpl"
+			file4,  // "cloud-init-vm.tmpl"
+			file5,  // "combined-csr.tmpl"
+			file6,  // "csr-client-auth.tmpl"
+			file7,  // "csr-server-auth.tmpl"
+			file8,  // "csr-server-client-eku.tmpl"
+			file9,  // "dp-apic-gw-service.tmpl"
+			filea,  // "dp-config-sequence.tmpl"
+			fileb,  // "dp-create-config-seq.tmpl"
+			filec,  // "dp-crypto-certificate.tmpl"
+			filed,  // "dp-crypto-ident-cred.tmpl"
+			filee,  // "dp-crypto-key.tmpl"
+			filef,  // "dp-crypto-val-cred.tmpl"
+			fileg,  // "dp-gateway-peering-manager.tmpl"
+			fileh,  // "dp-gateway-peering.tmpl"
+			filei,  // "dp-host-alias.tmpl"
+			filej,  // "dp-ntp-service.tmpl"
+			filek,  // "dp-save-config.tmpl"
+			filel,  // "dp-set-file.tmpl"
+			filem,  // "dp-ssl-client-profile.tmpl"
+			filen,  // "dp-ssl-server-profile.tmpl"
+			fileo,  // "dp-system-settings.tmpl"
+			filep,  // "extra-values.tmpl"
+			fileq,  // "gateway-k8s.tmpl"
+			filer,  // "helpers.tmpl"
+			files,  // "keypair.tmpl"
+			filet,  // "management-k8s.tmpl"
+			fileu,  // "management-vm.tmpl"
+			filev,  // "portal-k8s.tmpl"
+			filew,  // "portal-vm.tmpl"
+			filex,  // "soma.tmpl"
+			filey,  // "subsys-certs.tmpl"
+			filez,  // "subsys-config-k8s.tmpl"
+			file10, // "subsys-config-ova.tmpl"
 
 		},
 	}
@@ -243,7 +271,7 @@ func init() {
 	// register embeddedBox
 	embedded.RegisterEmbeddedBox(`../../templates`, &embedded.EmbeddedBox{
 		Name: `../../templates`,
-		Time: time.Unix(1573976188, 0),
+		Time: time.Unix(1574065772, 0),
 		Dirs: map[string]*embedded.EmbeddedDir{
 			"": dir1,
 		},
@@ -264,21 +292,25 @@ func init() {
 			"dp-crypto-val-cred.tmpl":         filef,
 			"dp-gateway-peering-manager.tmpl": fileg,
 			"dp-gateway-peering.tmpl":         fileh,
-			"dp-set-file.tmpl":                filei,
-			"dp-ssl-client-profile.tmpl":      filej,
-			"dp-ssl-server-profile.tmpl":      filek,
-			"extra-values.tmpl":               filel,
-			"gateway-k8s.tmpl":                filem,
-			"helpers.tmpl":                    filen,
-			"keypair.tmpl":                    fileo,
-			"management-k8s.tmpl":             filep,
-			"management-vm.tmpl":              fileq,
-			"portal-k8s.tmpl":                 filer,
-			"portal-vm.tmpl":                  files,
-			"soma.tmpl":                       filet,
-			"subsys-certs.tmpl":               fileu,
-			"subsys-config-k8s.tmpl":          filev,
-			"subsys-config-ova.tmpl":          filew,
+			"dp-host-alias.tmpl":              filei,
+			"dp-ntp-service.tmpl":             filej,
+			"dp-save-config.tmpl":             filek,
+			"dp-set-file.tmpl":                filel,
+			"dp-ssl-client-profile.tmpl":      filem,
+			"dp-ssl-server-profile.tmpl":      filen,
+			"dp-system-settings.tmpl":         fileo,
+			"extra-values.tmpl":               filep,
+			"gateway-k8s.tmpl":                fileq,
+			"helpers.tmpl":                    filer,
+			"keypair.tmpl":                    files,
+			"management-k8s.tmpl":             filet,
+			"management-vm.tmpl":              fileu,
+			"portal-k8s.tmpl":                 filev,
+			"portal-vm.tmpl":                  filew,
+			"soma.tmpl":                       filex,
+			"subsys-certs.tmpl":               filey,
+			"subsys-config-k8s.tmpl":          filez,
+			"subsys-config-ova.tmpl":          file10,
 		},
 	})
 }

@@ -65,7 +65,8 @@ func concatSubdir(dir1 string, dir2 string) string {
 func Input() (input string, outdir1 string, validateIp bool, initConfig bool, initConfigType string,
 	subsysOnly bool, certsOnly bool, certcopy string, certdir string,
 	certverify bool, certfile, cafile string, rootcafile string, noexpire bool, certconcat bool, gen bool,
-	soma bool, req string, auth string, url string, setfile string, dpdir string, dpfile string) {
+	soma bool, req string, auth string, url string, setfile string, dpdir string, dpfile string,
+	datapowerOnly bool) {
 
 	// define command line flags
 	inputArg := flag.String("config", "subsys-config.json", "-config input-file")
@@ -107,6 +108,8 @@ func Input() (input string, outdir1 string, validateIp bool, initConfig bool, in
 	dpdirArg := flag.String("dpdir", "", "-dpdir cert|local|..., datapower directory")
 	dpfileArg := flag.String("dpfile","","-dpfile datapower file name")
 
+	datapowerOnlyArg := flag.Bool("datapower", false, "-datapower true|false generate datapower configuration only")
+
 	// scan command line args
 	flag.Parse()
 
@@ -139,7 +142,9 @@ func Input() (input string, outdir1 string, validateIp bool, initConfig bool, in
 	dpdir = *dpdirArg
 	dpfile = *dpfileArg
 
+	datapowerOnly = *datapowerOnlyArg
+
 	return input, outdir1, validateIp, initConfig, initConfigType, subsysOnly, certsOnly, certcopy, certdir,
 		certverify, certfile, cafile, rootcafile, noexpire, certconcat, gen,
-		soma, req, auth, url, setfile, dpdir, dpfile
+		soma, req, auth, url, setfile, dpdir, dpfile, datapowerOnly
 }
