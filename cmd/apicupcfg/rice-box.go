@@ -108,9 +108,9 @@ func init() {
 	}
 	filei := &embedded.EmbeddedFile{
 		Filename:    "dp-host-alias.tmpl",
-		FileModTime: time.Unix(1574064926, 0),
+		FileModTime: time.Unix(1574093839, 0),
 
-		Content: string("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<SOAP-ENV:Envelope xmlns:SOAP-ENV=\"http://schemas.xmlsoap.org/soap/envelope/\"\n                   xmlns:ma=\"http://www.datapower.com/schemas/management\">\n    <SOAP-ENV:Header/>\n    <SOAP-ENV:Body>\n        <ma:request domain=\"default\">\n            <ma:set-config>\n                <HostAlias>\n                    <mAdminState>enabled</mAdminState>\n                    <UserSummary>{{.Alias}}</UserSummary>\n                    <IPAddress>{{.IPAddress}}</IPAddress>\n                </HostAlias>\n            </ma:set-config>\n        </ma:request>\n    </SOAP-ENV:Body>\n</SOAP-ENV:Envelope>\n"),
+		Content: string("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<SOAP-ENV:Envelope xmlns:SOAP-ENV=\"http://schemas.xmlsoap.org/soap/envelope/\"\n                   xmlns:ma=\"http://www.datapower.com/schemas/management\">\n    <SOAP-ENV:Header/>\n    <SOAP-ENV:Body>\n        <ma:request domain=\"default\">\n            <ma:set-config>\n                <HostAlias name=\"{{.Alias}}\">\n                    <mAdminState>enabled</mAdminState>\n                    <UserSummary>host alias</UserSummary>\n                    <IPAddress>{{.IPAddress}}</IPAddress>\n                </HostAlias>\n            </ma:set-config>\n        </ma:request>\n    </SOAP-ENV:Body>\n</SOAP-ENV:Envelope>\n"),
 	}
 	filej := &embedded.EmbeddedFile{
 		Filename:    "dp-ntp-service.tmpl",
@@ -224,7 +224,7 @@ func init() {
 	// define dirs
 	dir1 := &embedded.EmbeddedDir{
 		Filename:   "",
-		DirModTime: time.Unix(1574065772, 0),
+		DirModTime: time.Unix(1574093839, 0),
 		ChildFiles: []*embedded.EmbeddedFile{
 			file2,  // "analytics-k8s.tmpl"
 			file3,  // "analytics-vm.tmpl"
@@ -271,7 +271,7 @@ func init() {
 	// register embeddedBox
 	embedded.RegisterEmbeddedBox(`../../templates`, &embedded.EmbeddedBox{
 		Name: `../../templates`,
-		Time: time.Unix(1574065772, 0),
+		Time: time.Unix(1574093839, 0),
 		Dirs: map[string]*embedded.EmbeddedDir{
 			"": dir1,
 		},
