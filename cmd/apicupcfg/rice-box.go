@@ -65,34 +65,34 @@ func init() {
 		Content: string("<SOAP-ENV:Envelope xmlns:SOAP-ENV=\"http://schemas.xmlsoap.org/soap/envelope/\"\n                   xmlns:ma=\"http://www.datapower.com/schemas/management\">\n    <SOAP-ENV:Header/>\n    <SOAP-ENV:Body>\n        <ma:request domain=\"{{.Domain | default \"apiconnect\"}}\">\n            <ma:set-config>\n                <ConfigSequence name=\"{{.ConfigSequenceName | default \"apiconnect\"}}\">\n                    <mAdminState>enabled</mAdminState>\n                    <UserSummary>API Connect Configuration</UserSummary>\n                    <Locations>\n                        <Directory>local:///</Directory>\n                        <AccessProfileName/>\n                    </Locations>\n                    <MatchPattern>(.*)\\.cfg$</MatchPattern>\n                    <ResultNamePattern>$1.log</ResultNamePattern>\n                    <StatusNamePattern>$1.status</StatusNamePattern>\n                    <Watch>on</Watch>\n                    <UseOutputLocation>off</UseOutputLocation>\n                    <OutputLocation>logtemp:///</OutputLocation>\n                    <DeleteUnused>on</DeleteUnused>\n                    <RunSequenceInterval>{{.ConfigurationExecutionInterval | default 3000}}</RunSequenceInterval>\n                </ConfigSequence>\n            </ma:set-config>\n        </ma:request>\n    </SOAP-ENV:Body>\n</SOAP-ENV:Envelope>"),
 	}
 	fileb := &embedded.EmbeddedFile{
-		Filename:    "dp-create-config-seq.tmpl",
-		FileModTime: time.Unix(1573518068, 0),
-
-		Content: string("<SOAP-ENV:Envelope xmlns:SOAP-ENV=\"http://schemas.xmlsoap.org/soap/envelope/\"\n                   xmlns:ma=\"http://www.datapower.com/schemas/management\">\n    <SOAP-ENV:Header/>\n    <SOAP-ENV:Body>\n        <ma:request domain=\"{{ .DatapowerDomain }}\">\n            <ma:set-config>\n                <ConfigSequence name=\"{{ .ConfigurationSequenceName | default apic_config_seq | quote }}\">\n                    <mAdminState>enabled</mAdminState>\n                    <UserSummary>apic config sequence</UserSummary>\n                    <Locations>\n                        <Directory>local:///</Directory>\n                        <AccessProfileName/>\n                    </Locations>\n                    <MatchPattern>(.*)\\.cfg$</MatchPattern>\n                    <ResultNamePattern>$1.log</ResultNamePattern>\n                    <StatusNamePattern>$1.status</StatusNamePattern>\n                    <Watch>on</Watch>\n                    <UseOutputLocation>off</UseOutputLocation>\n                    <OutputLocation>logtemp:///</OutputLocation>\n                    <DeleteUnused>on</DeleteUnused>\n                    <RunSequenceInterval>{{ .ConfigurationExecutionInterval | default 3000 }}</RunSequenceInterval>\n                </ConfigSequence>\n            </ma:set-config>\n        </ma:request>\n    </SOAP-ENV:Body>\n</SOAP-ENV:Envelope>"),
-	}
-	filec := &embedded.EmbeddedFile{
 		Filename:    "dp-crypto-certificate.tmpl",
 		FileModTime: time.Unix(1573711286, 0),
 
 		Content: string("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<SOAP-ENV:Envelope xmlns:SOAP-ENV=\"http://schemas.xmlsoap.org/soap/envelope/\"\n                   xmlns:ma=\"http://www.datapower.com/schemas/management\">\n    <SOAP-ENV:Header/>\n    <SOAP-ENV:Body>\n        <ma:request domain=\"{{.Domain}}\">\n            <ma:set-config>\n                <CryptoCertificate name=\"{{.CryptoCertName}}\">\n                    <mAdminState>enabled</mAdminState>\n                    <Filename>{{.CryptoCertFile}}</Filename>\n                    <Password></Password>\n                    <PasswordAlias>off</PasswordAlias>\n                    <Alias></Alias>\n                    <IgnoreExpiration>off</IgnoreExpiration>\n                </CryptoCertificate>\n            </ma:set-config>\n        </ma:request>\n    </SOAP-ENV:Body>\n</SOAP-ENV:Envelope>\n"),
 	}
-	filed := &embedded.EmbeddedFile{
+	filec := &embedded.EmbeddedFile{
 		Filename:    "dp-crypto-ident-cred.tmpl",
 		FileModTime: time.Unix(1573765886, 0),
 
 		Content: string("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<SOAP-ENV:Envelope xmlns:SOAP-ENV=\"http://schemas.xmlsoap.org/soap/envelope/\"\n                   xmlns:ma=\"http://www.datapower.com/schemas/management\">\n    <SOAP-ENV:Header/>\n    <SOAP-ENV:Body>\n        <ma:request domain=\"{{.Domain}}\">\n            <ma:set-config>\n                <CryptoIdentCred name=\"{{ .Name }}\">\n                    <mAdminState>enabled</mAdminState>\n                    <Key>{{.CryptoKeyName}}</Key>\n                    <Certificate>{{.CryptoCertName}}</Certificate>\n                    <CA>{{.CaName}}</CA>\n                </CryptoIdentCred>\n            </ma:set-config>\n        </ma:request>\n    </SOAP-ENV:Body>\n</SOAP-ENV:Envelope>"),
 	}
-	filee := &embedded.EmbeddedFile{
+	filed := &embedded.EmbeddedFile{
 		Filename:    "dp-crypto-key.tmpl",
 		FileModTime: time.Unix(1573709199, 0),
 
 		Content: string("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<SOAP-ENV:Envelope xmlns:SOAP-ENV=\"http://schemas.xmlsoap.org/soap/envelope/\"\n                   xmlns:ma=\"http://www.datapower.com/schemas/management\">\n    <SOAP-ENV:Header/>\n    <SOAP-ENV:Body>\n        <ma:request domain=\"{{.Domain}}\">\n            <ma:set-config>\n                <CryptoKey name=\"{{.CryptoKeyName}}\">\n                    <mAdminState>enabled</mAdminState>\n                    <Filename>{{.CryptoKeyFile}}</Filename>\n                    <Password></Password>\n                    <PasswordAlias>off</PasswordAlias>\n                    <Alias></Alias>\n                </CryptoKey>\n            </ma:set-config>\n        </ma:request>\n    </SOAP-ENV:Body>\n</SOAP-ENV:Envelope>\n"),
 	}
-	filef := &embedded.EmbeddedFile{
+	filee := &embedded.EmbeddedFile{
 		Filename:    "dp-crypto-val-cred.tmpl",
 		FileModTime: time.Unix(1573664471, 0),
 
 		Content: string("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<SOAP-ENV:Envelope xmlns:SOAP-ENV=\"http://schemas.xmlsoap.org/soap/envelope/\"\n                   xmlns:ma=\"http://www.datapower.com/schemas/management\">\n    <SOAP-ENV:Header/>\n    <SOAP-ENV:Body>\n        <ma:request>\n            <ma:set-config>\n                <CryptoValCred name=\"{{ .CryptoValCredName }}\">\n                    <mAdminState>enabled</mAdminState>\n                    <Certificate></Certificate>\n                    <CertValidationMode>pkix</CertValidationMode>\n                    <UseCRL>off</UseCRL>\n                    <RequireCRL>off</RequireCRL>\n                    <CRLDPHandling>ignore</CRLDPHandling>\n                    <InitialPolicySet></InitialPolicySet>\n                    <ExplicitPolicy>off</ExplicitPolicy>\n                    <CheckDates>on</CheckDates>\n                </CryptoValCred>\n            </ma:set-config>\n        </ma:request>\n    </SOAP-ENV:Body>\n</SOAP-ENV:Envelope>\n"),
+	}
+	filef := &embedded.EmbeddedFile{
+		Filename:    "dp-domain.tmpl",
+		FileModTime: time.Unix(1574127181, 0),
+
+		Content: string("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<SOAP-ENV:Envelope xmlns:SOAP-ENV=\"http://schemas.xmlsoap.org/soap/envelope/\"\n                   xmlns:ma=\"http://www.datapower.com/schemas/management\">\n    <SOAP-ENV:Header/>\n    <SOAP-ENV:Body>\n        <ma:request>\n            <ma:set-config>\n                <Domain name=\"{{.DatapowerDomain}}\">\n                    <mAdminState>enabled</mAdminState>\n                    <UserSummary>api connect domain</UserSummary>\n                    <NeighborDomain>default</NeighborDomain>\n                </Domain>\n            </ma:set-config>\n        </ma:request>\n    </SOAP-ENV:Body>\n</SOAP-ENV:Envelope>\n"),
 	}
 	fileg := &embedded.EmbeddedFile{
 		Filename:    "dp-gateway-peering-manager.tmpl",
@@ -224,7 +224,7 @@ func init() {
 	// define dirs
 	dir1 := &embedded.EmbeddedDir{
 		Filename:   "",
-		DirModTime: time.Unix(1574093839, 0),
+		DirModTime: time.Unix(1574127181, 0),
 		ChildFiles: []*embedded.EmbeddedFile{
 			file2,  // "analytics-k8s.tmpl"
 			file3,  // "analytics-vm.tmpl"
@@ -235,11 +235,11 @@ func init() {
 			file8,  // "csr-server-client-eku.tmpl"
 			file9,  // "dp-apic-gw-service.tmpl"
 			filea,  // "dp-config-sequence.tmpl"
-			fileb,  // "dp-create-config-seq.tmpl"
-			filec,  // "dp-crypto-certificate.tmpl"
-			filed,  // "dp-crypto-ident-cred.tmpl"
-			filee,  // "dp-crypto-key.tmpl"
-			filef,  // "dp-crypto-val-cred.tmpl"
+			fileb,  // "dp-crypto-certificate.tmpl"
+			filec,  // "dp-crypto-ident-cred.tmpl"
+			filed,  // "dp-crypto-key.tmpl"
+			filee,  // "dp-crypto-val-cred.tmpl"
+			filef,  // "dp-domain.tmpl"
 			fileg,  // "dp-gateway-peering-manager.tmpl"
 			fileh,  // "dp-gateway-peering.tmpl"
 			filei,  // "dp-host-alias.tmpl"
@@ -271,7 +271,7 @@ func init() {
 	// register embeddedBox
 	embedded.RegisterEmbeddedBox(`../../templates`, &embedded.EmbeddedBox{
 		Name: `../../templates`,
-		Time: time.Unix(1574093839, 0),
+		Time: time.Unix(1574127181, 0),
 		Dirs: map[string]*embedded.EmbeddedDir{
 			"": dir1,
 		},
@@ -285,11 +285,11 @@ func init() {
 			"csr-server-client-eku.tmpl":      file8,
 			"dp-apic-gw-service.tmpl":         file9,
 			"dp-config-sequence.tmpl":         filea,
-			"dp-create-config-seq.tmpl":       fileb,
-			"dp-crypto-certificate.tmpl":      filec,
-			"dp-crypto-ident-cred.tmpl":       filed,
-			"dp-crypto-key.tmpl":              filee,
-			"dp-crypto-val-cred.tmpl":         filef,
+			"dp-crypto-certificate.tmpl":      fileb,
+			"dp-crypto-ident-cred.tmpl":       filec,
+			"dp-crypto-key.tmpl":              filed,
+			"dp-crypto-val-cred.tmpl":         filee,
+			"dp-domain.tmpl":                  filef,
 			"dp-gateway-peering-manager.tmpl": fileg,
 			"dp-gateway-peering.tmpl":         fileh,
 			"dp-host-alias.tmpl":              filei,
