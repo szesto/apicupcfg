@@ -34,6 +34,7 @@ type DpConfigSequence struct {
 }
 
 func nonl(buf string) string { return buf /* strings.ReplaceAll(buf, "\n", "")*/}
+func dot2dash(buf string) string { return strings.ReplaceAll(buf, ".", "-") }
 
 type DpFile struct {
 	Domain string
@@ -252,27 +253,14 @@ type OsEnvSomaSpecs struct {
 	ReqSpecs []SomaSpec
 }
 
-func datapowerCluster(subsys *SubsysVm, outfiles map[string]string, tbox *rice.Box) {
+func datapowerOpensslConfig(subsys *SubsysVm, outputdir string, osenv OsEnv, tbox *rice.Box) {
 
 	// parse templates
 	ekuServerClient := parseTemplate(tbox, tpdir(tbox) + "csr-server-client-eku.tmpl")
 	keypairTemplate := parseTemplates(tbox, tpdir(tbox) + "keypair.tmpl", tpdir(tbox) + "helpers.tmpl")
 	combinedCsrTemplate := parseTemplates(tbox, tpdir(tbox) + "combined-csr.tmpl", tpdir(tbox) + "helpers.tmpl")
-	somaTemplate := parseTemplates(tbox, tpdir(tbox) + "soma.tmpl", tpdir(tbox) + "helpers.tmpl")
-
-	var osenv OsEnv
-	osenv.init()
 
 	certmap := make(map[string]CertSpec)
-
-	// datapower domain
-	dpdomain := subsys.Gateway.DatapowerDomain
-
-	// datapower output directory
-	outdir1 := concatSubdir(outfiles[outdir], outfiles[DatapowerOutDir])
-
-	// key pairs
-	// build datapower cert spec
 
 	// apic gateway service
 	cs := CertSpec{}
@@ -290,11 +278,11 @@ func datapowerCluster(subsys *SubsysVm, outfiles map[string]string, tbox *rice.B
 	certmap[cs.Cn] = cs
 
 	// csr
-	outpath := fileName(concatSubdir(outfiles[outdir], outfiles[DatapowerOutDir]), cs.CsrConf)
+	outpath := fileName(outputdir, cs.CsrConf)
 	writeTemplate(ekuServerClient, outpath, cs)
 
 	// key-pair
-	outpath = fileName(concatSubdir(outfiles[outdir], outfiles[DatapowerOutDir]), cs.CsrConf + osenv.ShellExt)
+	outpath = fileName(outputdir, cs.CsrConf + osenv.ShellExt)
 	writeTemplate(keypairTemplate, outpath, OsEnvCert{OsEnv: osenv, CertSpec: cs})
 
 	// api gateway
@@ -313,55 +301,107 @@ func datapowerCluster(subsys *SubsysVm, outfiles map[string]string, tbox *rice.B
 	certmap[cs.Cn] = cs
 
 	// csr
-	outpath = fileName(concatSubdir(outfiles[outdir], outfiles[DatapowerOutDir]), cs.CsrConf)
+	outpath = fileName(outputdir, cs.CsrConf)
 	writeTemplate(ekuServerClient, outpath, cs)
 
 	// key-pair
-	outpath = fileName(concatSubdir(outfiles[outdir], outfiles[DatapowerOutDir]), cs.CsrConf + osenv.ShellExt)
+	outpath = fileName(outputdir, cs.CsrConf + osenv.ShellExt)
 	writeTemplate(keypairTemplate, outpath, OsEnvCert{OsEnv: osenv, CertSpec: cs})
 
-	//for _, host := range subsys.Gateway.Hosts {
-	//
-	//	if len(host.Name) == 0 {
-	//		continue
-	//	}
-	//
-	//	// build datapower cert spec
-	//	cs := CertSpec{}
-	//
-	//	cs.Cn = host.Name
-	//	updateCertSpec(&subsys.Certs, subsys.Gateway.SubsysName, "datapower", &cs, DatapowerOutDir)
-	//
-	//	cs.AltCns = append(cs.AltCns, subsys.Gateway.ApiGateway)
-	//	cs.AltCns = append(cs.AltCns, subsys.Gateway.ApicGwService)
-	//
-	//	// save cert-spec in combined cert-map
-	//	certmap[cs.Cn] = cs
-	//
-	//	// csr
-	//	outpath := fileName(concatSubdir(outfiles[outdir], outfiles[DatapowerOutDir]), cs.CsrConf)
-	//	writeTemplate(ekuServerClient, outpath, cs)
-	//
-	//	// key-pair
-	//	outpath = fileName(concatSubdir(outfiles[outdir], outfiles[DatapowerOutDir]), cs.CsrConf + osenv.ShellExt)
-	//	writeTemplate(keypairTemplate, outpath, OsEnvCert{OsEnv: osenv, CertSpec: cs})
-	//}
-
 	// combine mutual-auth key and csr scripts
-	outpath = fileName(concatSubdir(outfiles[outdir], outfiles[DatapowerOutDir]), tagOutputFileName("all-datapower-csr", subsys.Tag) + osenv.ShellExt)
+	outpath = fileName(outputdir, tagOutputFileName("all-datapower-csr", subsys.Tag) + osenv.ShellExt)
 	writeTemplate(combinedCsrTemplate, outpath, OsEnvCerts{OsEnv: osenv, CertSpecs: certmap})
+}
 
-	// set-file private key
-	//outfile := fmt.Sprintf("%s", "dp-set-file-privkey-pem.xml")
-	//dpdir := certDir
-	//dpfile := gwdKey + ".pem"
-	//dpSetFile(outdir1, outfile, dpdomain, dpdir, dpfile, tbox)
+func datapowerGatewayPeeringConfig(gwy *GwySubsysVm, outputdir string, tbox *rice.Box) {
 
-	// set-file certificate
-	//outfile = fmt.Sprintf("%s", "dp-set-file-cert-pem.xml")
-	//dpdir = certDir
-	//dpfile = gwdCert + ".pem"
-	//dpSetFile(outdir1, outfile, dpdomain, dpdir, dpfile, tbox)
+	peering := []string {gwy.GetGwdPeeringOrDefault(), gwy.GetRateLimitPeeringOrDefault(), gwy.GetSubsPeeringOrDefault()}
+	localPorts := []int {gwy.GetGwdPeeringLocalPortOrDefault(), gwy.GetRateLimitPeeringLocalPortOrDefault(), gwy.GetSubsPeeringLocalPortOrDefault()}
+	monitorPorts := []int {gwy.GetGwdPeeringMonitorPortOrDefault(), gwy.GetRateLimitPeeringMonitorPortOrDefault(), gwy.GetSubsPeeringMonitorPortOrDefault()}
+
+	priorityfactory := func(max int) func(string, string) int {pri := max+1; return func(host, group string) int {pri--; return pri}}
+	prif := priorityfactory(100)
+
+	for hidx, host := range gwy.Hosts {
+
+		if len(host.Name) == 0 {
+			continue
+		}
+
+		peer1 := ""
+		peer2 := ""
+
+		peergroupswitch := "off"
+		if len(gwy.Hosts) == 3 {
+			peergroupswitch = "on"
+		}
+
+		sslswitch := "off"
+		if peergroupswitch == "on" {
+			sslswitch = "on"
+		}
+
+		for pgidx, pgroup := range peering {
+
+			if len(gwy.Hosts) == 3 {
+				if hidx == 0 {
+					peer1 = gwy.Hosts[1].Name
+					peer2 = gwy.Hosts[2].Name
+
+				} else if hidx == 1 {
+					peer1 = gwy.Hosts[0].Name
+					peer2 = gwy.Hosts[2].Name
+
+				} else if hidx == 2 {
+					peer1 = gwy.Hosts[0].Name
+					peer2 = gwy.Hosts[1].Name
+				}
+			}
+
+			localport := localPorts[pgidx]
+			monitorport := monitorPorts[pgidx]
+
+			// gateway peering: gwd, rate-limit, subs, (api-probe)
+			dpgwpeering := DpGatewayPeering{
+				Domain:              gwy.GetDatapowerDomainOrDefault(),
+				Name:                pgroup,
+				Summary:             "APIC peering",
+				LocalAddress:		fmt.Sprintf("if_%s", host.Device),
+				LocalPort:           localport,
+				MonitorPort:         monitorport,
+				PeerGroupSwitch: peergroupswitch,
+				Peer1:               peer1,
+				Peer2:               peer2,
+				SSLSwitch:           sslswitch,
+				Priority:            prif(host.Name, pgroup),
+				CryptoIdentCreds:       gwdIdCred,
+				CryptoValCreds:      "", // do not assign validation creds...
+				PersistenceLocation: "memory",
+				LocalDirectory:      "local:///", // local store or raid
+			}
+
+			outfile := fmt.Sprintf("dp-peering-%s-%s.xml", pgroup, dot2dash(host.Name))
+			dpGatewayPeering(outputdir, outfile, dpgwpeering, tbox)
+		}
+	}
+}
+
+func datapowerCluster(subsys *SubsysVm, outfiles map[string]string, tbox *rice.Box) {
+
+	// parse templates
+	somaTemplate := parseTemplates(tbox, tpdir(tbox) + "soma.tmpl", tpdir(tbox) + "helpers.tmpl")
+
+	var osenv OsEnv
+	osenv.init()
+
+	// datapower output directory
+	outdir1 := concatSubdir(outfiles[outdir], outfiles[DatapowerOutDir])
+
+	// openssl configuration
+	datapowerOpensslConfig(subsys, outdir1, osenv, tbox)
+
+	// datapower domain
+	dpdomain := subsys.Gateway.GetDatapowerDomainOrDefault()
 
 	// host alias, system name
 	for _, host := range subsys.Gateway.Hosts {
@@ -374,46 +414,42 @@ func datapowerCluster(subsys *SubsysVm, outfiles map[string]string, tbox *rice.B
 			IPAddress: host.IpAddress,
 		}
 
-		hname := strings.ReplaceAll(host.Name, ".", "-")
-
-		outfile := fmt.Sprintf("dp-host-alias-%s.xml", hname)
+		outfile := fmt.Sprintf("dp-host-alias-%s.xml", dot2dash(host.Name))
 		dpHostAlias(outdir1, outfile, dpha, tbox)
 
 		dpsys := DpSystemSettings{SystemName: host.Name}
-		outfile = fmt.Sprintf("dp-system-settings-%s.xml", hname)
+		outfile = fmt.Sprintf("dp-system-settings-%s.xml", dot2dash(host.Name))
 		dpSystemSettings(outdir1, outfile, dpsys, tbox)
 	}
 
 	// ntp service
-	// todo: add NTPService property to the Gateway subsystem
-	dpntp := DpNTPService{NTPServer: "pool.ntp.org"}
+	ntpserver := subsys.Gateway.GetNTPServerOrDefault()
+	dpntp := DpNTPService{NTPServer: ntpserver}
 	outfile := fmt.Sprintf("%s", "dp-ntp-service.xml")
 	dpNTPService(outdir1, outfile, dpntp, tbox)
 
-	// domain
-	dpdatapowerdomain := DpDomain{DatapowerDomain:subsys.Gateway.DatapowerDomain}
+	// application domain
+	dpdatapowerdomain := DpDomain{DatapowerDomain:subsys.Gateway.GetDatapowerDomainOrDefault()}
 	outfile = fmt.Sprintf("%s", "dp-domain.xml")
 	dpDomain(outdir1, outfile, dpdatapowerdomain, tbox)
 
 	// crypto-key
-	// name: gwd_key
 	outfile = fmt.Sprintf("%s", "dp-crypto-key.xml")
 	dpkeyname := gwdKey
 	dpkeyfile := certDir + ":///" + gwdKey + ".pem"
 	dpCryptoKey(outdir1, outfile, dpdomain, dpkeyname, dpkeyfile, tbox)
 
 	// cryto-certificate
-	// name: gwd_cert
 	outfile = fmt.Sprintf("%s","dp-crypto-cert.xml")
 	dpcertname := gwdCert
 	dpcertfile := certDir + ":///" + gwdCert + ".pem"
 	dpCryptoCertificate(outdir1, outfile, dpdomain, dpcertname, dpcertfile, tbox)
 
 	// crypto-id-creds
-	// name: gwd_id_cred
-	// ca: gwd_ca
+	// here we link crypto key to the self-signed crypto cert
+	// crypto id creds should be updated with valid cert and ca cert after initial configuration
 	outfile = fmt.Sprintf("%s", "dp-crypto-id-creds.xml")
-	dpcaname := "" // todo: how to set?
+	dpcaname := ""
 	dpCryptoIndentCredentials(outdir1, outfile, gwdIdCred, dpdomain, dpkeyname, dpcertname, dpcaname, tbox)
 
 	// valcred: gwd_val_cred -- not used...
@@ -441,77 +477,7 @@ func datapowerCluster(subsys *SubsysVm, outfiles map[string]string, tbox *rice.B
 	dpSSLClientProfile(outdir1, outfile, dpsslclient, tbox)
 
 	// gateway peering
-	for hidx, host := range subsys.Gateway.Hosts {
-
-		if len(host.Name) == 0 {
-			continue
-		}
-
-		peeringName := gwdPeering
-
-		peer1 := ""
-		peer2 := ""
-
-		peergroupswitch := "off"
-		if len(subsys.Gateway.Hosts) == 3 {
-			peergroupswitch = "on"
-		}
-
-		sslswitch := "off"
-		if peergroupswitch == "on" {
-			sslswitch = "on"
-		}
-
-		peering := []string{gwdPeering, rateLimitPeering, subsPeering}
-
-		for _, pgroup := range peering {
-			peeringName = pgroup
-
-			if len(subsys.Gateway.Hosts) == 3 {
-				if hidx == 0 {
-					peer1 = subsys.Gateway.Hosts[1].Name
-					peer2 = subsys.Gateway.Hosts[2].Name
-
-				} else if hidx == 1 {
-					peer1 = subsys.Gateway.Hosts[0].Name
-					peer2 = subsys.Gateway.Hosts[2].Name
-
-				} else if hidx == 2 {
-					peer1 = subsys.Gateway.Hosts[0].Name
-					peer2 = subsys.Gateway.Hosts[1].Name
-				}
-			}
-
-			localport := 0
-			monitorport := 0
-
-			if pgroup == gwdPeering { localport = gwdPeeringLocalPort; monitorport = gwdPeeringMonitorPort}
-			if pgroup == rateLimitPeering {localport = rateLimitPeeringLocalPort; monitorport = rateLimitPeeringMonitorPort}
-			if pgroup == subsPeering {localport = subsPeeringLocalPort; monitorport = subsPeeringMonitorPort}
-
-			// gateway peering: gwd, rate-limit, subs, api-probe
-			dpgwpeering := DpGatewayPeering{
-				Domain:              dpdomain,
-				Name:                peeringName,
-				Summary:             "APIC peering",
-				LocalAddress:		"if_eth0", // "if_" + h.Device
-				LocalPort:           localport,
-				MonitorPort:         monitorport,
-				PeerGroupSwitch: peergroupswitch,
-				Peer1:               peer1,
-				Peer2:               peer2,
-				SSLSwitch:           sslswitch,
-				Priority:            100, // use h.Priority
-				CryptoIdentCreds:       gwdIdCred,
-				CryptoValCreds:      "", // do not assign validation creds...
-				PersistenceLocation: "memory",
-				LocalDirectory:      "local:///", // local store or raid
-			}
-
-			outfile := fmt.Sprintf("dp-peering-%s-%s.xml", peeringName, strings.ReplaceAll(host.Name, ".", "-"))
-			dpGatewayPeering(outdir1, outfile, dpgwpeering, tbox)
-		}
-	}
+	datapowerGatewayPeeringConfig(&subsys.Gateway, outdir1, tbox)
 
 	// gateway peering manager: default
 	peeringmgr := DpGatewayPeeringManager{
@@ -564,7 +530,7 @@ func datapowerCluster(subsys *SubsysVm, outfiles map[string]string, tbox *rice.B
 	dpSaveConfig(outdir1, outfile, dpsaveconfig, tbox)
 
 	// save config - api connect domain
-	dpsavedomain = subsys.Gateway.DatapowerDomain
+	dpsavedomain = subsys.Gateway.GetDatapowerDomainOrDefault()
 	dpsaveconfig = DpSaveConfig{Domain: dpsavedomain}
 	outfile = fmt.Sprintf("dp-save-config-%s.xml", dpsavedomain)
 	dpSaveConfig(outdir1, outfile, dpsaveconfig, tbox)
@@ -580,15 +546,12 @@ func datapowerCluster(subsys *SubsysVm, outfiles map[string]string, tbox *rice.B
 		dpenv := "dp.env"
 		url := "https://" + host.Name + ":5550/service/mgmt/3.0"
 
-		//setfileSpecs := make(map[string]SomaSpec)
-		//reqSpecs := make(map[string]SomaSpec)
-
 		setfileSpecs := make([]SomaSpec, 2)
 		reqSpecs := make([]SomaSpec, 17)
 
 		setfileSpecs[0] = SomaSpec{
 			Req:    "",
-			File:   strings.ReplaceAll(subsys.Gateway.ApicGwService, ".", "-") + ".key",
+			File:   dot2dash(subsys.Gateway.ApicGwService) + ".key",
 			Dpdir:  "cert",
 			Dpfile: gwdKey + ".pem", // from subsys.Gateway
 			Auth:   dpenv,
@@ -597,7 +560,7 @@ func datapowerCluster(subsys *SubsysVm, outfiles map[string]string, tbox *rice.B
 
 		setfileSpecs[1] = SomaSpec{
 			Req:    "",
-			File:   strings.ReplaceAll(subsys.Gateway.ApicGwService, ".", "-") + ".crt.self",
+			File:   dot2dash(subsys.Gateway.ApicGwService) + ".crt.self",
 			Dpdir:  "cert",
 			Dpfile: gwdCert + ".pem", // from subsys.Gateway
 			Auth:   dpenv,
@@ -605,7 +568,7 @@ func datapowerCluster(subsys *SubsysVm, outfiles map[string]string, tbox *rice.B
 		}
 
 		reqSpecs[0] = SomaSpec{
-			Req:    fmt.Sprintf("dp-system-settings-%s.xml", strings.ReplaceAll(host.Name, ".", "-")),
+			Req:    fmt.Sprintf("dp-system-settings-%s.xml", dot2dash(host.Name)),
 			File:   "",
 			Dpdir:  "",
 			Dpfile: "",
@@ -614,7 +577,7 @@ func datapowerCluster(subsys *SubsysVm, outfiles map[string]string, tbox *rice.B
 		}
 
 		reqSpecs[1] = SomaSpec{
-			Req:    fmt.Sprintf("dp-host-alias-%s.xml", strings.ReplaceAll(host.Name, ".", "-")),
+			Req:    fmt.Sprintf("dp-host-alias-%s.xml", dot2dash(host.Name)),
 			File:   "",
 			Dpdir:  "",
 			Dpfile: "",
@@ -685,7 +648,7 @@ func datapowerCluster(subsys *SubsysVm, outfiles map[string]string, tbox *rice.B
 			Url:    url,
 		}
 
-		peeringkey := fmt.Sprintf(fmt.Sprintf("dp-peering-%s-%s.xml", gwdPeering, strings.ReplaceAll(host.Name, ".", "-")))
+		peeringkey := fmt.Sprintf(fmt.Sprintf("dp-peering-%s-%s.xml", gwdPeering, dot2dash(host.Name)))
 		reqSpecs[9] = SomaSpec{
 			Req:    peeringkey,
 			File:   "",
@@ -695,7 +658,7 @@ func datapowerCluster(subsys *SubsysVm, outfiles map[string]string, tbox *rice.B
 			Url:    url,
 		}
 
-		peeringkey = fmt.Sprintf(fmt.Sprintf("dp-peering-%s-%s.xml", rateLimitPeering, strings.ReplaceAll(host.Name, ".", "-")))
+		peeringkey = fmt.Sprintf(fmt.Sprintf("dp-peering-%s-%s.xml", rateLimitPeering, dot2dash(host.Name)))
 		reqSpecs[10] = SomaSpec{
 			Req:    peeringkey,
 			File:   "",
@@ -705,7 +668,7 @@ func datapowerCluster(subsys *SubsysVm, outfiles map[string]string, tbox *rice.B
 			Url:    url,
 		}
 
-		peeringkey = fmt.Sprintf(fmt.Sprintf("dp-peering-%s-%s.xml", subsPeering, strings.ReplaceAll(host.Name, ".", "-")))
+		peeringkey = fmt.Sprintf(fmt.Sprintf("dp-peering-%s-%s.xml", subsPeering, dot2dash(host.Name)))
 		reqSpecs[11] = SomaSpec{
 			Req:    peeringkey,
 			File:   "",
@@ -752,7 +715,7 @@ func datapowerCluster(subsys *SubsysVm, outfiles map[string]string, tbox *rice.B
 		}
 
 		reqSpecs[16] = SomaSpec{
-			Req:    fmt.Sprintf("dp-save-config-%s.xml", subsys.Gateway.DatapowerDomain),
+			Req:    fmt.Sprintf("dp-save-config-%s.xml", subsys.Gateway.GetDatapowerDomainOrDefault()),
 			File:   "",
 			Dpdir:  "",
 			Dpfile: "",
@@ -761,7 +724,7 @@ func datapowerCluster(subsys *SubsysVm, outfiles map[string]string, tbox *rice.B
 		}
 
 		// write soma script for a host
-		outpath = outdir1 + osenv.PathSeparator + "zoma-" + strings.ReplaceAll(host.Name, ".","-") + osenv.ShellExt
+		outpath := outdir1 + osenv.PathSeparator + "zoma-" + dot2dash(host.Name) + osenv.ShellExt
 		writeTemplate(somaTemplate, outpath, OsEnvSomaSpecs{
 			OsEnv:        osenv,
 			Config:	subsys.configFileName,

@@ -171,6 +171,99 @@ type GwySubsysVm struct {
 	// API connect gateway service
 	DatapowerApicGwServicePort int // 3000
 	DatapowerApicGwServiceAddress string // host-alias
+
+	// NTP server
+	NTPServer string
+
+	// low level peering configuration
+	GwdPeering string
+	GwdPeeringLocalPort int
+	GwdPeeringMonitorPort int
+
+	RateLimitPeering string
+	RateLimitPeeringLocalPort int
+	RateLimitPeeringMonitorPort int
+
+	SubsPeering string
+	SubsPeeringLocalPort int
+	SubsPeeringMonitorPort int
+}
+
+func (gwy *GwySubsysVm) GetDatapowerDomainOrDefault() string {
+	if len(gwy.DatapowerDomain) == 0 {
+		return "apiconnect"
+	}
+	return gwy.DatapowerDomain
+}
+
+func (gwy *GwySubsysVm) GetNTPServerOrDefault() string {
+	if len(gwy.NTPServer) == 0 {
+		return "pool.ntp.org"
+	}
+	return gwy.NTPServer
+}
+
+func (gwy *GwySubsysVm) GetGwdPeeringOrDefault() string {
+	if len(gwy.GwdPeering) == 0 {
+		return gwdPeering
+	}
+	return gwy.GwdPeering
+}
+
+func (gwy *GwySubsysVm) GetGwdPeeringLocalPortOrDefault() int {
+	if gwy.GwdPeeringLocalPort == 0 {
+		return gwdPeeringLocalPort
+	}
+	return gwy.GwdPeeringLocalPort
+}
+
+func (gwy *GwySubsysVm) GetGwdPeeringMonitorPortOrDefault() int {
+	if gwy.GwdPeeringMonitorPort == 0 {
+		return gwdPeeringMonitorPort
+	}
+	return gwy.GwdPeeringMonitorPort
+}
+
+func (gwy *GwySubsysVm) GetRateLimitPeeringOrDefault() string {
+	if len(gwy.RateLimitPeering) == 0 {
+		return rateLimitPeering
+	}
+	return gwy.RateLimitPeering
+}
+
+func (gwy *GwySubsysVm) GetRateLimitPeeringLocalPortOrDefault() int {
+	if gwy.RateLimitPeeringLocalPort == 0 {
+		return rateLimitPeeringLocalPort
+	}
+	return gwy.RateLimitPeeringLocalPort
+}
+
+func (gwy *GwySubsysVm) GetRateLimitPeeringMonitorPortOrDefault() int {
+	if gwy.RateLimitPeeringMonitorPort == 0 {
+		return rateLimitPeeringMonitorPort
+	}
+	return gwy.RateLimitPeeringMonitorPort
+}
+
+func (gwy *GwySubsysVm) GetSubsPeeringOrDefault() string {
+	if len(gwy.SubsPeering) == 0 {
+		return subsPeering
+	}
+	return gwy.SubsPeering
+}
+
+func (gwy *GwySubsysVm) GetSubsPeeringLocalPortOrDefault() int {
+	if gwy.SubsPeeringLocalPort == 0 {
+		return subsPeeringLocalPort
+	}
+	return gwy.SubsPeeringLocalPort
+}
+
+func (gwy *GwySubsysVm) GetSubsPeeringMonitorPortOrDefault() int {
+	if gwy.SubsPeeringMonitorPort == 0 {
+		return subsPeeringMonitorPort
+	}
+	return gwy.SubsPeeringMonitorPort
 }
 
 type SubsysVm struct {
@@ -204,11 +297,12 @@ func ValidateHostIpVm(subsys *SubsysVm) {
 	isManagement := len(subsys.Management.SubsysName) > 0
 	isAnalytics := len(subsys.Analytics.SubsysName) > 0
 	isPortal := len(subsys.Portal.SubsysName) > 0
+	isGateway := len(subsys.Gateway.SubsysName) > 0
 
 	if isManagement {
 		fmt.Printf("\n--- ip check for the management subsystem \"%s\"\n", subsys.Management.SubsysName)
 		for _, hostvm := range subsys.Management.VmFirstBoot.Hosts {
-			fmt.Printf("-host: %s\n", hostvm.Name)
+			fmt.Printf("\n-host: %s\n", hostvm.Name)
 			hostvm.validateIp()
 		}
 	}
@@ -216,7 +310,7 @@ func ValidateHostIpVm(subsys *SubsysVm) {
 	if isAnalytics {
 		fmt.Printf("\n--- ip check for the analytics subsystem \"%s\"\n", subsys.Analytics.SubsysName)
 		for _, hostvm := range subsys.Analytics.VmFirstBoot.Hosts {
-			fmt.Printf("-host: %s\n", hostvm.Name)
+			fmt.Printf("\n-host: %s\n", hostvm.Name)
 			hostvm.validateIp()
 		}
 	}
@@ -224,7 +318,15 @@ func ValidateHostIpVm(subsys *SubsysVm) {
 	if isPortal {
 		fmt.Printf("\n--- ip check for the portal subsystem \"%s\"\n", subsys.Portal.SubsysName)
 		for _, hostvm := range subsys.Portal.VmFirstBoot.Hosts {
-			fmt.Printf("-host: %s\n", hostvm.Name)
+			fmt.Printf("\n-host: %s\n", hostvm.Name)
+			hostvm.validateIp()
+		}
+	}
+
+	if isGateway {
+		fmt.Printf("\n--- ip check for the gateway subsystem \"%s\"\n", subsys.Gateway.SubsysName)
+		for _, hostvm := range subsys.Gateway.Hosts {
+			fmt.Printf("\n-host: %s\n", hostvm.Name)
 			hostvm.validateIp()
 		}
 	}
