@@ -187,6 +187,32 @@ type GwySubsysVm struct {
 	SubsPeering string
 	SubsPeeringLocalPort int
 	SubsPeeringMonitorPort int
+
+	// low level cert directory configuration
+	GwdKeyName string
+	GwdCertName string
+	CertDirectory string
+}
+
+func (gwy *GwySubsysVm) GetCertDirectoryOrDefault() string {
+	if len(gwy.CertDirectory) == 0 {
+		return certDir
+	}
+	return gwy.CertDirectory
+}
+
+func (gwy *GwySubsysVm) GetGwdKeyOrDefault() string {
+	if len(gwy.GwdKeyName) == 0 {
+		return gwdKey
+	}
+	return gwy.GwdKeyName
+}
+
+func (gwy *GwySubsysVm) GetGwdCertOrDefault() string {
+	if len(gwy.GwdCertName) == 0 {
+		return gwdCert
+	}
+	return gwy.GwdCertName
 }
 
 func (gwy *GwySubsysVm) GetDatapowerDomainOrDefault() string {
@@ -440,8 +466,7 @@ func CopyCertVm(certfile string, isdir bool, subsys *SubsysVm, commonCsrDir stri
 	}
 }
 
-func SomaUpload(subsys *SubsysVm, uploadfile, dpdir, dpfile, dpenv, url string, tbox *rice.Box) (status string, statusCode int, reply string, err error) {
+func SomaUpload(subsys *SubsysVm, uploadfile, dpdir, dpfile, dpdomain, dpenv, url string, tbox *rice.Box) (status string, statusCode int, reply string, err error) {
 
-	dpdomain := subsys.Gateway.DatapowerDomain
 	return SomaUploadFile(uploadfile, dpdir, dpfile, dpdomain, dpenv, url, tbox)
 }

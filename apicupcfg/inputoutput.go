@@ -66,7 +66,7 @@ func Input() (input string, outdir1 string, validateIp bool, initConfig bool, in
 	subsysOnly bool, certsOnly bool, certcopy string, certdir string,
 	certverify bool, certfile, cafile string, rootcafile string, noexpire bool, certconcat bool, gen bool,
 	soma bool, req string, auth string, url string, setfile string, dpdir string, dpfile string,
-	datapowerOnly bool) {
+	datapowerOnly bool, dpdomain string) {
 
 	// define command line flags
 	inputArg := flag.String("config", "subsys-config.json", "-config input-file")
@@ -110,6 +110,8 @@ func Input() (input string, outdir1 string, validateIp bool, initConfig bool, in
 
 	datapowerOnlyArg := flag.Bool("datapower", false, "-datapower true|false generate datapower configuration only")
 
+	dpdomainArg := flag.String("dpdomain", "default","-dpdomain datapower-domain, use for file upload")
+
 	// scan command line args
 	flag.Parse()
 
@@ -144,7 +146,9 @@ func Input() (input string, outdir1 string, validateIp bool, initConfig bool, in
 
 	datapowerOnly = *datapowerOnlyArg
 
+	dpdomain = *dpdomainArg
+
 	return input, outdir1, validateIp, initConfig, initConfigType, subsysOnly, certsOnly, certcopy, certdir,
 		certverify, certfile, cafile, rootcafile, noexpire, certconcat, gen,
-		soma, req, auth, url, setfile, dpdir, dpfile, datapowerOnly
+		soma, req, auth, url, setfile, dpdir, dpfile, datapowerOnly, dpdomain
 }

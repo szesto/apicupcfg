@@ -14,7 +14,7 @@ func main() {
 	// input: configuration file, output dir, csr subdirectories
 	input, outdir, validateIp, initConfig, initConfigType, subsysOnly, certsOnly,
 	certcopy, certdir, certverify, certfile, cafile, rootcafile, noexpire, certconcat, gen,
-	soma, req, auth, url, setfile, dpdir, dpfile, datapowerOnly := apicupcfg.Input()
+	soma, req, auth, url, setfile, dpdir, dpfile, datapowerOnly, dpdomain := apicupcfg.Input()
 
 	// input actions
 	isValidateIpActionf := func() bool {return validateIp}
@@ -95,7 +95,7 @@ func main() {
 
 			} else if isSetfilef() {
 				// soma set-file request
-				status, statusCode, reply, err := apicupcfg.SomaUpload(subsysvm, setfile, dpdir, dpfile, auth, url, tbox)
+				status, statusCode, reply, err := apicupcfg.SomaUpload(subsysvm, setfile, dpdir, dpfile, dpdomain, auth, url, tbox)
 				if err != nil {
 					fmt.Printf("%v\n\n", err)
 

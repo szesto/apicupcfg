@@ -20,9 +20,9 @@
     {{$spec := .}}
 
     {{ if $iswin }}
-        %apicupcfg% -config ..\{{$config}} -soma -setfile {{$spec.File}} -dpdir {{$spec.Dpdir}} -dpfile {{$spec.Dpfile}} -auth {{$spec.Auth}} -url {{$spec.Url}}
+        %apicupcfg% -config ..\{{$config}} -soma -setfile {{$spec.File}} -dpdir {{$spec.Dpdir}} -dpfile {{$spec.Dpfile}} -dpdomain {{$spec.Dpdomain}} -auth {{$spec.Auth}} -url {{$spec.Url}}
     {{else}}
-        $apicupcfg -config ../{{$config}} -soma -setfile {{$spec.File}} -dpdir {{$spec.Dpdir}} -dpfile {{$spec.Dpfile}} -auth {{$spec.Auth}} -url {{$spec.Url}}
+        $apicupcfg -config ../{{$config}} -soma -setfile {{$spec.File}} -dpdir {{$spec.Dpdir}} -dpfile {{$spec.Dpfile}} -dpdomain {{$spec.Dpdomain}} -auth {{$spec.Auth}} -url {{$spec.Url}}
     {{ end }}
 
 {{end}}

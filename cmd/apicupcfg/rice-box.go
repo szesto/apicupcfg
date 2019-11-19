@@ -198,9 +198,9 @@ func init() {
 	}
 	filex := &embedded.EmbeddedFile{
 		Filename:    "soma.tmpl",
-		FileModTime: time.Unix(1573971814, 0),
+		FileModTime: time.Unix(1574199008, 0),
 
-		Content: string("{{$pathsep := .OsEnv.PathSeparator}}\n{{$config := .Config}}\n{{$iswin := .OsEnv.IsWindows}}\n\n{{ template \"scriptheader1\" .OsEnv }}\n\n{{ if $iswin }}\n    set apicupcfg=apicupcfg.exe\n    IF EXIST ..\\apicupcfg.exe (\n        set apicupcfg=..\\apicupcfg.exe\n    )\n{{else}}\n    apicupcfg=apicupcfg\n    if [[ -f ../apicupcfg ]]; then\n        apicupcfg=../apicupcfg\n    fi\n{{ end }}\n\n{{range .SetFileSpecs}}\n    {{$spec := .}}\n\n    {{ if $iswin }}\n        %apicupcfg% -config ..\\{{$config}} -soma -setfile {{$spec.File}} -dpdir {{$spec.Dpdir}} -dpfile {{$spec.Dpfile}} -auth {{$spec.Auth}} -url {{$spec.Url}}\n    {{else}}\n        $apicupcfg -config ../{{$config}} -soma -setfile {{$spec.File}} -dpdir {{$spec.Dpdir}} -dpfile {{$spec.Dpfile}} -auth {{$spec.Auth}} -url {{$spec.Url}}\n    {{ end }}\n\n{{end}}\n\n{{range .ReqSpecs}}\n    {{$spec := .}}\n\n    {{ if $iswin }}\n        %apicupcfg% -config ..\\{{$config}} -soma -req {{$spec.Req}} -auth {{$spec.Auth}} -url {{$spec.Url}}\n    {{else}}\n        $apicupcfg -config ../{{$config}} -soma -req {{$spec.Req}} -auth {{$spec.Auth}} -url {{$spec.Url}}\n    {{end}}\n\n{{end}}"),
+		Content: string("{{$pathsep := .OsEnv.PathSeparator}}\n{{$config := .Config}}\n{{$iswin := .OsEnv.IsWindows}}\n\n{{ template \"scriptheader1\" .OsEnv }}\n\n{{ if $iswin }}\n    set apicupcfg=apicupcfg.exe\n    IF EXIST ..\\apicupcfg.exe (\n        set apicupcfg=..\\apicupcfg.exe\n    )\n{{else}}\n    apicupcfg=apicupcfg\n    if [[ -f ../apicupcfg ]]; then\n        apicupcfg=../apicupcfg\n    fi\n{{ end }}\n\n{{range .SetFileSpecs}}\n    {{$spec := .}}\n\n    {{ if $iswin }}\n        %apicupcfg% -config ..\\{{$config}} -soma -setfile {{$spec.File}} -dpdir {{$spec.Dpdir}} -dpfile {{$spec.Dpfile}} -dpdomain {{$spec.Dpdomain}} -auth {{$spec.Auth}} -url {{$spec.Url}}\n    {{else}}\n        $apicupcfg -config ../{{$config}} -soma -setfile {{$spec.File}} -dpdir {{$spec.Dpdir}} -dpfile {{$spec.Dpfile}} -dpdomain {{$spec.Dpdomain}} -auth {{$spec.Auth}} -url {{$spec.Url}}\n    {{ end }}\n\n{{end}}\n\n{{range .ReqSpecs}}\n    {{$spec := .}}\n\n    {{ if $iswin }}\n        %apicupcfg% -config ..\\{{$config}} -soma -req {{$spec.Req}} -auth {{$spec.Auth}} -url {{$spec.Url}}\n    {{else}}\n        $apicupcfg -config ../{{$config}} -soma -req {{$spec.Req}} -auth {{$spec.Auth}} -url {{$spec.Url}}\n    {{end}}\n\n{{end}}"),
 	}
 	filey := &embedded.EmbeddedFile{
 		Filename:    "subsys-certs.tmpl",
@@ -224,7 +224,7 @@ func init() {
 	// define dirs
 	dir1 := &embedded.EmbeddedDir{
 		Filename:   "",
-		DirModTime: time.Unix(1574127181, 0),
+		DirModTime: time.Unix(1574199008, 0),
 		ChildFiles: []*embedded.EmbeddedFile{
 			file2,  // "analytics-k8s.tmpl"
 			file3,  // "analytics-vm.tmpl"
@@ -271,7 +271,7 @@ func init() {
 	// register embeddedBox
 	embedded.RegisterEmbeddedBox(`../../templates`, &embedded.EmbeddedBox{
 		Name: `../../templates`,
-		Time: time.Unix(1574127181, 0),
+		Time: time.Unix(1574199008, 0),
 		Dirs: map[string]*embedded.EmbeddedDir{
 			"": dir1,
 		},

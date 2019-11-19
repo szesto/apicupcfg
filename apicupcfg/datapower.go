@@ -6,7 +6,7 @@ import (
 	"strings"
 )
 
-const certDir = "cert"
+const certDir = "sharedcert"
 const gwdKey = "gwd_key"
 const gwdCert = "gwd_cert"
 const gwdIdCred = "gwd_id_cred"
@@ -242,6 +242,7 @@ type SomaSpec struct {
 	File string		// set-file file path
 	Dpdir string	// set-file dp directory (cert, local, etc)
 	Dpfile string	// set-file dp file (gwd_key.pem, etc)
+	Dpdomain string		// set-file dp domain
 	Auth string		// auth env file with username, password
 	Url string		// datapower management service url
 }
@@ -429,20 +430,20 @@ func datapowerCluster(subsys *SubsysVm, outfiles map[string]string, tbox *rice.B
 	dpNTPService(outdir1, outfile, dpntp, tbox)
 
 	// application domain
-	dpdatapowerdomain := DpDomain{DatapowerDomain:subsys.Gateway.GetDatapowerDomainOrDefault()}
+	dpdatapowerdomain := DpDomain{DatapowerDomain: subsys.Gateway.GetDatapowerDomainOrDefault()}
 	outfile = fmt.Sprintf("%s", "dp-domain.xml")
 	dpDomain(outdir1, outfile, dpdatapowerdomain, tbox)
 
 	// crypto-key
 	outfile = fmt.Sprintf("%s", "dp-crypto-key.xml")
-	dpkeyname := gwdKey
-	dpkeyfile := certDir + ":///" + gwdKey + ".pem"
+	dpkeyname := subsys.Gateway.GetGwdKeyOrDefault()
+	dpkeyfile := subsys.Gateway.GetCertDirectoryOrDefault() + ":///" + subsys.Gateway.GetGwdKeyOrDefault() + ".pem"
 	dpCryptoKey(outdir1, outfile, dpdomain, dpkeyname, dpkeyfile, tbox)
 
 	// cryto-certificate
 	outfile = fmt.Sprintf("%s","dp-crypto-cert.xml")
-	dpcertname := gwdCert
-	dpcertfile := certDir + ":///" + gwdCert + ".pem"
+	dpcertname := subsys.Gateway.GetGwdCertOrDefault()
+	dpcertfile := subsys.Gateway.GetCertDirectoryOrDefault() + ":///" + subsys.Gateway.GetGwdCertOrDefault() + ".pem"
 	dpCryptoCertificate(outdir1, outfile, dpdomain, dpcertname, dpcertfile, tbox)
 
 	// crypto-id-creds
@@ -552,8 +553,9 @@ func datapowerCluster(subsys *SubsysVm, outfiles map[string]string, tbox *rice.B
 		setfileSpecs[0] = SomaSpec{
 			Req:    "",
 			File:   dot2dash(subsys.Gateway.ApicGwService) + ".key",
-			Dpdir:  "cert",
-			Dpfile: gwdKey + ".pem", // from subsys.Gateway
+			Dpdir:  subsys.Gateway.GetCertDirectoryOrDefault(),
+			Dpfile: subsys.Gateway.GetGwdKeyOrDefault() + ".pem",
+			Dpdomain: "default",
 			Auth:   dpenv,
 			Url:    url,
 		}
@@ -561,8 +563,9 @@ func datapowerCluster(subsys *SubsysVm, outfiles map[string]string, tbox *rice.B
 		setfileSpecs[1] = SomaSpec{
 			Req:    "",
 			File:   dot2dash(subsys.Gateway.ApicGwService) + ".crt.self",
-			Dpdir:  "cert",
-			Dpfile: gwdCert + ".pem", // from subsys.Gateway
+			Dpdir:  subsys.Gateway.GetCertDirectoryOrDefault(),
+			Dpfile: subsys.Gateway.GetGwdCertOrDefault() + ".pem",
+			Dpdomain: "default",
 			Auth:   dpenv,
 			Url:    url,
 		}
