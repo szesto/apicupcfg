@@ -70,7 +70,7 @@ func Input() (input string, outdir1 string, validateIp bool, initConfig bool, in
 
 	// define command line flags
 	inputArg := flag.String("config", "subsys-config.json", "-config input-file")
-	outdirArg := flag.String("out", "output", "-out output-directory")
+	outdirArg := flag.String("out", ".", "-out output-directory")
 	//commonCsrSubdirArg := flag.String("commoncsr", "common-csr", "-commoncsr subdir")
 	//customCsrSubdirArg := flag.String("customcsr", "custom-csr", "-customcsr subdir")
 	//projectSubdirArg := flag.String("project", "project", "-project subdir")
