@@ -222,6 +222,14 @@ func dpDomain(outdir, outfile string, dp DpDomain, tbox *rice.Box) {
 	dpWriteTemplate(outdir, outfile, dp, "dp-domain.tmpl", tbox)
 }
 
+type DpSaveConfig struct {
+	Domain string
+}
+
+func dpSaveConfig(outdir, outfile string, dp DpSaveConfig, tbox *rice.Box) {
+	dpWriteTemplate(outdir, outfile, dp, "dp-save-config.tmpl", tbox)
+}
+
 func dpWriteTemplate(outdir, outfile string, dp interface{}, templateName string, tbox *rice.Box) {
 	template := parseTemplate(tbox, tpdir(tbox) + templateName)
 	outpath := fileName(outdir, outfile)
@@ -549,6 +557,19 @@ func datapowerCluster(subsys *SubsysVm, outfiles map[string]string, tbox *rice.B
 	outfile = fmt.Sprintf("%s", "dp-apic-gw-service.xml")
 	dpApicGwService(outdir1, outfile, apicgw, tbox)
 
+	// save config - default domain
+	dpsavedomain := "default"
+	dpsaveconfig := DpSaveConfig{Domain: dpsavedomain}
+	outfile = fmt.Sprintf("dp-save-config-%s.xml", dpsavedomain)
+	dpSaveConfig(outdir1, outfile, dpsaveconfig, tbox)
+
+	// save config - api connect domain
+	dpsavedomain = subsys.Gateway.DatapowerDomain
+	dpsaveconfig = DpSaveConfig{Domain: dpsavedomain}
+	outfile = fmt.Sprintf("dp-save-config-%s.xml", dpsavedomain)
+	dpSaveConfig(outdir1, outfile, dpsaveconfig, tbox)
+
+
 	// write out soma scripts
 	for _, host := range subsys.Gateway.Hosts {
 
@@ -563,7 +584,7 @@ func datapowerCluster(subsys *SubsysVm, outfiles map[string]string, tbox *rice.B
 		//reqSpecs := make(map[string]SomaSpec)
 
 		setfileSpecs := make([]SomaSpec, 2)
-		reqSpecs := make([]SomaSpec, 15)
+		reqSpecs := make([]SomaSpec, 17)
 
 		setfileSpecs[0] = SomaSpec{
 			Req:    "",
@@ -714,6 +735,24 @@ func datapowerCluster(subsys *SubsysVm, outfiles map[string]string, tbox *rice.B
 
 		reqSpecs[14] = SomaSpec{
 			Req:    "dp-apic-gw-service.xml",
+			File:   "",
+			Dpdir:  "",
+			Dpfile: "",
+			Auth:   dpenv,
+			Url:    url,
+		}
+
+		reqSpecs[15] = SomaSpec{
+			Req:    fmt.Sprintf("dp-save-config-%s.xml", "default"),
+			File:   "",
+			Dpdir:  "",
+			Dpfile: "",
+			Auth:   dpenv,
+			Url:    url,
+		}
+
+		reqSpecs[16] = SomaSpec{
+			Req:    fmt.Sprintf("dp-save-config-%s.xml", subsys.Gateway.DatapowerDomain),
 			File:   "",
 			Dpdir:  "",
 			Dpfile: "",
