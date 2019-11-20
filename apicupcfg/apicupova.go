@@ -160,7 +160,7 @@ type GwySubsysVm struct {
 	// apic datapower domain
 	DatapowerDomain string
 
-	// apic configuration sequence
+	// apic configuration sequence (low level)
 	ConfigurationSequenceName string
 	ConfigurationExecutionInterval int
 
@@ -188,31 +188,57 @@ type GwySubsysVm struct {
 	SubsPeeringLocalPort int
 	SubsPeeringMonitorPort int
 
-	// low level cert directory configuration
-	GwdKeyName string
-	GwdCertName string
-	CertDirectory string
+	// datapower cert configuration
+	DatapowerCryptoDir string
+
+	// gwd_key
+	DatapowerGwdKey string
+
+	// gwd_cert
+	DatapowerGwdCert string
+
+	// ca, root-ca
+	CaFile string
+	RootCaFile string
+
+	// apic_ca_cert, apic_root_cert
+	DatapowerCaCert string
+	DatapowerRootCert string
 }
 
-func (gwy *GwySubsysVm) GetCertDirectoryOrDefault() string {
-	if len(gwy.CertDirectory) == 0 {
-		return certDir
+func (gwy *GwySubsysVm) GetCryptoDirectoryOrDefault() string {
+	if len(gwy.DatapowerCryptoDir) == 0 {
+		return cryptoDir
 	}
-	return gwy.CertDirectory
+	return gwy.DatapowerCryptoDir
 }
 
 func (gwy *GwySubsysVm) GetGwdKeyOrDefault() string {
-	if len(gwy.GwdKeyName) == 0 {
+	if len(gwy.DatapowerGwdKey) == 0 {
 		return gwdKey
 	}
-	return gwy.GwdKeyName
+	return gwy.DatapowerGwdKey
 }
 
 func (gwy *GwySubsysVm) GetGwdCertOrDefault() string {
-	if len(gwy.GwdCertName) == 0 {
+	if len(gwy.DatapowerGwdCert) == 0 {
 		return gwdCert
 	}
-	return gwy.GwdCertName
+	return gwy.DatapowerGwdCert
+}
+
+func (gwy *GwySubsysVm) GetCaCertOrDefault() string {
+	if len(gwy.DatapowerCaCert) == 0 {
+		return "gwd_ca_cert"
+	}
+	return gwy.DatapowerCaCert
+}
+
+func (gwy *GwySubsysVm) GetRootCertOrDefault() string {
+	if len(gwy.DatapowerRootCert) == 0 {
+		return "gwd_root_cert"
+	}
+	return gwy.DatapowerRootCert
 }
 
 func (gwy *GwySubsysVm) GetDatapowerDomainOrDefault() string {

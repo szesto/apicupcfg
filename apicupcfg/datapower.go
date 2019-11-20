@@ -6,7 +6,7 @@ import (
 	"strings"
 )
 
-const certDir = "sharedcert"
+const cryptoDir = "sharedcert"
 const gwdKey = "gwd_key"
 const gwdCert = "gwd_cert"
 const gwdIdCred = "gwd_id_cred"
@@ -61,13 +61,7 @@ type DpCryptoKey struct {
 	CryptoKeyFile string
 }
 
-func dpCryptoKey(outdir, outfile, dpdomain, dpkeyname, dpkeyfile string, tbox *rice.Box) {
-
-	dp := DpCryptoKey{
-		Domain:        dpdomain,
-		CryptoKeyName: dpkeyname,
-		CryptoKeyFile: dpkeyfile,
-	}
+func dpCryptoKey(outdir, outfile string, dp DpCryptoKey, tbox *rice.Box) {
 
 	dpWriteTemplate(outdir, outfile, dp, "dp-crypto-key.tmpl", tbox)
 }
@@ -78,13 +72,7 @@ type DpCryptoCertificate struct {
 	CryptoCertFile string
 }
 
-func dpCryptoCertificate(outdir, outfile, dpdomain, dpcertname, dpcertfile string, tbox *rice.Box) {
-
-	dp := DpCryptoCertificate{
-		Domain:         dpdomain,
-		CryptoCertName: dpcertname,
-		CryptoCertFile: dpcertfile,
-	}
+func dpCryptoCertificate(outdir, outfile string, dp DpCryptoCertificate, tbox *rice.Box) {
 
 	dpWriteTemplate(outdir, outfile, dp, "dp-crypto-certificate.tmpl", tbox)
 }
@@ -94,18 +82,10 @@ type DpCryptoIdentCredentials struct {
 	Name string
 	CryptoKeyName string
 	CryptoCertName string
-	CaName string // how to set? crypto-cert?
+	CaName string
 }
 
-func dpCryptoIndentCredentials(outdir, outfile, dpname, dpdomain, dpkeyname, dpcertname, dpcaname string, tbox *rice.Box) {
-
-	dp := DpCryptoIdentCredentials{
-		Domain:         dpdomain,
-		Name:			dpname,
-		CryptoKeyName:  dpkeyname,
-		CryptoCertName: dpcertname,
-		CaName:         dpcaname,
-	}
+func dpCryptoIndentCredentials(outdir, outfile string, dp DpCryptoIdentCredentials, tbox *rice.Box) {
 
 	dpWriteTemplate(outdir, outfile, dp, "dp-crypto-ident-cred.tmpl", tbox)
 }
@@ -323,6 +303,74 @@ func datapowerOpensslConfig(subsys *SubsysVm, outputdir string, osenv OsEnv, tbo
 	writeTemplate(combinedCsrTemplate, outpath, OsEnvCerts{OsEnv: osenv, CertSpecs: certmap})
 }
 
+func datapowerCryptoConfig(gwy *GwySubsysVm, outputdir string, tbox *rice.Box) {
+
+	dpdomain := gwy.GetDatapowerDomainOrDefault()
+
+	// crypto-key
+	dpcryptokey := DpCryptoKey{
+		Domain:        dpdomain,
+		CryptoKeyName: gwy.GetGwdKeyOrDefault(),
+		CryptoKeyFile: fmt.Sprintf("%s:///%s.pem",
+			gwy.GetCryptoDirectoryOrDefault(), gwy.GetGwdKeyOrDefault()),
+	}
+	outfile := fmt.Sprintf("%s", "dp-crypto-key.xml")
+	dpCryptoKey(outputdir, outfile, dpcryptokey, tbox)
+
+	// cryto-certificate self-signed
+	dpcryptocert := DpCryptoCertificate{
+		Domain:         dpdomain,
+		CryptoCertName: fmt.Sprintf("%s_self", gwy.GetGwdCertOrDefault()),
+		CryptoCertFile: fmt.Sprintf("%s:///%s_self.pem",
+			gwy.GetCryptoDirectoryOrDefault(), gwy.GetGwdCertOrDefault()),
+	}
+	outfile = fmt.Sprintf("%s","dp-crypto-cert-self.xml")
+	dpCryptoCertificate(outputdir, outfile, dpcryptocert, tbox)
+
+	// crypto certificate
+	dpcryptocert = DpCryptoCertificate{
+		Domain:         dpdomain,
+		CryptoCertName: fmt.Sprintf("%s", gwy.GetGwdCertOrDefault()),
+		CryptoCertFile: fmt.Sprintf("%s:///%s.pem",
+			gwy.GetCryptoDirectoryOrDefault(), gwy.GetGwdCertOrDefault()),
+	}
+	outfile = fmt.Sprintf("%s", "dp-crypto-cert.xml")
+	dpCryptoCertificate(outputdir, outfile, dpcryptocert, tbox)
+
+	// crypto cert - ca
+	dpcryptocert = DpCryptoCertificate{
+		Domain:         dpdomain,
+		CryptoCertName: fmt.Sprintf("%s", gwy.GetCaCertOrDefault()),
+		CryptoCertFile: fmt.Sprintf("%s:///%s.pem",
+			gwy.GetCryptoDirectoryOrDefault(), gwy.GetCaCertOrDefault()),
+	}
+	outfile = fmt.Sprintf("%s", "dp-crypto-cert-ca.xml")
+	dpCryptoCertificate(outputdir, outfile, dpcryptocert, tbox)
+
+	// crypto cert - root ca
+	dpcryptocert = DpCryptoCertificate{
+		Domain:         dpdomain,
+		CryptoCertName: fmt.Sprintf("%s", gwy.GetRootCertOrDefault()),
+		CryptoCertFile: fmt.Sprintf("%s:///%s.pem",
+			gwy.GetCryptoDirectoryOrDefault(), gwy.GetRootCertOrDefault()),
+	}
+	outfile = fmt.Sprintf("%s", "dp-crypto-cert-root-ca.xml")
+	dpCryptoCertificate(outputdir, outfile, dpcryptocert, tbox)
+
+	// crypto identification credentials
+	dpidcreds := DpCryptoIdentCredentials{
+		Domain:         dpdomain,
+		Name:           gwdIdCred,
+		CryptoKeyName:  gwy.GetGwdKeyOrDefault(),
+		CryptoCertName: fmt.Sprintf("%s_self", gwy.GetGwdCertOrDefault()),
+		CaName:         "",
+	}
+	outfile = fmt.Sprintf("%s", "dp-crypto-id-creds.xml")
+	dpCryptoIndentCredentials(outputdir, outfile, dpidcreds, tbox)
+
+	// valcred: gwd_val_cred -- not used...
+}
+
 func datapowerGatewayPeeringConfig(gwy *GwySubsysVm, outputdir string, tbox *rice.Box) {
 
 	peering := []string {gwy.GetGwdPeeringOrDefault(), gwy.GetRateLimitPeeringOrDefault(), gwy.GetSubsPeeringOrDefault()}
@@ -396,6 +444,28 @@ func datapowerGatewayPeeringConfig(gwy *GwySubsysVm, outputdir string, tbox *ric
 	}
 }
 
+type DpCryptoIdentCredModify struct {
+	Domain string
+	Name string
+	Key string
+	Cert string
+	CaCerts []string
+}
+
+func datapowerCryptoIdentCredModify(outputdir, outfile string, dp DpCryptoIdentCredModify, tbox *rice.Box) {
+
+	// set-file cert
+	// set-file ca-cert
+	// set-file root-cert
+	// crypto-key key
+	// crypto-cert cert
+	// crypto-cert ca-cert
+	// crypto-cert root-cert
+	// crypto-id-creds-mod crypto-cert, crypto-ca-cert, crypto-root-cert
+
+	dpWriteTemplate(outputdir, outfile, dp, "dp-crypto-ident-cred-modify.tmpl", tbox)
+}
+
 func datapowerCluster(subsys *SubsysVm, outfiles map[string]string, tbox *rice.Box) {
 
 	// parse templates
@@ -410,8 +480,10 @@ func datapowerCluster(subsys *SubsysVm, outfiles map[string]string, tbox *rice.B
 	// openssl configuration
 	datapowerOpensslConfig(subsys, outdir1, osenv, tbox)
 
+	gwy := subsys.Gateway
+
 	// datapower domain
-	dpdomain := subsys.Gateway.GetDatapowerDomainOrDefault()
+	dpdomain := gwy.GetDatapowerDomainOrDefault()
 
 	// host alias, system name
 	for _, host := range subsys.Gateway.Hosts {
@@ -433,7 +505,7 @@ func datapowerCluster(subsys *SubsysVm, outfiles map[string]string, tbox *rice.B
 	}
 
 	// ntp service
-	ntpserver := subsys.Gateway.GetNTPServerOrDefault()
+	ntpserver := gwy.GetNTPServerOrDefault()
 	dpntp := DpNTPService{NTPServer: ntpserver}
 	outfile := fmt.Sprintf("%s", "dp-ntp-service.xml")
 	dpNTPService(outdir1, outfile, dpntp, tbox)
@@ -448,30 +520,12 @@ func datapowerCluster(subsys *SubsysVm, outfiles map[string]string, tbox *rice.B
 	dpDNSServiceModify(outdir1, outfile, dpdns, tbox)
 
 	// application domain
-	dpdatapowerdomain := DpDomain{DatapowerDomain: subsys.Gateway.GetDatapowerDomainOrDefault()}
+	dpdatapowerdomain := DpDomain{DatapowerDomain: gwy.GetDatapowerDomainOrDefault()}
 	outfile = fmt.Sprintf("%s", "dp-domain.xml")
 	dpDomain(outdir1, outfile, dpdatapowerdomain, tbox)
 
-	// crypto-key
-	outfile = fmt.Sprintf("%s", "dp-crypto-key.xml")
-	dpkeyname := subsys.Gateway.GetGwdKeyOrDefault()
-	dpkeyfile := subsys.Gateway.GetCertDirectoryOrDefault() + ":///" + subsys.Gateway.GetGwdKeyOrDefault() + ".pem"
-	dpCryptoKey(outdir1, outfile, dpdomain, dpkeyname, dpkeyfile, tbox)
-
-	// cryto-certificate
-	outfile = fmt.Sprintf("%s","dp-crypto-cert.xml")
-	dpcertname := subsys.Gateway.GetGwdCertOrDefault()
-	dpcertfile := subsys.Gateway.GetCertDirectoryOrDefault() + ":///" + subsys.Gateway.GetGwdCertOrDefault() + ".pem"
-	dpCryptoCertificate(outdir1, outfile, dpdomain, dpcertname, dpcertfile, tbox)
-
-	// crypto-id-creds
-	// here we link crypto key to the self-signed crypto cert
-	// crypto id creds should be updated with valid cert and ca cert after initial configuration
-	outfile = fmt.Sprintf("%s", "dp-crypto-id-creds.xml")
-	dpcaname := ""
-	dpCryptoIndentCredentials(outdir1, outfile, gwdIdCred, dpdomain, dpkeyname, dpcertname, dpcaname, tbox)
-
-	// valcred: gwd_val_cred -- not used...
+	// crypto-key, cryto-certs, identification creds
+	datapowerCryptoConfig(&gwy, outdir1, tbox)
 
 	// ssl-server
 	dpsslsrv := DpSSLServerProfile{
@@ -496,7 +550,7 @@ func datapowerCluster(subsys *SubsysVm, outfiles map[string]string, tbox *rice.B
 	dpSSLClientProfile(outdir1, outfile, dpsslclient, tbox)
 
 	// gateway peering
-	datapowerGatewayPeeringConfig(&subsys.Gateway, outdir1, tbox)
+	datapowerGatewayPeeringConfig(&gwy, outdir1, tbox)
 
 	// gateway peering manager: default
 	peeringmgr := DpGatewayPeeringManager{
@@ -514,7 +568,7 @@ func datapowerCluster(subsys *SubsysVm, outfiles map[string]string, tbox *rice.B
 	dpconfigseq := DpConfigSequence{
 		Domain:                         dpdomain,
 		ConfigSequenceName:             "apiconnect", // always
-		ConfigurationExecutionInterval: subsys.Gateway.ConfigurationExecutionInterval,
+		ConfigurationExecutionInterval: gwy.ConfigurationExecutionInterval,
 	}
 
 	outfile = fmt.Sprintf("%s","dp-config-sequence.xml")
@@ -529,12 +583,12 @@ func datapowerCluster(subsys *SubsysVm, outfiles map[string]string, tbox *rice.B
 	apicgw := DpApicGwService{
 		Domain:           dpdomain,
 		Name:             "default", // always
-		LocalAddress:     func() string {if len(subsys.Gateway.DatapowerApicGwServiceAddress) >0 {return subsys.Gateway.DatapowerApicGwServiceAddress} else {return apicGwServiceAddress}}(),
-		LocalPort:        func() int {if subsys.Gateway.DatapowerApicGwServicePort > 0 {return subsys.Gateway.DatapowerApicGwServicePort} else {return apicGwServicePort}}(),
+		LocalAddress:     func() string {if len(gwy.DatapowerApicGwServiceAddress) >0 {return gwy.DatapowerApicGwServiceAddress} else {return apicGwServiceAddress}}(),
+		LocalPort:        func() int {if gwy.DatapowerApicGwServicePort > 0 {return gwy.DatapowerApicGwServicePort} else {return apicGwServicePort}}(),
 		SSLClientProfile: sslGwdClient,
 		SSLServerProfile: sslGwdServer,
-		ApiGateway:       func() string {if len(subsys.Gateway.DatapowerApiGatewayAddress) > 0 {return subsys.Gateway.DatapowerApiGatewayAddress} else {return apiGwAddress}}(),
-		ApiGatewayPort:   func() int {if subsys.Gateway.DatapowerApiGatewayPort > 0 {return subsys.Gateway.DatapowerApiGatewayPort} else {return apiGwPort}}(),
+		ApiGateway:       func() string {if len(gwy.DatapowerApiGatewayAddress) > 0 {return gwy.DatapowerApiGatewayAddress} else {return apiGwAddress}}(),
+		ApiGatewayPort:   func() int {if gwy.DatapowerApiGatewayPort > 0 {return gwy.DatapowerApiGatewayPort} else {return apiGwPort}}(),
 		GwdPeering:       gwdPeering,
 		GwPeeringManager: "default", // always
 	}
@@ -549,7 +603,7 @@ func datapowerCluster(subsys *SubsysVm, outfiles map[string]string, tbox *rice.B
 	dpSaveConfig(outdir1, outfile, dpsaveconfig, tbox)
 
 	// save config - api connect domain
-	dpsavedomain = subsys.Gateway.GetDatapowerDomainOrDefault()
+	dpsavedomain = gwy.GetDatapowerDomainOrDefault()
 	dpsaveconfig = DpSaveConfig{Domain: dpsavedomain}
 	outfile = fmt.Sprintf("dp-save-config-%s.xml", dpsavedomain)
 	dpSaveConfig(outdir1, outfile, dpsaveconfig, tbox)
@@ -570,9 +624,9 @@ func datapowerCluster(subsys *SubsysVm, outfiles map[string]string, tbox *rice.B
 
 		setfileSpecs[0] = SomaSpec{
 			Req:    "",
-			File:   dot2dash(subsys.Gateway.ApicGwService) + ".key",
-			Dpdir:  subsys.Gateway.GetCertDirectoryOrDefault(),
-			Dpfile: subsys.Gateway.GetGwdKeyOrDefault() + ".pem",
+			File:   dot2dash(gwy.ApicGwService) + ".key",
+			Dpdir:  gwy.GetCryptoDirectoryOrDefault(),
+			Dpfile: gwy.GetGwdKeyOrDefault() + ".pem",
 			Dpdomain: "default",
 			Auth:   dpenv,
 			Url:    url,
@@ -580,9 +634,9 @@ func datapowerCluster(subsys *SubsysVm, outfiles map[string]string, tbox *rice.B
 
 		setfileSpecs[1] = SomaSpec{
 			Req:    "",
-			File:   dot2dash(subsys.Gateway.ApicGwService) + ".crt.self",
-			Dpdir:  subsys.Gateway.GetCertDirectoryOrDefault(),
-			Dpfile: subsys.Gateway.GetGwdCertOrDefault() + ".pem",
+			File:   dot2dash(gwy.ApicGwService) + ".crt.self",
+			Dpdir:  gwy.GetCryptoDirectoryOrDefault(),
+			Dpfile: fmt.Sprintf("%s_self.pem", gwy.GetGwdCertOrDefault()),
 			Dpdomain: "default",
 			Auth:   dpenv,
 			Url:    url,
@@ -644,7 +698,7 @@ func datapowerCluster(subsys *SubsysVm, outfiles map[string]string, tbox *rice.B
 		}
 
 		reqSpecs[6] = SomaSpec{
-			Req:    "dp-crypto-cert.xml",
+			Req:    "dp-crypto-cert-self.xml",
 			File:   "",
 			Dpdir:  "",
 			Dpfile: "",
@@ -765,4 +819,113 @@ func datapowerCluster(subsys *SubsysVm, outfiles map[string]string, tbox *rice.B
 	}
 
 	// write combined soma script
+
+	// crypto ident cred modify
+	dpcryptoidentcredmod := DpCryptoIdentCredModify{
+		Domain:  dpdomain,
+		Name:    gwdIdCred,
+		Key:     fmt.Sprintf("%s", gwy.GetGwdKeyOrDefault()),
+		Cert:    fmt.Sprintf("%s", gwy.GetGwdCertOrDefault()),
+		CaCerts: []string{gwy.GetCaCertOrDefault(),gwy.GetRootCertOrDefault()},
+	}
+
+	outfile = fmt.Sprintf("%s", "dp-crypto-ident-cred-modify.xml")
+	datapowerCryptoIdentCredModify(outdir1, outfile, dpcryptoidentcredmod, tbox)
+
+	// write crypto ident modify script
+	// set file crypto-cert
+	// set file ca cert
+	// set file root cert
+	// crypto cert
+	// crypto cert ca
+	// crypto cert root ca
+	// crypto ident cred mod
+
+	for _, host := range subsys.Gateway.Hosts {
+
+		if len(host.Name) == 0 {
+			continue
+		}
+
+		dpenv := "dp.env"
+		url := "https://" + host.Name + ":5550/service/mgmt/3.0"
+
+		setfileSpecs := make([]SomaSpec, 3)
+		reqSpecs := make([]SomaSpec, 4)
+
+		setfileSpecs[0] = SomaSpec{
+			Req:    "",
+			File:   dot2dash(gwy.ApicGwService) + ".crt",
+			Dpdir:  gwy.GetCryptoDirectoryOrDefault(),
+			Dpfile: fmt.Sprintf("%s.pem", gwy.GetGwdCertOrDefault()),
+			Dpdomain: "default",
+			Auth:   dpenv,
+			Url:    url,
+		}
+
+		setfileSpecs[1] = SomaSpec{
+			Req:    "",
+			File:   gwy.CaFile, // todo: copy ca file to the destination
+			Dpdir:  gwy.GetCryptoDirectoryOrDefault(),
+			Dpfile: fmt.Sprintf("%s.pem", gwy.GetCaCertOrDefault()),
+			Dpdomain: "default",
+			Auth:   dpenv,
+			Url:    url,
+		}
+
+		setfileSpecs[2] = SomaSpec{
+			Req:    "",
+			File:   gwy.RootCaFile, // todo: copy root ca file to the destination
+			Dpdir:  gwy.GetCryptoDirectoryOrDefault(),
+			Dpfile: fmt.Sprintf("%s.pem", gwy.GetRootCertOrDefault()),
+			Dpdomain: "default",
+			Auth:   dpenv,
+			Url:    url,
+		}
+
+		reqSpecs[0] = SomaSpec{
+			Req:    "dp-crypto-cert.xml",
+			File:   "",
+			Dpdir:  "",
+			Dpfile: "",
+			Auth:   dpenv,
+			Url:    url,
+		}
+
+		reqSpecs[1] = SomaSpec{
+			Req:    "dp-crypto-cert-ca.xml",
+			File:   "",
+			Dpdir:  "",
+			Dpfile: "",
+			Auth:   dpenv,
+			Url:    url,
+		}
+
+		reqSpecs[2] = SomaSpec{
+			Req:    "dp-crypto-cert-root-ca.xml",
+			File:   "",
+			Dpdir:  "",
+			Dpfile: "",
+			Auth:   dpenv,
+			Url:    url,
+		}
+
+		reqSpecs[3] = SomaSpec{
+			Req:    "dp-crypto-ident-cred-modify.xml",
+			File:   "",
+			Dpdir:  "",
+			Dpfile: "",
+			Auth:   dpenv,
+			Url:    url,
+		}
+
+		// write soma script for a host
+		outpath := outdir1 + osenv.PathSeparator + "zoma-crypto-update-" + dot2dash(host.Name) + osenv.ShellExt
+		writeTemplate(somaTemplate, outpath, OsEnvSomaSpecs{
+			OsEnv:        osenv,
+			Config:	subsys.configFileName,
+			SetFileSpecs: setfileSpecs,
+			ReqSpecs:     reqSpecs,
+		})
+	}
 }
