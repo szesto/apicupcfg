@@ -231,6 +231,15 @@ func dpSaveConfig(outdir, outfile string, dp DpSaveConfig, tbox *rice.Box) {
 	dpWriteTemplate(outdir, outfile, dp, "dp-save-config.tmpl", tbox)
 }
 
+type DpDNSService struct {
+	SearchDomains []string
+	NameServers []string
+}
+
+func dpDNSServiceModify(outdir, outfile string, dp DpDNSService, tbox *rice.Box) {
+	dpWriteTemplate(outdir, outfile, dp, "dp-dns-modify.tmpl", tbox)
+}
+
 func dpWriteTemplate(outdir, outfile string, dp interface{}, templateName string, tbox *rice.Box) {
 	template := parseTemplate(tbox, tpdir(tbox) + templateName)
 	outpath := fileName(outdir, outfile)
@@ -429,6 +438,15 @@ func datapowerCluster(subsys *SubsysVm, outfiles map[string]string, tbox *rice.B
 	outfile := fmt.Sprintf("%s", "dp-ntp-service.xml")
 	dpNTPService(outdir1, outfile, dpntp, tbox)
 
+	// update dns service
+	dpdns := DpDNSService{
+		SearchDomains: subsys.Gateway.SearchDomains,
+		NameServers:   subsys.Gateway.DnsServers,
+	}
+
+	outfile = fmt.Sprintf("%s", "dp-dns-service-modify.xml")
+	dpDNSServiceModify(outdir1, outfile, dpdns, tbox)
+
 	// application domain
 	dpdatapowerdomain := DpDomain{DatapowerDomain: subsys.Gateway.GetDatapowerDomainOrDefault()}
 	outfile = fmt.Sprintf("%s", "dp-domain.xml")
@@ -548,7 +566,7 @@ func datapowerCluster(subsys *SubsysVm, outfiles map[string]string, tbox *rice.B
 		url := "https://" + host.Name + ":5550/service/mgmt/3.0"
 
 		setfileSpecs := make([]SomaSpec, 2)
-		reqSpecs := make([]SomaSpec, 17)
+		reqSpecs := make([]SomaSpec, 18)
 
 		setfileSpecs[0] = SomaSpec{
 			Req:    "",
@@ -598,6 +616,16 @@ func datapowerCluster(subsys *SubsysVm, outfiles map[string]string, tbox *rice.B
 		}
 
 		reqSpecs[3] = SomaSpec{
+			Req:      "dp-dns-service-modify.xml",
+			File:     "",
+			Dpdir:    "",
+			Dpfile:   "",
+			Dpdomain: "",
+			Auth:     dpenv,
+			Url:      url,
+		}
+
+		reqSpecs[4] = SomaSpec{
 			Req:    "dp-domain.xml",
 			File:   "",
 			Dpdir:  "",
@@ -606,7 +634,7 @@ func datapowerCluster(subsys *SubsysVm, outfiles map[string]string, tbox *rice.B
 			Url:    url,
 		}
 
-		reqSpecs[4] = SomaSpec{
+		reqSpecs[5] = SomaSpec{
 			Req:    "dp-crypto-key.xml",
 			File:   "",
 			Dpdir:  "",
@@ -615,7 +643,7 @@ func datapowerCluster(subsys *SubsysVm, outfiles map[string]string, tbox *rice.B
 			Url:    url,
 		}
 
-		reqSpecs[5] = SomaSpec{
+		reqSpecs[6] = SomaSpec{
 			Req:    "dp-crypto-cert.xml",
 			File:   "",
 			Dpdir:  "",
@@ -624,7 +652,7 @@ func datapowerCluster(subsys *SubsysVm, outfiles map[string]string, tbox *rice.B
 			Url:    url,
 		}
 
-		reqSpecs[6] = SomaSpec{
+		reqSpecs[7] = SomaSpec{
 			Req:    "dp-crypto-id-creds.xml",
 			File:   "",
 			Dpdir:  "",
@@ -633,7 +661,7 @@ func datapowerCluster(subsys *SubsysVm, outfiles map[string]string, tbox *rice.B
 			Url:    url,
 		}
 
-		reqSpecs[7] = SomaSpec{
+		reqSpecs[8] = SomaSpec{
 			Req:    "dp-ssl-server.xml",
 			File:   "",
 			Dpdir:  "",
@@ -642,7 +670,7 @@ func datapowerCluster(subsys *SubsysVm, outfiles map[string]string, tbox *rice.B
 			Url:    url,
 		}
 
-		reqSpecs[8] = SomaSpec{
+		reqSpecs[9] = SomaSpec{
 			Req:    "dp-ssl-client.xml",
 			File:   "",
 			Dpdir:  "",
@@ -652,16 +680,6 @@ func datapowerCluster(subsys *SubsysVm, outfiles map[string]string, tbox *rice.B
 		}
 
 		peeringkey := fmt.Sprintf(fmt.Sprintf("dp-peering-%s-%s.xml", gwdPeering, dot2dash(host.Name)))
-		reqSpecs[9] = SomaSpec{
-			Req:    peeringkey,
-			File:   "",
-			Dpdir:  "",
-			Dpfile: "",
-			Auth:   dpenv,
-			Url:    url,
-		}
-
-		peeringkey = fmt.Sprintf(fmt.Sprintf("dp-peering-%s-%s.xml", rateLimitPeering, dot2dash(host.Name)))
 		reqSpecs[10] = SomaSpec{
 			Req:    peeringkey,
 			File:   "",
@@ -671,7 +689,7 @@ func datapowerCluster(subsys *SubsysVm, outfiles map[string]string, tbox *rice.B
 			Url:    url,
 		}
 
-		peeringkey = fmt.Sprintf(fmt.Sprintf("dp-peering-%s-%s.xml", subsPeering, dot2dash(host.Name)))
+		peeringkey = fmt.Sprintf(fmt.Sprintf("dp-peering-%s-%s.xml", rateLimitPeering, dot2dash(host.Name)))
 		reqSpecs[11] = SomaSpec{
 			Req:    peeringkey,
 			File:   "",
@@ -681,8 +699,9 @@ func datapowerCluster(subsys *SubsysVm, outfiles map[string]string, tbox *rice.B
 			Url:    url,
 		}
 
+		peeringkey = fmt.Sprintf(fmt.Sprintf("dp-peering-%s-%s.xml", subsPeering, dot2dash(host.Name)))
 		reqSpecs[12] = SomaSpec{
-			Req:    "dp-peering-manager.xml",
+			Req:    peeringkey,
 			File:   "",
 			Dpdir:  "",
 			Dpfile: "",
@@ -691,7 +710,7 @@ func datapowerCluster(subsys *SubsysVm, outfiles map[string]string, tbox *rice.B
 		}
 
 		reqSpecs[13] = SomaSpec{
-			Req:    "dp-config-sequence.xml",
+			Req:    "dp-peering-manager.xml",
 			File:   "",
 			Dpdir:  "",
 			Dpfile: "",
@@ -700,7 +719,7 @@ func datapowerCluster(subsys *SubsysVm, outfiles map[string]string, tbox *rice.B
 		}
 
 		reqSpecs[14] = SomaSpec{
-			Req:    "dp-apic-gw-service.xml",
+			Req:    "dp-config-sequence.xml",
 			File:   "",
 			Dpdir:  "",
 			Dpfile: "",
@@ -709,7 +728,7 @@ func datapowerCluster(subsys *SubsysVm, outfiles map[string]string, tbox *rice.B
 		}
 
 		reqSpecs[15] = SomaSpec{
-			Req:    fmt.Sprintf("dp-save-config-%s.xml", "default"),
+			Req:    "dp-apic-gw-service.xml",
 			File:   "",
 			Dpdir:  "",
 			Dpfile: "",
@@ -718,6 +737,15 @@ func datapowerCluster(subsys *SubsysVm, outfiles map[string]string, tbox *rice.B
 		}
 
 		reqSpecs[16] = SomaSpec{
+			Req:    fmt.Sprintf("dp-save-config-%s.xml", "default"),
+			File:   "",
+			Dpdir:  "",
+			Dpfile: "",
+			Auth:   dpenv,
+			Url:    url,
+		}
+
+		reqSpecs[17] = SomaSpec{
 			Req:    fmt.Sprintf("dp-save-config-%s.xml", subsys.Gateway.GetDatapowerDomainOrDefault()),
 			File:   "",
 			Dpdir:  "",

@@ -1,0 +1,34 @@
+<SOAP-ENV:Envelope xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/"
+                   xmlns:ma="http://www.datapower.com/schemas/management">
+    <SOAP-ENV:Header/>
+    <SOAP-ENV:Body>
+        <ma:request domain="default">
+            <ma:modify-config>
+                <DNSNameService>
+                    <mAdminState>enabled</mAdminState>
+                    <UserSummary></UserSummary>
+                    {{- range .SearchDomains }}
+                        {{- $domain := .}}
+                    <SearchDomains>
+                        <SearchDomain>{{- $domain}}</SearchDomain>
+                    </SearchDomains>
+                    {{- end}}
+                    {{- range .NameServers }}
+                    <NameServers>
+                        {{- $dnsipaddr := .}}
+                        <IPAddress>{{- $dnsipaddr}}</IPAddress>
+                        <UDPPort>53</UDPPort>
+                        <TCPPort>53</TCPPort>
+                        <MaxRetries>3</MaxRetries>
+                    </NameServers>
+                    {{- end}}
+                    <IPPreference>4</IPPreference>
+                    <ForceIPPreference>off</ForceIPPreference>
+                    <LoadBalanceAlgorithm>round-robin</LoadBalanceAlgorithm>
+                    <MaxRetries>3</MaxRetries>
+                    <Timeout>300</Timeout>
+                </DNSNameService>
+            </ma:modify-config>
+        </ma:request>
+    </SOAP-ENV:Body>
+</SOAP-ENV:Envelope>
