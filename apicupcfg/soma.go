@@ -48,7 +48,10 @@ func loadDatapowerEnv(dpenv string) (username, password string, err error) {
 		return "", "", err
 	}
 
-	return up[0], up[1], nil
+	username = strings.TrimSpace(up[0])
+	password = strings.TrimSpace(up[1])
+
+	return username, password, nil
 }
 
 func somaSetFile(filebytes []byte, dpdir, dpfile string, dpdomain, url, user, password string, tbox *rice.Box) (status string, statusCode int, reply string, err error) {
