@@ -80,35 +80,38 @@ func CaCopy(cafile, rootcafile, dstcafile, dstrootcafile, outdir, dstdir, config
 	dstfile := outdir + string(os.PathSeparator) + dstdir + string(os.PathSeparator) + dstcafile
 	fmt.Printf("ca-copy... copying ca file '%s' to destination '%s'\n", cafile, dstfile)
 
-	err = copyFileErrExist(cafile, dstfile)
+	exist, err := copyFileErrExist(cafile, dstfile)
 	if err != nil {
 		return err
+	}
 
+	if exist {
+		fmt.Printf("ca-file... destination file '%s' already exists... skip copy\n", dstfile)
 	}
 
 	// copy root-ca file
 	dstfile = outdir + string(os.PathSeparator) + dstdir + string(os.PathSeparator) + dstrootcafile
 	fmt.Printf("ca-copy... copying root ca file '%s' to destination '%s'\n", rootcafile, dstfile)
 
-	err = copyFileErrExist(rootcafile, dstfile)
+	exist, err = copyFileErrExist(rootcafile, dstfile)
 	if err != nil {
 		return err
+	}
 
+	if exist {
+		fmt.Printf("ca-file... destination file '%s' already exists... skip copy\n", dstfile)
 	}
 
 	return nil
 }
 
-func copyFileErrExist(srcfile, dstfile string) error {
+func copyFileErrExist(srcfile, dstfile string) (bool, error) {
 	exist, err := isFileExist(dstfile)
 
 	if err != nil {
-		return err
-
-	} else if exist {
-		return fmt.Errorf("ca-file... destination file '%s' already exists", dstfile)
+		return false, err
 	}
 
 	copyFile(srcfile, dstfile)
-	return nil
+	return exist, nil
 }
