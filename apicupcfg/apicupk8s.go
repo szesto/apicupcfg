@@ -258,10 +258,10 @@ func CopyCertK8s(certfile string, isdir bool, subsys *SubsysK8s, commonCsrDir st
 
 	if isdir {
 		return copyCerts(certfile, &subsys.Certs, &subsys.Management, &subsys.Analytics,
-			&subsys.Portal, &subsys.Gateway, commonCsrDir, customCsrDir)
+			&subsys.Portal, &subsys.Gateway, commonCsrDir, customCsrDir, false)
 
 	} else {
 		return copyCert(certfile, &subsys.Certs, &subsys.Management, &subsys.Analytics,
-			&subsys.Portal, &subsys.Gateway, commonCsrDir, customCsrDir)
+			&subsys.Portal, &subsys.Gateway, commonCsrDir, customCsrDir, false)
 	}
 }

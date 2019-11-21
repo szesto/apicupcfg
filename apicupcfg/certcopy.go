@@ -11,7 +11,7 @@ import (
 )
 
 func copyCerts(certdir string, certs *Certs, mgmt ManagementSubsysDescriptor, alyt AnalyticsSubsysDescriptor,
-	ptl PortalSubsysDescriptor, gwy GatewaySubsysDescriptor, commonCsrOutDir string, customCsrOutDir string) error {
+	ptl PortalSubsysDescriptor, gwy GatewaySubsysDescriptor, commonCsrOutDir string, customCsrOutDir string, isOva bool) error {
 
 	// read certs dir
 	infos, err := ioutil.ReadDir(certdir)
@@ -27,7 +27,7 @@ func copyCerts(certdir string, certs *Certs, mgmt ManagementSubsysDescriptor, al
 
 		certfile := certdir + string(os.PathSeparator) + info.Name()
 
-		err = copyCert(certfile, certs, mgmt, alyt, ptl, gwy, commonCsrOutDir, customCsrOutDir)
+		err = copyCert(certfile, certs, mgmt, alyt, ptl, gwy, commonCsrOutDir, customCsrOutDir, isOva)
 		if err != nil {
 			fmt.Printf("%v\n", err)
 		}
@@ -37,7 +37,7 @@ func copyCerts(certdir string, certs *Certs, mgmt ManagementSubsysDescriptor, al
 }
 
 func copyCert(certfile string, certs *Certs, mgmt ManagementSubsysDescriptor, alyt AnalyticsSubsysDescriptor,
-	ptl PortalSubsysDescriptor, gwy GatewaySubsysDescriptor, commonCsrOutDir string, customCsrOutDir string) error {
+	ptl PortalSubsysDescriptor, gwy GatewaySubsysDescriptor, commonCsrOutDir string, customCsrOutDir string, isOva bool) error {
 
 	fmt.Printf("\nprocessing file... '%s'\n", certfile)
 
@@ -55,10 +55,8 @@ func copyCert(certfile string, certs *Certs, mgmt ManagementSubsysDescriptor, al
 		return nil
 	}
 
-	// todo: copy first cert only...
 	if len(certlist) > 1 {
 		return fmt.Errorf("file '%s' is a cert chain... %v, one cert expected", certfile, blockTypes)
-		//log.Fatalf("file '%s' is a cert chain... %v, one cert expected...\n", certfile, blockTypes)
 	}
 
 	cert := certlist[0]
@@ -118,6 +116,33 @@ func copyCert(certfile string, certs *Certs, mgmt ManagementSubsysDescriptor, al
 		}
 	}
 
+	// gateway subsystem for ova
+	if isOva {
+		// gateway director
+		certSpec := CertSpec{}
+		certSpec.Cn = gwy.GetApicGatewayServiceEndpoint()
+		updateCertSpec(certs, gwy.GetGatewaySubsysName(), "gateway-director", &certSpec, DatapowerOutDir)
+
+		err = verifyCopyCertfile(certfile, cert, &certSpec)
+		if err != nil {
+			verifyErrors = append(verifyErrors, err)
+		} else {
+			matchcount++
+		}
+
+		// api gateway
+		certSpec = CertSpec{}
+		certSpec.Cn = gwy.GetApiGatewayEndpoint()
+		updateCertSpec(certs, gwy.GetGatewaySubsysName(), "api-gateway", &certSpec, DatapowerOutDir)
+
+		err = verifyCopyCertfile(certfile, cert, &certSpec)
+		if err != nil {
+			verifyErrors = append(verifyErrors, err)
+		} else {
+			matchcount++
+		}
+	}
+
 	// no hostname match for the cert, show errors
 	if matchcount == 0 {
 		for _, err := range verifyErrors {
@@ -140,9 +165,22 @@ func verifyCopyCertfile(certfile string, cert *x509.Certificate, certSpec *CertS
 
 		// copy cert...
 		dstfile := certSpec.CsrSubdir + string(os.PathSeparator) + certSpec.CertFile
-		copyFile(certfile, dstfile)
 
-		fmt.Printf("cert file %s copied to destination %s\n", certfile, dstfile)
+		// check if destination file exists
+		exists, err := isFileExist(dstfile)
+		if err != nil {
+			return err
+		}
+
+		if exists {
+			fmt.Printf("cert file '%s' destination '%s' already exists... skip...\n", certfile, dstfile)
+
+		} else {
+			copyFile(certfile, dstfile)
+			fmt.Printf("cert file '%s' copied to destination %s\n", certfile, dstfile)
+
+		}
+
 		return nil
 	}
 

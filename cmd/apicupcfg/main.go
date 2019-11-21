@@ -14,7 +14,7 @@ func main() {
 	// input: configuration file, output dir, csr subdirectories
 	input, outdir, validateIp, initConfig, initConfigType, subsysOnly, certsOnly,
 	certcopy, certdir, certverify, certfile, cafile, rootcafile, noexpire, certconcat, gen,
-	soma, req, auth, url, setfile, dpdir, dpfile, datapowerOnly, dpdomain := apicupcfg.Input()
+	soma, req, auth, url, setfile, dpdir, dpfile, datapowerOnly, dpdomain, dpcacopy := apicupcfg.Input()
 
 	// input actions
 	isValidateIpActionf := func() bool {return validateIp}
@@ -32,9 +32,12 @@ func main() {
 	isDpdirf := func() bool {return len(dpdir) > 0}
 	isDpfilef := func() bool {return len(dpfile) > 0}
 
+	isDpCaCopyActionf := func() bool {return dpcacopy}
+
 	// check input actions
 	if !isValidateIpActionf() && !isCertCopyActionf() && !isCertDirActionf() &&
-		!isCertVerifyActionf() && !isCertConcatActionf() && !isGenActionf() && !isSomaf() {
+		!isCertVerifyActionf() && !isCertConcatActionf() && !isGenActionf() &&
+		!isSomaf() && !isDpCaCopyActionf() {
 
 		log.Fatalf("no action specified... use apicupcfg -h for help...")
 	}
@@ -168,6 +171,14 @@ func main() {
 
 				}
 
+			} else if isDpCaCopyActionf() {
+				err = apicupcfg.CaCopy(cafile, rootcafile, subsysvm.Gateway.CaFile, subsysvm.Gateway.RootCaFile, outdir, apicupcfg.DatapowerOutDir, input)
+
+				if err != nil {
+					log.Fatal(err)
+
+				}
+
 			} else if isGenActionf() {
 				// gen action
 
@@ -187,6 +198,10 @@ func main() {
 		} else if isSomaf() {
 			// not applicable, complain
 			fmt.Printf("soma command line option is not applicable to the %s install type...\n", apicupcfg.InstallTypeK8s)
+
+		} else if isDpCaCopyActionf() {
+			// not applicable, complain
+			fmt.Printf("dpcacopy command line option is not applicable to the %s install type...\n", apicupcfg.InstallTypeK8s)
 
 		} else {
 			// create output directories

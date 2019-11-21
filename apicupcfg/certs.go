@@ -223,7 +223,7 @@ func updateCertSpecs(certs *Certs, mgmt ManagementSubsysDescriptor, alyt Analyti
 
 		certSpec := getCertSpec(certmap, CertKeyApicGwServiceIngress)
 		certSpec.Cn = CertKeyApicGwServiceIngress
-		updateCertSpec(certs, mgmt.GetManagementSubsysName(), CertKeyApicGwServiceIngress, &certSpec, commonCsrOutDir)
+		updateCertSpec(certs, gwy.GetGatewaySubsysName(), CertKeyApicGwServiceIngress, &certSpec, commonCsrOutDir)
 		certmap[CertKeyApicGwServiceIngress] = certSpec
 	}
 

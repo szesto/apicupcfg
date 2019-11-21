@@ -484,11 +484,11 @@ func CopyCertVm(certfile string, isdir bool, subsys *SubsysVm, commonCsrDir stri
 
 	if isdir {
 		return copyCerts(certfile, &subsys.Certs, &subsys.Management, &subsys.Analytics,
-			&subsys.Portal, &subsys.Gateway, commonCsrDir, customCsrDir)
+			&subsys.Portal, &subsys.Gateway, commonCsrDir, customCsrDir, true)
 
 	} else {
 		return copyCert(certfile, &subsys.Certs, &subsys.Management, &subsys.Analytics,
-			&subsys.Portal, &subsys.Gateway, commonCsrDir, customCsrDir)
+			&subsys.Portal, &subsys.Gateway, commonCsrDir, customCsrDir, true)
 	}
 }
 
