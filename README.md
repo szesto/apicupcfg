@@ -188,26 +188,33 @@ in the cmd/apicupcfg directory:
 *No IBM API Connect software is required to build or use this tool.*
 
 **Typical Steps for OVA install.**
-- `apicupcfg -gen -initconfig [-configtype ova]`
-- `edit configuration file subsys-config.json. In what follows, tag is the value of the Tag property.`
-- `to validate ip addresses: apicupcfg -validateip`
-- `to generate subsystem and certs configuration scripts: apicupcfg -gen`
-- `to generate certificate signing requests, from the custom-csr subdir: all-user-facing-public-csr.tag.bat|sh`
-- `submit generated csr files to the ca`
-- `place certificates recieved from the ca in a directory. Here we assume received-certs subdir.`
-- `to copy certificates to correct destination: apicupcfg -certdir received-certs`
-- `place trusted root certificates received from the the ca in a directory. Here we assume ca-trust subdir.`
-- `to concatenate and copy trusted ca certs: apicupcfg -certconcat -ca ca-trust\ca.pem -rootca ca-trust\rootca.pem`
-- `from the project directory, run subsystem and cert setting scripts`
-- `..\apicup-subsys-set-management.tag.bat|sh`
-- `..\apicup-subsys-set-analytics.tag.bat|sh`
-- `..\apicup-subsys-set-portal.tag.bat|sh`
-- `..\apicup-certs-set-user-facing-public.tag.bat|sh`
-- `from the project sub directory install subsystems with the apicup subsys install command`
-- `..\bin\apicup subsys install mgmt --out mgmtplan-out`
-- `..\bin\apicup subsys install alyt --out mgmtplan-out`
-- `..\bin\apicup subsys install ptl --out mgmtplan-out`
-- `configure datapower cluster. (See datapower configuration)`
+- Create working directory.
+- Generate json configuration file *subsys-config.json*:
+    - `apicupcfg -gen -initconfig [-configtype ova]`
+- Edit *subsys-config.json* configuration file. In what follows, *tag* is the value of the *Tag* property.
+- Validate subsystem (and datapower) ip addresses:
+    - `apicupcfg -validateip`
+- Generate subsystem and certificate setting scripts:
+    - `apicupcfg -gen`
+- Generate CSR's. From the *custom-csr* directory:
+    - `all-user-facing-public-csr.tag.bat|sh`
+- Submit generated csr files to the ca.
+- Place certificates recieved from the ca in a directory. Here we assume *received-certs* directory.
+- Copy certificates to correct destination:
+    - `apicupcfg -certdir received-certs`
+- Place trusted root certificates received from the the ca in a directory. Here we assume *ca-trust* subdir.`
+- Concatenate and copy trusted ca certs:
+    - `apicupcfg -certconcat -ca ca-trust\ca.pem -rootca ca-trust\rootca.pem`
+- Run subsystem and certificate setting scripts. From the *project* directory: 
+    - `..\apicup-subsys-set-management.tag.bat|sh`
+    - `..\apicup-subsys-set-analytics.tag.bat|sh`
+    - `..\apicup-subsys-set-portal.tag.bat|sh`
+    - `..\apicup-certs-set-user-facing-public.tag.bat|sh`
+- Install subsystems with the `apicup subsys install` command. From the *project* directory:
+    - `..\bin\apicup subsys install mgmt --out mgmtplan-out`
+    - `..\bin\apicup subsys install alyt --out mgmtplan-out`
+    - `..\bin\apicup subsys install ptl --out mgmtplan-out`
+- Configure datapower cluster. (See datapower configuration)
 
 **Command line reference.**
 
