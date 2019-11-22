@@ -189,25 +189,24 @@ in the cmd/apicupcfg directory:
 
 **Command line reference.**
 
-Note that default output directory is output. We normally pass current directory as output: -out .
-(Default output directory may change from *output* to *current directory*)
+Note that default output directory is current directory: output: -out .
 
 - help:  
 `apicupcfg -help`  
 - init config:  
 `apicupcfg -gen -initconfig -configtype ova|k8s [-config subsys-config.json]`  
 - generate subsys and cert scripts:  
-`apicupcfg -gen -out . [-config subsys-config.json]`  
+`apicupcfg -gen [-out .] [-config subsys-config.json]`  
 - generate subsys or certs only:  
-`apicupcfg -gen -subsys -out . [-config subsys-config.json]`  
-`apicupcfg -gen -certs -out . [-config subsys-config.json]`
+`apicupcfg -gen -subsys [-out .] [-config subsys-config.json]`  
+`apicupcfg -gen -certs [-out .] [-config subsys-config.json]`
 - copy certificate(s) to correct destination:  
-`apicupcfg -certcopy cerftile.pem -out . [-config subsys-config.json]`  
-`apicupcfg -certdir certdir -out . [-config subsys-config.json]`  
+`apicupcfg -certcopy cerftile.pem [-out .] [-config subsys-config.json]`  
+`apicupcfg -certdir dir [-out .] [-config subsys-config.json]`  
 - verify certificate:  
 `apicupcfg -certverify [-noexpire] [-cert cert.pem] -ca ca.pem -rootca rootca.pem`  
 - concatenate intermediate and root ca certs and copy to the destination:  
-`apicupcfg -certconcat -ca ca.pem -rootca rootca.pem -out .`  
+`apicupcfg -certconcat -ca ca.pem -rootca rootca.pem [-out .] [-config subsys-config.json]`  
 - validate subsystem ip addresses (ova install only):  
 `apicupcfg -validateip [-config subsys-config.json]`
 
