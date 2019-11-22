@@ -32,7 +32,7 @@ certificate configuration section, and defaults section that applies to all suby
 To generate configuration scripts and directories:
 `apicupcfg -gen -out output-directory [-config subsys-config.json]`
 
-Default output subdirectory is `output` and is assumed if `-out` command line option is ommitted.
+Default output subdirectory is current directory and is assumed if `-out` command line option is ommitted.
 Default input configuration file is subsys-config.json
 
 To generate configuration scripts and directories in the working directory:
