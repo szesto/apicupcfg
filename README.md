@@ -211,9 +211,9 @@ in the cmd/apicupcfg directory:
     - `..\apicup-subsys-set-portal.tag.bat|sh`
     - `..\apicup-certs-set-user-facing-public.tag.bat|sh`
 - Install subsystems with the `apicup subsys install` command. From the *project* directory:
-    - `..\bin\apicup subsys install mgmt --out mgmtplan-out`
-    - `..\bin\apicup subsys install alyt --out mgmtplan-out`
-    - `..\bin\apicup subsys install ptl --out mgmtplan-out`
+    - `..\bin\apicup subsys install mgmt --out mgmt-plan-out`
+    - `..\bin\apicup subsys install alyt --out alyt-plan-out`
+    - `..\bin\apicup subsys install ptl --out ptl-plan-out`
 - Configure datapower cluster. (See datapower configuration)
 
 **Command line reference.**
