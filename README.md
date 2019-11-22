@@ -40,42 +40,42 @@ To generate configuration scripts and directories in the working directory:
 
 Generated directories:
 
-bin - directory for apicup executable. Copy your version of apicup executable to the bin directory and then copy it to the apicup executable.
-project - apicup install configuration.
-custom-csr - openssl scripts for custom certificates.
-common-csr - openssl scripts for common certificates.
-shared-dir - openssl scripts for shared endpoint trust.
+- *bin* - directory for apicup executable. Copy your version of apicup executable to the bin directory and then copy it to the apicup executable.
+- *project* - apicup install configuration.
+- *custom-csr* - openssl scripts for custom certificates.
+- *common-csr* - openssl scripts for common certificates.
+- *shared-dir* - openssl scripts for shared endpoint trust.
+  
+Generated scripts and configuration data depend on the input configuration file. 
+General rule is that all required scripts and configuration files are created. 
 
-Generated scripts and configuration data depend on the input configuration file.
-General rule is that all required scripts and configuration files are created.
+Each generated configuration file is tagged with the value defined in the input json configuration file. 
 
-Each generated configuration file is tagged with the value defined in the input json configuration file.
-
-Generated subsystem configuration scripts:
-
-apicup-subsys-set-management.tag.(sh|bat)
-apicup-subsys-set-analytics.tag.(sh|bat)
-apicup-subsys-set-portal.tag.(sh|bat)
-apicup-subsys-set-gateway.tag.(sh|bat)
-
+Generated subsystem configuration scripts: 
+ 
+- `apicup-subsys-set-management.tag.(sh|bat)`
+- `apicup-subsys-set-analytics.tag.(sh|bat)`
+- `apicup-subsys-set-portal.tag.(sh|bat)`
+- k8s install only: `apicup-subsys-set-gateway.tag.(sh|bat)`
+ 
 Generated certificate setting scripts.
-
-apicup-certs-set-user-facing-public.tag.(sh|bat)
-apicup-certs-set-user-facing-public.tag.(sh|bat)
-apicup-certs-set-mutual-auth.tag.(sh|bat)
-apicup-certs-set-common.tag.(sh|bat)
-
-apicup-certs-set-certbot-user-facing-public.tag.(sh|bat)
-apicup-certs-set-certbot-public.tag.(sh|bat)
-
-apicup-certs-set-shared-trust-user-facing-public.tag.(sh|bat)
-apicup-certs-set-shared-trust-public.tag.(sh|bat)
-apicup-certs-set-shared-trust-mutual-auth.tag.(sh|bat)
-
+ 
+- `apicup-certs-set-user-facing-public.tag.(sh|bat)`
+- `apicup-certs-set-user-facing-public.tag.(sh|bat)`
+- `apicup-certs-set-mutual-auth.tag.(sh|bat)`
+- `apicup-certs-set-common.tag.(sh|bat)`
+ 
+- `apicup-certs-set-certbot-user-facing-public.tag.(sh|bat)`
+- `apicup-certs-set-certbot-public.tag.(sh|bat)`
+ 
+- `apicup-certs-set-shared-trust-user-facing-public.tag.(sh|bat)`
+- `apicup-certs-set-shared-trust-public.tag.(sh|bat)`
+- `apicup-certs-set-shared-trust-mutual-auth.tag.(sh|bat)`
+ 
 **Running generated scripts.**
-
+ 
 Generated scripts (other then openssl scripts in csr subdirectories) must be run from the project subdirectory:
-
+ 
 `cd project`
 `../apicup-subsys-set-management.tag.sh` (linux, macos)
 `..\apicup-subsys-set-management.tag.bat` (windows)
@@ -94,9 +94,9 @@ It is recommended to generate public user facing certs only. Other types of cert
 
 **Openssl scripts**.
 
-custom-csr subdirectory contains openssl scripts for public user facing certs and public certs.
-common-csr subdirectory contains openssl scripts for common certificates, this includes mutual auth and client certs.
-shared-csr subdirectory contains openssl scripts for shared endpoint trust.
+*custom-csr* subdirectory contains openssl scripts for public user facing certs and public certs.
+*common-csr* subdirectory contains openssl scripts for common certificates, this includes mutual auth and client certs.
+*shared-csr* subdirectory contains openssl scripts for shared endpoint trust.
 
 Each endpoint the json configuration file is transformed into the cn and openssl csr configuration
 file and script are generated in the csr subdirectory.
@@ -118,7 +118,7 @@ Certificate settings scripts expect to find certificates, private keys and root 
 Certificates recieved from the ca can be manually copied to the correct destination but this is error prone.
 
 To copy a certificate received from the ca to the correct destination:
-`apicupcfg -certcopy path-to-certificate-file.pem -out outdir [-config subsys-config.json]`
+`apicupcfg -certcopy path-to-certificate-file.pem [-out outdir] [-config subsys-config.json]`
 
 This command will introspect the certificate, match it with endpoints defined in the configuration file
 and copy certificate to the correct destination. Note that if certificate matches mulitple endpoints
@@ -187,7 +187,7 @@ in the cmd/apicupcfg directory:
 
 *No IBM API Connect software is required to build or use this tool.*
 
-**Typical Steps for OVA install.**
+**Typical Steps for the OVA install.**
 - Create working directory.
 - Generate json configuration file *subsys-config.json*:
     - `apicupcfg -gen -initconfig [-configtype ova]`
