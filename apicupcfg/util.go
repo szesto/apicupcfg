@@ -116,6 +116,13 @@ func CreateOutputDirectories(outdir, commonCsrSubdir, customCsrSubdir, sharedCsr
 		if err = os.MkdirAll(datapowerDir, os.ModePerm); err != nil {
 			return err
 		}
+
+		// soma subdirectory (this is internal)
+		const somasubdir = "soma"
+		somadir := concatSubdir(datapowerDir, somasubdir)
+		if err = os.MkdirAll(somadir, os.ModePerm); err != nil {
+			return err
+		}
 	}
 
 	return err
