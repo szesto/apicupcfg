@@ -280,7 +280,7 @@ in the cmd/apicupcfg directory:
 - Configure datapower cluster.
 
 **Steps for datapower configuration**
- change to the *datapower* directory.
+- change to the *datapower* directory.
     - run `all-datapower-csr.tag.bat|sh`
     - submit 2 enpdoint csr's to the ca.
     - for each datapower, run initial configuration, set timezone, enable xml management interface. Apply fixpack.
