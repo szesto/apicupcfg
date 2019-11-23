@@ -148,7 +148,70 @@ To verify certificate:
 To verify intermidiate ca certificate:
 `apicupcfg -certverify [-noexpire] -ca path-to-intermediate-ca.pem -rootca path-to-root-ca.pem`
 
-This command will compute and display trust chain. Pass `-noexpire` to ignore certificate expiration.
+This command will compute and display trust chain. Pass `-noexpire` to ignore certificate expiration. 
+
+**Datapower Configuration for the OVA install.**  
+
+To configure datapower cluster, define configuration values in the Gateway:{} object. 
+
+`
+    "Gateway": {
+        "SubsysName": "gwy",
+        "Mode": "dev|standard",
+        "SearchDomains": ["my.domain.com","domain.com"],
+        "DnsServers": ["192.168.1.1","8.8.8.8"],
+        "Hosts": [
+            {"Name": "gw1.my.domain.com", "Device": "eth0", 
+                "IpAddress": "192.168.1.50", "SubnetMask": "255.255.255.0", "Gateway": "192.168.1.1"}
+        ],
+        "ApiGateway": "gw.my.domain.com",
+        "ApicGwService": "gwd.my.domain.com",
+        "DatapowerDomain": "apiconnect",
+        "DatapowerGatewayPort": "9443",
+        "NTPServer": "ntp.pool.org",
+        "CaFile": "dp-ca.pem",
+        "RootCaFile": "dp-root-ca.pem"
+    }
+`  
+
+Datapower configuration is generated in the *datapower* directory.  
+
+Datapower configuration defines 2 endpoints: gateway director endpoint and api invocation endpoint.
+One csr is generated for each endpoint with subject alternative names listing all datapower instances.
+
+To complete datapower configuration, change to the *datapower* directory and run *all-datapower-csr-tag.bat|shell* script.
+This creates private key, csr, and self-signed certificates.
+
+Datapower crypto is first configured with self signed certificates. Real certificates are installed with the crypto update script.
+
+There are a number of layers in the *Datapower* configuration. Each layer is configured with the *SOMA* request.
+Each *SOMA* request is named with the function that it executes, eg `dp-domain.xml` to create application domain.
+
+*SOMA* request is posted to the target datapower by the apicupcfg command:
+`apicupcfg -config ../subsys-config.json -soma -req dp-domain.xml -auth dp.env -url https://gw1.my.domain:5550/service/mgmt/3.0`
+
+A number of manual datapower configuration steps is kept to the minimum.
+Complete initial datapower setup, set timezone, and enable xml management interface.
+
+Datapower configuration steps are combined into the *zoma* scripts, one for each datapower instance.
+
+Create *dp.env* file with 2 lines, one username and another password for datapower authentication.
+dp.env:
+admin
+dppassword
+
+Run *zoma* file for each individual datapower.
+
+*Copying datapower certificates.*  
+To copy datapower certificates, place certificates in the directory and run:
+`apicupcfg -certdir dir`  
+
+To copy trusted datapower certificates, place ca cert and root cert into a directory, and run:
+`apicupcfg -dpcacopy -ca ca.pem -rootca rootca.pem`
+
+*Updating datapower crypto configuration.*  
+After copying datapower certificates and datapower trust certificates run
+`zoma-crypto-update...bash|bat` script for each datapower machine.
 
 **Buid**
 
@@ -214,7 +277,26 @@ in the cmd/apicupcfg directory:
     - `..\bin\apicup subsys install mgmt --out mgmt-plan-out`
     - `..\bin\apicup subsys install alyt --out alyt-plan-out`
     - `..\bin\apicup subsys install ptl --out ptl-plan-out`
-- Configure datapower cluster. (See datapower configuration)
+- Configure datapower cluster.
+
+**Steps for datapower configuration**
+ change to the *datapower* directory.
+    - run `all-datapower-csr.tag.bat|sh`
+    - submit 2 enpdoint csr's to the ca.
+    - for each datapower, run initial configuration, set timezone, enable xml management interface. Apply fixpack.
+    - create *dp.env* file with datapower admin creds: 1st line username, 2nd line password
+    - run `*zoma-datapower-name.bat|sh*` file for each datapower instance.
+    - complete datapower crypto update.
+
+**Datapower crypto update**
+- Place signed certificates in the dp-certs directory
+- Copy certificates: 
+    - `apicupcfg -certdir dp-certs`
+- Place datapower trust certificates in the dp-trust directory
+- Copy datapower certificates:
+    - apicupcfg -dpcopy -ca dp-trust/ca.pem -rootca dp-trust/root-ca.pem
+- Change to the *datapower* directory
+    - run *zoma-crypto-update-datapower-name.bat|sh* script for each datapower instance
 
 **Command line reference.**
 
