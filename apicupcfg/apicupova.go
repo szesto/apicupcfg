@@ -324,6 +324,8 @@ type SubsysVm struct {
 	Version string
 	Tag string
 
+	UseVersion bool // use version for the apic executable
+
 	// defaults
 	Mode string // dev|standard
 	SshPublicKeyFile string
@@ -388,9 +390,9 @@ func LoadSubsysVm(jsonConfigFile string) *SubsysVm {
 
 	// unmarshal values file
 	subsys := &SubsysVm{}
-	subsys.OsEnv.init()
-
 	unmarshallJsonFile(jsonConfigFile, &subsys)
+
+	subsys.OsEnv.init2(subsys.Version, subsys.UseVersion)
 
 	// save input config file
 	subsys.configFileName = jsonConfigFile
@@ -447,35 +449,37 @@ func ApplyTemplateVm(subsys *SubsysVm, outfiles map[string]string, subsysOnly, c
 
 	var outpath string
 
-	if isManagement && !certsOnly && !datapowerOnly {
+	oneof := func(a, b bool) bool { if a {return a} else if b {return b}; return false }
+
+	if isManagement && !oneof(certsOnly, datapowerOnly) {
 		outpath = fileName(outfiles[outdir], tagOutputFileName(outfiles[managementOut], subsys.Tag)) + shellext
 		writeTemplate(mgtt, outpath, subsys.Management)
 	}
 
-	if isAnalytics && !certsOnly && !datapowerOnly {
+	if isAnalytics && !oneof(certsOnly, datapowerOnly) {
 		outpath = fileName(outfiles[outdir], tagOutputFileName(outfiles[analyticsOut], subsys.Tag)) + shellext
 		writeTemplate(analyt, outpath, subsys.Analytics)
 	}
 
-	if isPortal && !certsOnly && !datapowerOnly {
+	if isPortal && !oneof(certsOnly, datapowerOnly) {
 		outpath = fileName(outfiles[outdir], tagOutputFileName(outfiles[portalOut], subsys.Tag)) + shellext
 		writeTemplate(ptl, outpath, subsys.Portal)
 	}
 
 	// this outputs default cloud-init file... each subsystem can have it's own
-	if isCloudInit && !certsOnly && !datapowerOnly {
+	if isCloudInit && !oneof(certsOnly, datapowerOnly) {
 		outpath = fileName(outfiles[outdir], subsys.CloudInit.CloudInitFile)
 		writeTemplate(cloudinitt, outpath, subsys.CloudInit.InitValues)
 	}
 
 	// certs
-	if  !subsysOnly && !datapowerOnly {
+	if  !oneof(subsysOnly, datapowerOnly) {
 		updateCertSpecs(&subsys.Certs, &subsys.Management, &subsys.Analytics, &subsys.Portal, &subsys.Gateway, outfiles[CommonCsrOutDir], outfiles[CustomCsrOutDir])
-		outputCerts(&subsys.Certs, outfiles, subsys.Tag, tbox)
+		outputCerts(&subsys.Certs, outfiles, subsys.Tag, subsys.Version, subsys.UseVersion,  tbox)
 	}
 
 	// datapower
-	if !subsysOnly && !certsOnly {
+	if !oneof(subsysOnly, certsOnly) {
 		datapowerCluster(subsys, outfiles, tbox)
 	}
 }

@@ -1,6 +1,9 @@
 package apicupcfg
 
-import "os"
+import (
+	"fmt"
+	"os"
+)
 
 type OsEnv struct {
 	IsLinux bool
@@ -12,16 +15,32 @@ type OsEnv struct {
 }
 
 func (env *OsEnv) init() {
+	env.init2("", false)
+}
+
+func (env *OsEnv) init2(version string, useVersion bool) {
 	if os.PathSeparator == '/' {
 		env.IsLinux = true
 		env.IsWindows = false
-		env.BinApicup = "../bin/apicup"
+		if len(version) > 0 && useVersion {
+			// apicup-[linux_lts_v2018.4.1.8-ifix2.0]
+			// todo: check for macos... apicup-[mac_lts_v2018.4.1.8-ifix2.0]
+			env.BinApicup = fmt.Sprintf("../bin/apicup-%s", version)
+		} else {
+			env.BinApicup = "../bin/apicup"
+		}
 		env.ShellExt = ".sh"
 		env.ScriptInvoke = "/bin/bash"
+
 	} else {
 		env.IsLinux = false
 		env.IsWindows = true
-		env.BinApicup = "..\\bin\\apicup"
+		if len(version) > 0 && useVersion {
+			// apicup-[windows_lts_v2018.4.1.8-ifix2.0].exe
+			env.BinApicup = fmt.Sprintf("..\\bin\\apicup-%s.exe", version)
+		} else {
+			env.BinApicup = "..\\bin\\apicup.exe"
+		}
 		env.ShellExt = ".bat"
 		env.ScriptInvoke = "call"
 	}

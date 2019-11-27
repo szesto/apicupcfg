@@ -342,7 +342,7 @@ func setupSharedEndpointTrust(certs *Certs, mgmt ManagementSubsysDescriptor, aly
 	cs.AltCns = append(cs.AltCns, gwy.GetApiGatewayEndpoint())
 }
 
-func outputCerts(certs *Certs, outfiles map[string]string, tag string, tbox *rice.Box) {
+func outputCerts(certs *Certs, outfiles map[string]string, tag string, version string, useVersion bool, tbox *rice.Box) {
 
 	ekuServerAuth := parseTemplate(tbox, tpdir(tbox) + "csr-server-auth.tmpl")
 	ekuClientAuth := parseTemplate(tbox, tpdir(tbox) + "csr-client-auth.tmpl")
@@ -354,7 +354,7 @@ func outputCerts(certs *Certs, outfiles map[string]string, tag string, tbox *ric
 	var outpath string
 
 	var osenv OsEnv
-	osenv.init()
+	osenv.init2(version, useVersion)
 
 	// public-user-facing-eku-server-auth csr conf
 	if certs.PublicUserFacingCerts {

@@ -153,6 +153,8 @@ type SubsysK8s struct {
 	Version string
 	Tag string
 
+	UseVersion bool // use version for the apicup executable
+
 	// defaults
 	Mode string
 	Namespace string
@@ -175,7 +177,7 @@ func LoadSubsysK8s(jsonConfigFile string) *SubsysK8s {
 	subsys := &SubsysK8s{}
 	unmarshallJsonFile(jsonConfigFile, &subsys)
 
-	subsys.OsEnv.init()
+	subsys.OsEnv.init2(subsys.Version, subsys.UseVersion)
 
 	// copy defaults
 	subsys.Management.copyDefaults(*subsys)
@@ -250,7 +252,7 @@ func ApplyTemplatesK8s(subsys *SubsysK8s, outfiles map[string]string, subsysOnly
 		updateCertSpecs(&subsys.Certs, &subsys.Management, &subsys.Analytics, &subsys.Portal, &subsys.Gateway,
 			outfiles[CommonCsrOutDir], outfiles[CustomCsrOutDir])
 
-		outputCerts(&subsys.Certs, outfiles, subsys.Tag, tbox)
+		outputCerts(&subsys.Certs, outfiles, subsys.Tag, subsys.Version, subsys.UseVersion, tbox)
 	}
 }
 
