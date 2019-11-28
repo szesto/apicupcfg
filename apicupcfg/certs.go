@@ -465,6 +465,9 @@ func outputCerts(certs *Certs, outfiles map[string]string, tag string, version s
 			cbmap := make(map[string]CertSpec)
 			for cname, cs := range certs {
 				cs.CsrSubdir = certbot.CertDir
+				cs.CertSubdir = certbot.CertDir
+				cs.KeySubdir = certbot.CertDir
+				cs.CaSubdir = certbot.CertDir
 				cs.KeyFile = certbot.Key
 				cs.CertFile = certbot.Cert
 				cs.CaFile = certbot.CaChain
