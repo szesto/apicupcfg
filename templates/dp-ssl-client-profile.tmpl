@@ -10,11 +10,45 @@
                     <UserSummary>gwd client profile</UserSummary>
                     <Protocols>
                         <SSLv3>off</SSLv3>
-                        <TLSv1d0>on</TLSv1d0>
-                        <TLSv1d1>on</TLSv1d1>
+                        <TLSv1d0>off</TLSv1d0>
+                        <TLSv1d1>off</TLSv1d1>
                         <TLSv1d2>on</TLSv1d2>
                     </Protocols>
-                    <Ciphers>DHE_DSS_EXPORT_WITH_DES40_CBC_SHA</Ciphers>
+                    <Ciphers>ECDHE_ECDSA_WITH_AES_256_GCM_SHA384</Ciphers>
+                    <Ciphers>ECDHE_RSA_WITH_AES_256_GCM_SHA384</Ciphers>
+                    <Ciphers>ECDHE_ECDSA_WITH_AES_256_CBC_SHA384</Ciphers>
+                    <Ciphers>ECDHE_RSA_WITH_AES_256_CBC_SHA384</Ciphers>
+                    <Ciphers>ECDHE_ECDSA_WITH_AES_256_CBC_SHA</Ciphers>
+                    <Ciphers>ECDHE_RSA_WITH_AES_256_CBC_SHA</Ciphers>
+                    <Ciphers>DHE_DSS_WITH_AES_256_GCM_SHA384</Ciphers>
+                    <Ciphers>DHE_RSA_WITH_AES_256_GCM_SHA384</Ciphers>
+                    <Ciphers>DHE_RSA_WITH_AES_256_CBC_SHA256</Ciphers>
+                    <Ciphers>DHE_DSS_WITH_AES_256_CBC_SHA256</Ciphers>
+                    <Ciphers>DHE_RSA_WITH_AES_256_CBC_SHA</Ciphers>
+                    <Ciphers>DHE_DSS_WITH_AES_256_CBC_SHA</Ciphers>
+                    <Ciphers>RSA_WITH_AES_256_GCM_SHA384</Ciphers>
+                    <Ciphers>RSA_WITH_AES_256_CBC_SHA256</Ciphers>
+                    <Ciphers>RSA_WITH_AES_256_CBC_SHA</Ciphers>
+                    <Ciphers>ECDHE_ECDSA_WITH_AES_128_GCM_SHA256</Ciphers>
+                    <Ciphers>ECDHE_RSA_WITH_AES_128_GCM_SHA256</Ciphers>
+                    <Ciphers>ECDHE_ECDSA_WITH_AES_128_CBC_SHA256</Ciphers>
+                    <Ciphers>ECDHE_RSA_WITH_AES_128_CBC_SHA256</Ciphers>
+                    <Ciphers>ECDHE_ECDSA_WITH_AES_128_CBC_SHA</Ciphers>
+                    <Ciphers>ECDHE_RSA_WITH_AES_128_CBC_SHA</Ciphers>
+                    <Ciphers>DHE_DSS_WITH_AES_128_GCM_SHA256</Ciphers>
+                    <Ciphers>DHE_RSA_WITH_AES_128_GCM_SHA256</Ciphers>
+                    <Ciphers>DHE_RSA_WITH_AES_128_CBC_SHA256</Ciphers>
+                    <Ciphers>DHE_DSS_WITH_AES_128_CBC_SHA256</Ciphers>
+                    <Ciphers>DHE_RSA_WITH_AES_128_CBC_SHA</Ciphers>
+                    <Ciphers>DHE_DSS_WITH_AES_128_CBC_SHA</Ciphers>
+                    <Ciphers>RSA_WITH_AES_128_GCM_SHA256</Ciphers>
+                    <Ciphers>RSA_WITH_AES_128_CBC_SHA256</Ciphers>
+                    <Ciphers>RSA_WITH_AES_128_CBC_SHA</Ciphers>
+                    <Ciphers>ECDHE_ECDSA_WITH_3DES_EDE_CBC_SHA</Ciphers>
+                    <Ciphers>ECDHE_RSA_WITH_3DES_EDE_CBC_SHA</Ciphers>
+                    <Ciphers>DHE_RSA_WITH_3DES_EDE_CBC_SHA</Ciphers>
+                    <Ciphers>DHE_DSS_WITH_3DES_EDE_CBC_SHA</Ciphers>
+                    <Ciphers>RSA_WITH_3DES_EDE_CBC_SHA</Ciphers>
                     <Idcred>{{.CryptoIdentCreds}}</Idcred>
                     <ValidateServerCert>off</ValidateServerCert>
                     <Valcred>{{.CryptoValCreds}}</Valcred>
