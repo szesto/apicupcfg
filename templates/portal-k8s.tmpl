@@ -15,7 +15,9 @@
 {{$apicup}} subsys set {{$subsys}} storage-class={{ .StorageClass }}
 
 {{$apicup}} subsys set {{$subsys}} registry={{ .RegistryUrl }}
-{{$apicup}} subsys set {{$subsys}} registry-secret={{ .RegistrySecret }}
+{{ if .RegistrySecret }}
+    {{$apicup}} subsys set {{$subsys}} registry-secret={{ .RegistrySecret }}
+{{end}}
 
 {{$apicup}} subsys set {{$subsys}} portal-admin={{ .PortalAdmin }}
 {{$apicup}} subsys set {{$subsys}} portal-www={{ .PortalWWW }}

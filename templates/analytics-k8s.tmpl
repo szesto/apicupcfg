@@ -15,7 +15,9 @@
 {{$apicup}} subsys set {{$subsys}} analytics-client={{.AnalyticsClientEndpoint}}
 {{$apicup}} subsys set {{$subsys}} namespace={{.Namespace}}
 {{$apicup}} subsys set {{$subsys}} registry={{.RegistryUrl}}
-{{$apicup}} subsys set {{$subsys}} registry-secret={{.RegistrySecret}}
+{{ if .RegistrySecret }}
+    {{$apicup}} subsys set {{$subsys}} registry-secret={{.RegistrySecret}}
+{{end}}
 
 {{/* default 6, recommended minimum 12 */}}
 {{$apicup}} subsys set {{$subsys}} coordinating-max-memory-gb={{.CoordinatingMaxMemoryGb | default 12}}
