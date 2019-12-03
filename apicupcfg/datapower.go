@@ -5,6 +5,7 @@ import (
 	rice "github.com/GeertJohan/go.rice"
 	"os"
 	"strings"
+	"text/template"
 )
 
 const cryptoDir = "sharedcert"
@@ -163,7 +164,7 @@ type DpApicGwService struct {
 	SSLServerProfile string
 	ApiGateway string
 	ApiGatewayPort int
-	GwdPeering string
+	//GwdPeering string
 	GwPeeringManager string
 }
 
@@ -258,6 +259,9 @@ func datapowerOpensslConfig(subsys *SubsysVm, outputdir string, osenv OsEnv, tbo
 	cs.Cn = subsys.Gateway.ApicGwService
 	updateCertSpec(&subsys.Certs, subsys.Gateway.SubsysName, "datapower", &cs, DatapowerOutDir)
 
+	// add api gateway to alt cns
+	cs.AltCns = append(cs.AltCns, subsys.Gateway.ApiGateway)
+
 	for _, host := range subsys.Gateway.Hosts {
 		if len(host.Name) == 0 {
 			continue
@@ -276,6 +280,7 @@ func datapowerOpensslConfig(subsys *SubsysVm, outputdir string, osenv OsEnv, tbo
 	outpath = fileName(outputdir, cs.CsrConf + osenv.ShellExt)
 	writeTemplate(keypairTemplate, outpath, OsEnvCert{OsEnv: osenv, CertSpec: cs})
 
+/*
 	// api gateway
 	cs = CertSpec{}
 	cs.Cn = subsys.Gateway.ApiGateway
@@ -298,7 +303,7 @@ func datapowerOpensslConfig(subsys *SubsysVm, outputdir string, osenv OsEnv, tbo
 	// key-pair
 	outpath = fileName(outputdir, cs.CsrConf + osenv.ShellExt)
 	writeTemplate(keypairTemplate, outpath, OsEnvCert{OsEnv: osenv, CertSpec: cs})
-
+*/
 	// combine mutual-auth key and csr scripts
 	outpath = fileName(outputdir, tagOutputFileName("all-datapower-csr", subsys.Tag) + osenv.ShellExt)
 	writeTemplate(combinedCsrTemplate, outpath, OsEnvCerts{OsEnv: osenv, CertSpecs: certmap})
@@ -467,6 +472,405 @@ func datapowerCryptoIdentCredModify(outputdir, outfile string, dp DpCryptoIdentC
 	dpWriteTemplate(outputdir, outfile, dp, "dp-crypto-ident-cred-modify.tmpl", tbox)
 }
 
+func somaServiceUrl(host string) string {
+	return fmt.Sprintf("https://%s:5550/service/mgmt/3.0", host)
+}
+
+func somaPref() string {
+	return "soma" + string(os.PathSeparator)
+}
+
+func somaCryptoSelf(gwy *GwySubsysVm, dpoutdir string, osenv OsEnv, configFileName string, somaTemplate *template.Template) {
+
+	// set file private key
+	// set file self-signed cert
+	// crypto key
+	// crypto cert self-signed
+	// crypto ident cred
+
+	for _, host := range gwy.Hosts {
+
+		if len(host.Name) == 0 {
+			continue
+		}
+
+		dpenv := "dp.env"
+		url := somaServiceUrl(host.Name)
+
+		setfileSpecs := make([]SomaSpec, 0)
+		reqSpecs := make([]SomaSpec, 0)
+
+		// set files - default domain
+
+		setfileSpecs = append(setfileSpecs, SomaSpec{
+			Req:    "",
+			File:   dot2dash(gwy.ApicGwService) + ".key",
+			Dpdir:  gwy.GetCryptoDirectoryOrDefault(),
+			Dpfile: gwy.GetGwdKeyOrDefault() + ".pem",
+			Dpdomain: "default",
+			Auth:   dpenv,
+			Url:    url,
+		})
+
+		setfileSpecs = append(setfileSpecs, SomaSpec{
+			Req:    "",
+			File:   dot2dash(gwy.ApicGwService) + ".crt.self",
+			Dpdir:  gwy.GetCryptoDirectoryOrDefault(),
+			Dpfile: fmt.Sprintf("%s_self.pem", gwy.GetGwdCertOrDefault()),
+			Dpdomain: "default",
+			Auth:   dpenv,
+			Url:    url,
+		})
+
+		// save default domain
+		reqSpecs = append(reqSpecs, SomaSpec{
+			Req:    somaPref() + fmt.Sprintf("dp-save-config-%s.xml", "default"),
+			File:   "",
+			Dpdir:  "",
+			Dpfile: "",
+			Auth:   dpenv,
+			Url:    url,
+		})
+
+		// crypto-objects apiconnect domain
+
+		reqSpecs = append(reqSpecs, SomaSpec{
+			Req:    somaPref() + "dp-domain.xml",
+			File:   "",
+			Dpdir:  "",
+			Dpfile: "",
+			Auth:   dpenv,
+			Url:    url,
+		})
+
+		reqSpecs = append(reqSpecs, SomaSpec{
+			Req:    somaPref() + "dp-crypto-key.xml",
+			File:   "",
+			Dpdir:  "",
+			Dpfile: "",
+			Auth:   dpenv,
+			Url:    url,
+		})
+
+		reqSpecs = append(reqSpecs, SomaSpec{
+			Req:    somaPref() + "dp-crypto-cert-self.xml",
+			File:   "",
+			Dpdir:  "",
+			Dpfile: "",
+			Auth:   dpenv,
+			Url:    url,
+		})
+
+		reqSpecs = append(reqSpecs, SomaSpec{
+			Req:    somaPref() + "dp-crypto-id-creds.xml",
+			File:   "",
+			Dpdir:  "",
+			Dpfile: "",
+			Auth:   dpenv,
+			Url:    url,
+		})
+
+		// save apiconnect domain
+		reqSpecs = append(reqSpecs, SomaSpec{
+			Req:    somaPref() + fmt.Sprintf("dp-save-config-%s.xml", gwy.GetDatapowerDomainOrDefault()),
+			File:   "",
+			Dpdir:  "",
+			Dpfile: "",
+			Auth:   dpenv,
+			Url:    url,
+		})
+
+		// write soma script for a host
+		outpath := dpoutdir + osenv.PathSeparator + "zoma-crypto-self-" + dot2dash(host.Name) + osenv.ShellExt
+		writeTemplate(somaTemplate, outpath, OsEnvSomaSpecs{
+			OsEnv:        osenv,
+			Config:	configFileName,
+			SetFileSpecs: setfileSpecs,
+			ReqSpecs:     reqSpecs,
+		})
+	}
+}
+
+func somaCryptoUpdate(gwy *GwySubsysVm, dpoutdir string, osenv OsEnv, configFileName string, somaTemplate *template.Template) {
+
+	// write crypto ident modify script
+	// set file crypto-cert
+	// set file ca cert
+	// set file root cert
+	// crypto cert
+	// crypto cert ca
+	// crypto cert root ca
+	// crypto ident cred mod
+
+	for _, host := range gwy.Hosts {
+
+		if len(host.Name) == 0 {
+			continue
+		}
+
+		dpenv := "dp.env"
+		url := somaServiceUrl(host.Name)
+
+		setfileSpecs := make([]SomaSpec, 0)
+		reqSpecs := make([]SomaSpec, 0)
+
+		setfileSpecs = append(setfileSpecs, SomaSpec{
+			Req:    "",
+			File:   dot2dash(gwy.ApicGwService) + ".crt",
+			Dpdir:  gwy.GetCryptoDirectoryOrDefault(),
+			Dpfile: fmt.Sprintf("%s.pem", gwy.GetGwdCertOrDefault()),
+			Dpdomain: "default",
+			Auth:   dpenv,
+			Url:    url,
+		})
+
+		setfileSpecs = append(setfileSpecs, SomaSpec{
+			Req:    "",
+			File:   gwy.CaFile,
+			Dpdir:  gwy.GetCryptoDirectoryOrDefault(),
+			Dpfile: fmt.Sprintf("%s.pem", gwy.GetCaCertOrDefault()),
+			Dpdomain: "default",
+			Auth:   dpenv,
+			Url:    url,
+		})
+
+		setfileSpecs = append(setfileSpecs, SomaSpec{
+			Req:    "",
+			File:   gwy.RootCaFile,
+			Dpdir:  gwy.GetCryptoDirectoryOrDefault(),
+			Dpfile: fmt.Sprintf("%s.pem", gwy.GetRootCertOrDefault()),
+			Dpdomain: "default",
+			Auth:   dpenv,
+			Url:    url,
+		})
+
+		reqSpecs = append(reqSpecs, SomaSpec{
+			Req:    somaPref() + "dp-crypto-cert.xml",
+			File:   "",
+			Dpdir:  "",
+			Dpfile: "",
+			Auth:   dpenv,
+			Url:    url,
+		})
+
+		reqSpecs = append(reqSpecs, SomaSpec{
+			Req:    somaPref() + "dp-crypto-cert-ca.xml",
+			File:   "",
+			Dpdir:  "",
+			Dpfile: "",
+			Auth:   dpenv,
+			Url:    url,
+		})
+
+		reqSpecs = append(reqSpecs, SomaSpec{
+			Req:    somaPref() + "dp-crypto-cert-root-ca.xml",
+			File:   "",
+			Dpdir:  "",
+			Dpfile: "",
+			Auth:   dpenv,
+			Url:    url,
+		})
+
+		reqSpecs = append(reqSpecs, SomaSpec{
+			Req:    somaPref() + "dp-crypto-ident-cred-modify.xml",
+			File:   "",
+			Dpdir:  "",
+			Dpfile: "",
+			Auth:   dpenv,
+			Url:    url,
+		})
+
+		// save apiconnect domain
+		reqSpecs = append(reqSpecs, SomaSpec{
+			Req:    somaPref() + fmt.Sprintf("dp-save-config-%s.xml", gwy.GetDatapowerDomainOrDefault()),
+			File:   "",
+			Dpdir:  "",
+			Dpfile: "",
+			Auth:   dpenv,
+			Url:    url,
+		})
+
+		// write soma script for a host
+		outpath := dpoutdir + osenv.PathSeparator + "zoma-crypto-update-" + dot2dash(host.Name) + osenv.ShellExt
+		writeTemplate(somaTemplate, outpath, OsEnvSomaSpecs{
+			OsEnv:        osenv,
+			Config:	configFileName,
+			SetFileSpecs: setfileSpecs,
+			ReqSpecs:     reqSpecs,
+		})
+	}
+}
+
+func somaApiConnect(gwy *GwySubsysVm, dpoutdir string, osenv OsEnv, configFileName string, somaTemplate *template.Template) {
+
+	for _, host := range gwy.Hosts {
+
+		if len(host.Name) == 0 {
+			continue
+		}
+
+		dpenv := "dp.env"
+		url := somaServiceUrl(host.Name)
+
+		setfileSpecs := make([]SomaSpec, 0)
+		reqSpecs := make([]SomaSpec, 0)
+
+		// default domain
+
+		reqSpecs = append(reqSpecs, SomaSpec{
+			Req:    somaPref() + fmt.Sprintf("dp-system-settings-%s.xml", dot2dash(host.Name)),
+			File:   "",
+			Dpdir:  "",
+			Dpfile: "",
+			Auth:   dpenv,
+			Url:    url,
+		})
+
+		reqSpecs = append(reqSpecs, SomaSpec{
+			Req:    somaPref() + fmt.Sprintf("dp-host-alias-%s.xml", dot2dash(host.Name)),
+			File:   "",
+			Dpdir:  "",
+			Dpfile: "",
+			Auth:   dpenv,
+			Url:    url,
+		})
+
+		reqSpecs = append(reqSpecs, SomaSpec{
+			Req:    somaPref() + "dp-ntp-service.xml",
+			File:   "",
+			Dpdir:  "",
+			Dpfile: "",
+			Auth:   dpenv,
+			Url:    url,
+		})
+
+		reqSpecs = append(reqSpecs, SomaSpec{
+			Req:      somaPref() + "dp-dns-service-modify.xml",
+			File:     "",
+			Dpdir:    "",
+			Dpfile:   "",
+			Dpdomain: "",
+			Auth:     dpenv,
+			Url:      url,
+		})
+
+		// api connect domain created by the crypto script
+		//reqSpecs = append(reqSpecs, SomaSpec{
+		//	Req:    somaPref() + "dp-domain.xml",
+		//	File:   "",
+		//	Dpdir:  "",
+		//	Dpfile: "",
+		//	Auth:   dpenv,
+		//	Url:    url,
+		//})
+
+		// save default domain
+		reqSpecs = append(reqSpecs, SomaSpec{
+			Req:    somaPref() + fmt.Sprintf("dp-save-config-%s.xml", "default"),
+			File:   "",
+			Dpdir:  "",
+			Dpfile: "",
+			Auth:   dpenv,
+			Url:    url,
+		})
+
+		// api connect domain
+
+		reqSpecs = append(reqSpecs, SomaSpec{
+			Req:    somaPref() + "dp-ssl-server.xml",
+			File:   "",
+			Dpdir:  "",
+			Dpfile: "",
+			Auth:   dpenv,
+			Url:    url,
+		})
+
+		reqSpecs = append(reqSpecs, SomaSpec{
+			Req:    somaPref() + "dp-ssl-client.xml",
+			File:   "",
+			Dpdir:  "",
+			Dpfile: "",
+			Auth:   dpenv,
+			Url:    url,
+		})
+
+		peeringkey := fmt.Sprintf(fmt.Sprintf("dp-peering-%s-%s.xml", gwdPeering, dot2dash(host.Name)))
+		reqSpecs = append(reqSpecs, SomaSpec{
+			Req:    somaPref() + peeringkey,
+			File:   "",
+			Dpdir:  "",
+			Dpfile: "",
+			Auth:   dpenv,
+			Url:    url,
+		})
+
+		peeringkey = fmt.Sprintf(fmt.Sprintf("dp-peering-%s-%s.xml", rateLimitPeering, dot2dash(host.Name)))
+		reqSpecs = append(reqSpecs, SomaSpec{
+			Req:    somaPref() + peeringkey,
+			File:   "",
+			Dpdir:  "",
+			Dpfile: "",
+			Auth:   dpenv,
+			Url:    url,
+		})
+
+		peeringkey = fmt.Sprintf(fmt.Sprintf("dp-peering-%s-%s.xml", subsPeering, dot2dash(host.Name)))
+		reqSpecs = append(reqSpecs, SomaSpec{
+			Req:    somaPref() + peeringkey,
+			File:   "",
+			Dpdir:  "",
+			Dpfile: "",
+			Auth:   dpenv,
+			Url:    url,
+		})
+
+		reqSpecs = append(reqSpecs, SomaSpec{
+			Req:    somaPref() + "dp-peering-manager.xml",
+			File:   "",
+			Dpdir:  "",
+			Dpfile: "",
+			Auth:   dpenv,
+			Url:    url,
+		})
+
+		reqSpecs = append(reqSpecs, SomaSpec{
+			Req:    somaPref() + "dp-config-sequence.xml",
+			File:   "",
+			Dpdir:  "",
+			Dpfile: "",
+			Auth:   dpenv,
+			Url:    url,
+		})
+
+		reqSpecs = append(reqSpecs, SomaSpec{
+			Req:    somaPref() + "dp-apic-gw-service.xml",
+			File:   "",
+			Dpdir:  "",
+			Dpfile: "",
+			Auth:   dpenv,
+			Url:    url,
+		})
+
+		reqSpecs = append(reqSpecs, SomaSpec{
+			Req:    somaPref() + fmt.Sprintf("dp-save-config-%s.xml", gwy.GetDatapowerDomainOrDefault()),
+			File:   "",
+			Dpdir:  "",
+			Dpfile: "",
+			Auth:   dpenv,
+			Url:    url,
+		})
+
+		// write soma script for a host
+		outpath := dpoutdir + osenv.PathSeparator + "zoma-" + dot2dash(host.Name) + osenv.ShellExt
+		writeTemplate(somaTemplate, outpath, OsEnvSomaSpecs{
+			OsEnv:        osenv,
+			Config:	configFileName,
+			SetFileSpecs: setfileSpecs,
+			ReqSpecs:     reqSpecs,
+		})
+	}
+}
+
 func datapowerCluster(subsys *SubsysVm, outfiles map[string]string, tbox *rice.Box) {
 
 	// parse templates
@@ -595,7 +999,7 @@ func datapowerCluster(subsys *SubsysVm, outfiles map[string]string, tbox *rice.B
 		SSLServerProfile: sslGwdServer,
 		ApiGateway:       func() string {if len(gwy.DatapowerApiGatewayAddress) > 0 {return gwy.DatapowerApiGatewayAddress} else {return apiGwAddress}}(),
 		ApiGatewayPort:   func() int {if gwy.DatapowerApiGatewayPort > 0 {return gwy.DatapowerApiGatewayPort} else {return apiGwPort}}(),
-		GwdPeering:       gwdPeering,
+		//GwdPeering:       gwdPeering, // v5 only, not used for the api gateway
 		GwPeeringManager: "default", // always
 	}
 
@@ -614,219 +1018,6 @@ func datapowerCluster(subsys *SubsysVm, outfiles map[string]string, tbox *rice.B
 	outfile = fmt.Sprintf("dp-save-config-%s.xml", dpsavedomain)
 	dpSaveConfig(somaoutdir, outfile, dpsaveconfig, tbox)
 
-	somaf := func() string {return "soma" + string(os.PathSeparator)}
-
-	// write out soma scripts
-	for _, host := range subsys.Gateway.Hosts {
-
-		if len(host.Name) == 0 {
-			continue
-		}
-
-		dpenv := "dp.env"
-		url := "https://" + host.Name + ":5550/service/mgmt/3.0"
-
-		setfileSpecs := make([]SomaSpec, 2)
-		reqSpecs := make([]SomaSpec, 18)
-
-		setfileSpecs[0] = SomaSpec{
-			Req:    "",
-			File:   dot2dash(gwy.ApicGwService) + ".key",
-			Dpdir:  gwy.GetCryptoDirectoryOrDefault(),
-			Dpfile: gwy.GetGwdKeyOrDefault() + ".pem",
-			Dpdomain: "default",
-			Auth:   dpenv,
-			Url:    url,
-		}
-
-		setfileSpecs[1] = SomaSpec{
-			Req:    "",
-			File:   dot2dash(gwy.ApicGwService) + ".crt.self",
-			Dpdir:  gwy.GetCryptoDirectoryOrDefault(),
-			Dpfile: fmt.Sprintf("%s_self.pem", gwy.GetGwdCertOrDefault()),
-			Dpdomain: "default",
-			Auth:   dpenv,
-			Url:    url,
-		}
-
-		reqSpecs[0] = SomaSpec{
-			Req:    somaf() + fmt.Sprintf("dp-system-settings-%s.xml", dot2dash(host.Name)),
-			File:   "",
-			Dpdir:  "",
-			Dpfile: "",
-			Auth:   dpenv,
-			Url:    url,
-		}
-
-		reqSpecs[1] = SomaSpec{
-			Req:    somaf() + fmt.Sprintf("dp-host-alias-%s.xml", dot2dash(host.Name)),
-			File:   "",
-			Dpdir:  "",
-			Dpfile: "",
-			Auth:   dpenv,
-			Url:    url,
-		}
-
-		reqSpecs[2] = SomaSpec{
-			Req:    somaf() + "dp-ntp-service.xml",
-			File:   "",
-			Dpdir:  "",
-			Dpfile: "",
-			Auth:   dpenv,
-			Url:    url,
-		}
-
-		reqSpecs[3] = SomaSpec{
-			Req:      somaf() + "dp-dns-service-modify.xml",
-			File:     "",
-			Dpdir:    "",
-			Dpfile:   "",
-			Dpdomain: "",
-			Auth:     dpenv,
-			Url:      url,
-		}
-
-		reqSpecs[4] = SomaSpec{
-			Req:    somaf() + "dp-domain.xml",
-			File:   "",
-			Dpdir:  "",
-			Dpfile: "",
-			Auth:   dpenv,
-			Url:    url,
-		}
-
-		reqSpecs[5] = SomaSpec{
-			Req:    somaf() + "dp-crypto-key.xml",
-			File:   "",
-			Dpdir:  "",
-			Dpfile: "",
-			Auth:   dpenv,
-			Url:    url,
-		}
-
-		reqSpecs[6] = SomaSpec{
-			Req:    somaf() + "dp-crypto-cert-self.xml",
-			File:   "",
-			Dpdir:  "",
-			Dpfile: "",
-			Auth:   dpenv,
-			Url:    url,
-		}
-
-		reqSpecs[7] = SomaSpec{
-			Req:    somaf() + "dp-crypto-id-creds.xml",
-			File:   "",
-			Dpdir:  "",
-			Dpfile: "",
-			Auth:   dpenv,
-			Url:    url,
-		}
-
-		reqSpecs[8] = SomaSpec{
-			Req:    somaf() + "dp-ssl-server.xml",
-			File:   "",
-			Dpdir:  "",
-			Dpfile: "",
-			Auth:   dpenv,
-			Url:    url,
-		}
-
-		reqSpecs[9] = SomaSpec{
-			Req:    somaf() + "dp-ssl-client.xml",
-			File:   "",
-			Dpdir:  "",
-			Dpfile: "",
-			Auth:   dpenv,
-			Url:    url,
-		}
-
-		peeringkey := fmt.Sprintf(fmt.Sprintf("dp-peering-%s-%s.xml", gwdPeering, dot2dash(host.Name)))
-		reqSpecs[10] = SomaSpec{
-			Req:    somaf() + peeringkey,
-			File:   "",
-			Dpdir:  "",
-			Dpfile: "",
-			Auth:   dpenv,
-			Url:    url,
-		}
-
-		peeringkey = fmt.Sprintf(fmt.Sprintf("dp-peering-%s-%s.xml", rateLimitPeering, dot2dash(host.Name)))
-		reqSpecs[11] = SomaSpec{
-			Req:    somaf() + peeringkey,
-			File:   "",
-			Dpdir:  "",
-			Dpfile: "",
-			Auth:   dpenv,
-			Url:    url,
-		}
-
-		peeringkey = fmt.Sprintf(fmt.Sprintf("dp-peering-%s-%s.xml", subsPeering, dot2dash(host.Name)))
-		reqSpecs[12] = SomaSpec{
-			Req:    somaf() + peeringkey,
-			File:   "",
-			Dpdir:  "",
-			Dpfile: "",
-			Auth:   dpenv,
-			Url:    url,
-		}
-
-		reqSpecs[13] = SomaSpec{
-			Req:    somaf() + "dp-peering-manager.xml",
-			File:   "",
-			Dpdir:  "",
-			Dpfile: "",
-			Auth:   dpenv,
-			Url:    url,
-		}
-
-		reqSpecs[14] = SomaSpec{
-			Req:    somaf() + "dp-config-sequence.xml",
-			File:   "",
-			Dpdir:  "",
-			Dpfile: "",
-			Auth:   dpenv,
-			Url:    url,
-		}
-
-		reqSpecs[15] = SomaSpec{
-			Req:    somaf() + "dp-apic-gw-service.xml",
-			File:   "",
-			Dpdir:  "",
-			Dpfile: "",
-			Auth:   dpenv,
-			Url:    url,
-		}
-
-		reqSpecs[16] = SomaSpec{
-			Req:    somaf() + fmt.Sprintf("dp-save-config-%s.xml", "default"),
-			File:   "",
-			Dpdir:  "",
-			Dpfile: "",
-			Auth:   dpenv,
-			Url:    url,
-		}
-
-		reqSpecs[17] = SomaSpec{
-			Req:    somaf() + fmt.Sprintf("dp-save-config-%s.xml", subsys.Gateway.GetDatapowerDomainOrDefault()),
-			File:   "",
-			Dpdir:  "",
-			Dpfile: "",
-			Auth:   dpenv,
-			Url:    url,
-		}
-
-		// write soma script for a host
-		outpath := dpoutdir + osenv.PathSeparator + "zoma-" + dot2dash(host.Name) + osenv.ShellExt
-		writeTemplate(somaTemplate, outpath, OsEnvSomaSpecs{
-			OsEnv:        osenv,
-			Config:	subsys.configFileName,
-			SetFileSpecs: setfileSpecs,
-			ReqSpecs:     reqSpecs,
-		})
-	}
-
-	// write combined soma script
-
 	// crypto ident cred modify
 	dpcryptoidentcredmod := DpCryptoIdentCredModify{
 		Domain:  dpdomain,
@@ -839,100 +1030,14 @@ func datapowerCluster(subsys *SubsysVm, outfiles map[string]string, tbox *rice.B
 	outfile = fmt.Sprintf("%s", "dp-crypto-ident-cred-modify.xml")
 	datapowerCryptoIdentCredModify(somaoutdir, outfile, dpcryptoidentcredmod, tbox)
 
-	// write crypto ident modify script
-	// set file crypto-cert
-	// set file ca cert
-	// set file root cert
-	// crypto cert
-	// crypto cert ca
-	// crypto cert root ca
-	// crypto ident cred mod
+	// write out soma scripts...
 
-	for _, host := range subsys.Gateway.Hosts {
+	// soma crypto self-signed scripts
+	somaCryptoSelf(&subsys.Gateway, dpoutdir, osenv, subsys.configFileName, somaTemplate)
 
-		if len(host.Name) == 0 {
-			continue
-		}
+	// soma api connect scripts
+	somaApiConnect(&subsys.Gateway, dpoutdir, osenv, subsys.configFileName, somaTemplate)
 
-		dpenv := "dp.env"
-		url := "https://" + host.Name + ":5550/service/mgmt/3.0"
-
-		setfileSpecs := make([]SomaSpec, 3)
-		reqSpecs := make([]SomaSpec, 4)
-
-		setfileSpecs[0] = SomaSpec{
-			Req:    "",
-			File:   dot2dash(gwy.ApicGwService) + ".crt",
-			Dpdir:  gwy.GetCryptoDirectoryOrDefault(),
-			Dpfile: fmt.Sprintf("%s.pem", gwy.GetGwdCertOrDefault()),
-			Dpdomain: "default",
-			Auth:   dpenv,
-			Url:    url,
-		}
-
-		setfileSpecs[1] = SomaSpec{
-			Req:    "",
-			File:   gwy.CaFile,
-			Dpdir:  gwy.GetCryptoDirectoryOrDefault(),
-			Dpfile: fmt.Sprintf("%s.pem", gwy.GetCaCertOrDefault()),
-			Dpdomain: "default",
-			Auth:   dpenv,
-			Url:    url,
-		}
-
-		setfileSpecs[2] = SomaSpec{
-			Req:    "",
-			File:   gwy.RootCaFile,
-			Dpdir:  gwy.GetCryptoDirectoryOrDefault(),
-			Dpfile: fmt.Sprintf("%s.pem", gwy.GetRootCertOrDefault()),
-			Dpdomain: "default",
-			Auth:   dpenv,
-			Url:    url,
-		}
-
-		reqSpecs[0] = SomaSpec{
-			Req:    somaf() + "dp-crypto-cert.xml",
-			File:   "",
-			Dpdir:  "",
-			Dpfile: "",
-			Auth:   dpenv,
-			Url:    url,
-		}
-
-		reqSpecs[1] = SomaSpec{
-			Req:    somaf() + "dp-crypto-cert-ca.xml",
-			File:   "",
-			Dpdir:  "",
-			Dpfile: "",
-			Auth:   dpenv,
-			Url:    url,
-		}
-
-		reqSpecs[2] = SomaSpec{
-			Req:    somaf() + "dp-crypto-cert-root-ca.xml",
-			File:   "",
-			Dpdir:  "",
-			Dpfile: "",
-			Auth:   dpenv,
-			Url:    url,
-		}
-
-		reqSpecs[3] = SomaSpec{
-			Req:    somaf() + "dp-crypto-ident-cred-modify.xml",
-			File:   "",
-			Dpdir:  "",
-			Dpfile: "",
-			Auth:   dpenv,
-			Url:    url,
-		}
-
-		// write soma script for a host
-		outpath := dpoutdir + osenv.PathSeparator + "zoma-crypto-update-" + dot2dash(host.Name) + osenv.ShellExt
-		writeTemplate(somaTemplate, outpath, OsEnvSomaSpecs{
-			OsEnv:        osenv,
-			Config:	subsys.configFileName,
-			SetFileSpecs: setfileSpecs,
-			ReqSpecs:     reqSpecs,
-		})
-	}
+	// soma crypto update scripts
+	somaCryptoUpdate(&subsys.Gateway, dpoutdir, osenv, subsys.configFileName, somaTemplate)
 }
