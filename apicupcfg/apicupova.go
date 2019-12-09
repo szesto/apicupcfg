@@ -318,6 +318,26 @@ func (gwy *GwySubsysVm) GetSubsPeeringMonitorPortOrDefault() int {
 	return gwy.SubsPeeringMonitorPort
 }
 
+func (gwy *GwySubsysVm) GetApiGatewayPortOrDefault() int {
+	if gwy.DatapowerApiGatewayPort == 0 { return defaultApiGatewayPort }
+	return gwy.DatapowerApiGatewayPort
+}
+
+func (gwy *GwySubsysVm) GetApiGatewayAddressOrDefault() string {
+	if len(gwy.DatapowerApiGatewayAddress) == 0 {return defaultApiGatewayAddress}
+	return gwy.DatapowerApiGatewayAddress
+}
+
+func (gwy *GwySubsysVm) GetApicGwServicePortOrDefault() int {
+	if gwy.DatapowerApicGwServicePort == 0 {return defaultApicGwServicePort}
+	return gwy.DatapowerApicGwServicePort
+}
+
+func (gwy *GwySubsysVm) GetApicGwServiceAddressOrDefault() string {
+	if len(gwy.DatapowerApicGwServiceAddress) == 0 {return defaultApicGwServiceAddress}
+	return gwy.DatapowerApicGwServiceAddress
+}
+
 type SubsysVm struct {
 	InstallTypeHeader
 

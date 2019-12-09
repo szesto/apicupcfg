@@ -12,9 +12,14 @@ const cryptoDir = "sharedcert"
 const gwdKey = "gwd_key"
 const gwdCert = "gwd_cert"
 const gwdIdCred = "gwd_id_cred"
-const gwdValCred = "gwd_val_cred"
 const sslGwdServer = "gwd_server"
 const sslGwdClient = "gwd_client"
+
+const defaultApiGatewayPort = 9443
+const defaultApiGatewayAddress = "if_eth0"
+
+const defaultApicGwServicePort = 3000
+const defaultApicGwServiceAddress = "if_eth0"
 
 const gwdPeering = "gwd"
 const rateLimitPeering = "rate-limit"
@@ -223,9 +228,9 @@ func dpDNSServiceModify(outdir, outfile string, dp DpDNSService, tbox *rice.Box)
 }
 
 func dpWriteTemplate(outdir, outfile string, dp interface{}, templateName string, tbox *rice.Box) {
-	template := parseTemplate(tbox, tpdir(tbox) + templateName)
+	t := parseTemplate(tbox, tpdir(tbox) + templateName)
 	outpath := fileName(outdir, outfile)
-	writeTemplate2(template, outpath, nonl, dp)
+	writeTemplate2(t, outpath, nonl, dp)
 }
 
 type SomaSpec struct {
@@ -383,8 +388,7 @@ func datapowerGatewayPeeringConfig(gwy *GwySubsysVm, outputdir string, tbox *ric
 	localPorts := []int {gwy.GetGwdPeeringLocalPortOrDefault(), gwy.GetRateLimitPeeringLocalPortOrDefault(), gwy.GetSubsPeeringLocalPortOrDefault()}
 	monitorPorts := []int {gwy.GetGwdPeeringMonitorPortOrDefault(), gwy.GetRateLimitPeeringMonitorPortOrDefault(), gwy.GetSubsPeeringMonitorPortOrDefault()}
 
-	priorityfactory := func(max int) func(string, string) int {pri := max+1; return func(host, group string) int {pri--; return pri}}
-	prif := priorityfactory(100)
+	prif := func(hidx int, host, pgroup string) int {switch hidx {case 0: return 100; case 1: return 90; case 2: return 80; default: return 50}}
 
 	for hidx, host := range gwy.Hosts {
 
@@ -437,7 +441,7 @@ func datapowerGatewayPeeringConfig(gwy *GwySubsysVm, outputdir string, tbox *ric
 				Peer1:               peer1,
 				Peer2:               peer2,
 				SSLSwitch:           sslswitch,
-				Priority:            prif(host.Name, pgroup),
+				Priority:            prif(hidx, host.Name, pgroup),
 				CryptoIdentCreds:       gwdIdCred,
 				CryptoValCreds:      "", // do not assign validation creds...
 				PersistenceLocation: "memory",
@@ -985,20 +989,15 @@ func datapowerCluster(subsys *SubsysVm, outfiles map[string]string, tbox *rice.B
 	dpConfigSequence(somaoutdir, outfile, dpconfigseq, tbox)
 
 	// apic gw service: default
-	const apicGwServiceAddress = "if_eth0"
-	const apicGwServicePort = 3000
-	const apiGwAddress = "if_eth0"
-	const apiGwPort = 9443
-
 	apicgw := DpApicGwService{
 		Domain:           dpdomain,
 		Name:             "default", // always
-		LocalAddress:     func() string {if len(gwy.DatapowerApicGwServiceAddress) >0 {return gwy.DatapowerApicGwServiceAddress} else {return apicGwServiceAddress}}(),
-		LocalPort:        func() int {if gwy.DatapowerApicGwServicePort > 0 {return gwy.DatapowerApicGwServicePort} else {return apicGwServicePort}}(),
+		LocalAddress:     gwy.GetApicGwServiceAddressOrDefault(),
+		LocalPort:        gwy.GetApicGwServicePortOrDefault(),
 		SSLClientProfile: sslGwdClient,
 		SSLServerProfile: sslGwdServer,
-		ApiGateway:       func() string {if len(gwy.DatapowerApiGatewayAddress) > 0 {return gwy.DatapowerApiGatewayAddress} else {return apiGwAddress}}(),
-		ApiGatewayPort:   func() int {if gwy.DatapowerApiGatewayPort > 0 {return gwy.DatapowerApiGatewayPort} else {return apiGwPort}}(),
+		ApiGateway:       gwy.GetApiGatewayAddressOrDefault(),
+		ApiGatewayPort:   gwy.GetApiGatewayPortOrDefault(),
 		//GwdPeering:       gwdPeering, // v5 only, not used for the api gateway
 		GwPeeringManager: "default", // always
 	}
