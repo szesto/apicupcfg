@@ -546,7 +546,7 @@ func somaCryptoSelf(gwy *GwySubsysVm, dpoutdir string, osenv OsEnv, configFileNa
 		})
 
 		// crypto-objects apiconnect domain
-		
+
 		reqSpecs = append(reqSpecs, SomaSpec{
 			Req:    somaPref() + "dp-crypto-key.xml",
 			File:   "",
