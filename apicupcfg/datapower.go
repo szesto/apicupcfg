@@ -526,6 +526,15 @@ func somaCryptoSelf(gwy *GwySubsysVm, dpoutdir string, osenv OsEnv, configFileNa
 			Url:    url,
 		})
 
+		reqSpecs = append(reqSpecs, SomaSpec{
+			Req:    somaPref() + "dp-domain.xml",
+			File:   "",
+			Dpdir:  "",
+			Dpfile: "",
+			Auth:   dpenv,
+			Url:    url,
+		})
+
 		// save default domain
 		reqSpecs = append(reqSpecs, SomaSpec{
 			Req:    somaPref() + fmt.Sprintf("dp-save-config-%s.xml", "default"),
@@ -537,16 +546,7 @@ func somaCryptoSelf(gwy *GwySubsysVm, dpoutdir string, osenv OsEnv, configFileNa
 		})
 
 		// crypto-objects apiconnect domain
-
-		reqSpecs = append(reqSpecs, SomaSpec{
-			Req:    somaPref() + "dp-domain.xml",
-			File:   "",
-			Dpdir:  "",
-			Dpfile: "",
-			Auth:   dpenv,
-			Url:    url,
-		})
-
+		
 		reqSpecs = append(reqSpecs, SomaSpec{
 			Req:    somaPref() + "dp-crypto-key.xml",
 			File:   "",
