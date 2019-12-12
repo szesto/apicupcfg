@@ -144,16 +144,43 @@
         "SubsysName": "gwy",
         "Mode": "standard",
 
-        "SearchDomains": [],
-        "DnsServers": [],
+        "SearchDomains": ["my.domain.com", "domain.com"],
+        "DnsServers": ["dns-ip-1", "dns-ip-2"],
 
         "Hosts": [
-            {"Name": "dp1.my.domain.com", "HardDiskPassword": "password", "Device": "eth0",
-                "IpAddress": "ip-address", "SubnetMask": "dot.subnet.mask","Gateway": "gw-ip-address"},
-            {"Name": "dp2.my.domain.com", "HardDiskPassword": "password", "Device": "eth0",
-                "IpAddress": "ip-address", "SubnetMask": "dot.subnet.mask", "Gateway": "gw-ip-address"},
-            {"Name": "dp3.my.domain.com", "HardDiskPassword": "password", "Device": "eth0",
-                "IpAddress": "ip-address", "SubnetMask": "dot.subnet.mask", "Gateway": "gw-ip-address"}
+            {"Name": "dp1.my.domain.com", "Device": "eth0", "HostAlias": "if_eth0",
+                "IpAddress": "ip-address", "SubnetMask": "dot.subnet.mask","Gateway": "gw-ip-address",
+                "GwdPeeringPriority": 100, "RateLimitPeeringPriority": 100, "SubsPeeringPriority": 100},
+
+            {"Name": "dp2.my.domain.com", "Device": "eth0", "HostAlias": "if_eth0",
+                "IpAddress": "ip-address", "SubnetMask": "dot.subnet.mask", "Gateway": "gw-ip-address",
+                "GwdPeeringPriority": 90, "RateLimitPeeringPriority": 90, "SubsPeeringPriority": 90},
+
+            {"Name": "dp3.my.domain.com",
+
+                "Interfaces": [
+                    {"Device": "eth0", "HostAlias": "if_eth0",
+                        "IpAddress": "ip-address", "SubnetMask": "dot.subnet.mask", "Gateway": "gw-ip-address",
+                        "Routes": [{"Destination": "dest1","NextHopRouter": "nexthop","Metric": 1}]
+                    },
+                    {"Device": "eth1", "HostAlias": "if_eth1",
+                        "IpAddress": "ip-address", "SubnetMask": "dot.subnet.mask",
+                        "Routes": [{"Destination": "dest1","NextHopRouter": "nexthop","Metric": 1}]
+                    },
+                    {"Device": "eth2", "HostAlias": "if_eth2",
+                        "IpAddress": "ip-address", "SubnetMask": "dot.subnet.mask",
+                        "Routes": [{"Destination": "dest1","NextHopRouter": "nexthop","Metric": 1}]
+                    },
+                    {"Device": "eth3", "HostAlias": "if_eth3",
+                        "IpAddress": "ip-address", "SubnetMask": "dot.subnet.mask",
+                        "Routes": [{"Destination": "dest1","NextHopRouter": "nexthop","Metric": 1}]
+                    }
+                ],
+
+                "GwdPeeringPriority": 80, "GwdPeeringInterface": "eth0",
+                "RateLimitPeeringPriority": 80, "RateLimitPeeringInterface": "eth0",
+                "SubsPeeringPriority": 80, "SubsPeeringInterface": "eth0"
+            }
         ],
 
         "ApiGateway": "gw.my.domain.com",

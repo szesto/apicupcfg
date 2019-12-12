@@ -6,13 +6,48 @@ import (
 	"text/template"
 )
 
-type HostVm struct {
-	Name string
-	HardDiskPassword string // luks storage encryption password
+type NetworkInterface struct {
 	Device string // eth0
 	IpAddress string
 	SubnetMask string // dot notation
 	Gateway string
+	HostAlias string // datapower host alias
+}
+
+type HostVm struct {
+	Name string
+	NetworkInterface
+}
+
+type HostVmSubsys struct {
+	HostVm
+	HardDiskPassword string // luks storage encryption password
+}
+
+type GatewayRoute struct {
+	Destination string
+	NextHopRouter string
+	Metric string
+}
+
+type GatewayInterface struct {
+	NetworkInterface
+	Routes []GatewayRoute
+}
+
+type HostGateway struct {
+	HostVm
+
+	Interfaces []GatewayInterface // advanced datapower configuration
+
+	GwdPeeringPriority int
+	GwdPeeringInterface string
+
+	RateLimitPeeringPriority int
+	RateLimitPeeringInterface string
+
+	SubsPeeringPriority int
+	SubsPeeringInterface string
 }
 
 func (vm *HostVm) validateIp() {
@@ -57,7 +92,7 @@ type VmFirstBoot struct {
 	DnsServers []string
 	VmwareConsolePasswordHash string
 	IpRanges IpRanges
-	Hosts []HostVm
+	Hosts []HostVmSubsys
 }
 
 func (fb *VmFirstBoot) copyDefaults(from VmFirstBoot) {
@@ -75,7 +110,7 @@ func (fb *VmFirstBoot) copyDefaults(from VmFirstBoot) {
 
 	// do not copy hosts
 	if fb.Hosts == nil {
-		fb.Hosts = []HostVm{}
+		fb.Hosts = []HostVmSubsys{}
 	}
 }
 
@@ -152,7 +187,7 @@ type GwySubsysVm struct {
 
 	SearchDomains []string
 	DnsServers []string
-	Hosts []HostVm
+	Hosts []HostGateway
 
 	ApiGateway string
 	ApicGwService string
@@ -172,13 +207,15 @@ type GwySubsysVm struct {
 	DatapowerApicGwServicePort int // 3000
 	DatapowerApicGwServiceAddress string // host-alias
 
-	// NTP server
+	// NTP server (todo: list)
 	NTPServer string
 
 	// low level peering configuration
+
 	GwdPeering string
 	GwdPeeringLocalPort int
 	GwdPeeringMonitorPort int
+	GwdPeeringPersistence string // memory | raid
 
 	RateLimitPeering string
 	RateLimitPeeringLocalPort int

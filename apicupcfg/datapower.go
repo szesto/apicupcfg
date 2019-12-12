@@ -382,9 +382,131 @@ func datapowerCryptoConfig(gwy *GwySubsysVm, outputdir string, tbox *rice.Box) {
 	// valcred: gwd_val_cred -- not used...
 }
 
+func searchpeeringinterface(name string, intf string, h *HostGateway) (string, error) {
+
+	ispeeringintf := len(intf) > 0
+	isinterfaces := len(h.Interfaces) > 0
+	isdefaultintf := ! isinterfaces
+	isalias := len(h.HostAlias) > 0
+
+	fmtdevalias := fmt.Sprintf("if_%s", h.Device)
+	devalias := func() string { if isalias {return h.HostAlias} else {return fmtdevalias} }
+
+	if isdefaultintf {
+		if ispeeringintf {
+			if h.Device == intf {
+				return devalias(), nil
+
+			} else {
+				return "", fmt.Errorf("host '%s', peering '%s': peering interface '%s' does not match device '%s'",
+					h.Name, name, intf, h.Device)
+			}
+
+		} else {
+			return devalias(), nil
+		}
+
+	} else if isinterfaces && !ispeeringintf {
+			return "", fmt.Errorf("host '%s', peering '%s': peering interface parameter required", h.Name, name)
+
+	} else {
+		// search interfaces based on defined peering interface todo
+	}
+
+	return "", nil
+}
+
+func datapowerGatewayPeeringConfig(gwy *GwySubsysVm, outputdir string, tbox *rice.Box) error {
+
+	peergroupswitch := "off"
+	if len(gwy.Hosts) == 3 {
+		peergroupswitch = "on"
+	}
+
+	sslswitch := "off"
+	if peergroupswitch == "on" {
+		sslswitch = "on"
+	}
+
+	computepeers := func(hidx int) (peer1, peer2 string) {
+		if len(gwy.Hosts) == 3 {
+			if hidx == 0 {
+				peer1 = gwy.Hosts[1].Name
+				peer2 = gwy.Hosts[2].Name
+
+			} else if hidx == 1 {
+				peer1 = gwy.Hosts[0].Name
+				peer2 = gwy.Hosts[2].Name
+
+			} else if hidx == 2 {
+				peer1 = gwy.Hosts[0].Name
+				peer2 = gwy.Hosts[1].Name
+			}
+		}
+		return peer1, peer2
+	}
+
+	for hidx, host := range gwy.Hosts {
+
+		if len(host.Name) == 0 {
+			continue
+		}
+
+		peer1, peer2 := computepeers(hidx)
+
+		// each host is participating in all peering groups
+		peerings := []string {gwy.GetGwdPeeringOrDefault(), gwy.GetRateLimitPeeringOrDefault(), gwy.GetSubsPeeringOrDefault()}
+		localPorts := []int {gwy.GetGwdPeeringLocalPortOrDefault(), gwy.GetRateLimitPeeringLocalPortOrDefault(), gwy.GetSubsPeeringLocalPortOrDefault()}
+		monitorPorts := []int {gwy.GetGwdPeeringMonitorPortOrDefault(), gwy.GetRateLimitPeeringMonitorPortOrDefault(), gwy.GetSubsPeeringMonitorPortOrDefault()}
+
+		priorities := []int {host.GwdPeeringPriority, host.RateLimitPeeringPriority, host.SubsPeeringPriority}
+		peeringintfs := []string {host.GwdPeeringInterface, host.RateLimitPeeringInterface, host.SubsPeeringInterface}
+
+		for j := 0; j < len(peerings); j++ {
+
+			pgroup := peerings[j]
+			pri := priorities[j]
+			intf := peeringintfs[j]
+
+			localport := localPorts[j]
+			monitorport := monitorPorts[j]
+
+			aliasname, err := searchpeeringinterface(pgroup, intf, &host)
+			if err != nil {
+				return err
+			}
+
+			// gateway peering: gwd, rate-limit, subs, (api-probe)
+			dpgwpeering := DpGatewayPeering{
+				Domain:              gwy.GetDatapowerDomainOrDefault(),
+				Name:                pgroup,
+				Summary:             "APIC peering",
+				LocalAddress:		aliasname,
+				LocalPort:			localport,
+				MonitorPort:        monitorport,
+				PeerGroupSwitch: 	peergroupswitch,
+				Peer1:               peer1,
+				Peer2:               peer2,
+				SSLSwitch:           sslswitch,
+				Priority:            pri,
+				CryptoIdentCreds:		gwdIdCred,
+				CryptoValCreds:      "", // do not assign validation creds...
+				PersistenceLocation: "memory",
+				LocalDirectory:      "local:///", // local store or raid
+			}
+
+			outfile := fmt.Sprintf("dp-peering-%s-%s.xml", pgroup, dot2dash(host.Name))
+			dpGatewayPeering(outputdir, outfile, dpgwpeering, tbox)
+		}
+	}
+
+	return nil
+}
+
+/*
 func datapowerGatewayPeeringConfig(gwy *GwySubsysVm, outputdir string, tbox *rice.Box) {
 
-	peering := []string {gwy.GetGwdPeeringOrDefault(), gwy.GetRateLimitPeeringOrDefault(), gwy.GetSubsPeeringOrDefault()}
+	peerings := []string {gwy.GetGwdPeeringOrDefault(), gwy.GetRateLimitPeeringOrDefault(), gwy.GetSubsPeeringOrDefault()}
 	localPorts := []int {gwy.GetGwdPeeringLocalPortOrDefault(), gwy.GetRateLimitPeeringLocalPortOrDefault(), gwy.GetSubsPeeringLocalPortOrDefault()}
 	monitorPorts := []int {gwy.GetGwdPeeringMonitorPortOrDefault(), gwy.GetRateLimitPeeringMonitorPortOrDefault(), gwy.GetSubsPeeringMonitorPortOrDefault()}
 
@@ -409,7 +531,7 @@ func datapowerGatewayPeeringConfig(gwy *GwySubsysVm, outputdir string, tbox *ric
 			sslswitch = "on"
 		}
 
-		for pgidx, pgroup := range peering {
+		for pgidx, pgroup := range peerings {
 
 			if len(gwy.Hosts) == 3 {
 				if hidx == 0 {
@@ -453,6 +575,7 @@ func datapowerGatewayPeeringConfig(gwy *GwySubsysVm, outputdir string, tbox *ric
 		}
 	}
 }
+*/
 
 type DpCryptoIdentCredModify struct {
 	Domain string
@@ -899,14 +1022,18 @@ func datapowerCluster(subsys *SubsysVm, outfiles map[string]string, tbox *rice.B
 	// datapower domain
 	dpdomain := gwy.GetDatapowerDomainOrDefault()
 
+	fmtaliasf := func (device string) string {return fmt.Sprintf("if_%s", device)}
+	hostaliasf := func(h *HostGateway) string {if len(h.HostAlias) > 0 {return h.HostAlias} else {return fmtaliasf(h.Device)}}
+
 	// host alias, system name
 	for _, host := range subsys.Gateway.Hosts {
 		if len(host.Name) == 0 {
 			continue
 		}
 
+		// todo: if interfaces defined, create host-alias for each intefrace
 		dpha := DpHostAlias{
-			Alias:     fmt.Sprintf("if_%s", host.Device),
+			Alias:     hostaliasf(&host),
 			IPAddress: host.IpAddress,
 		}
 
