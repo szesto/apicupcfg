@@ -34,10 +34,12 @@ func main() {
 
 	isDpCaCopyActionf := func() bool {return dpcacopy}
 
+	isInitConfigActionf := func() bool {return initConfig}
+
 	// check input actions
 	if !isValidateIpActionf() && !isCertCopyActionf() && !isCertDirActionf() &&
 		!isCertVerifyActionf() && !isCertConcatActionf() && !isGenActionf() &&
-		!isSomaf() && !isDpCaCopyActionf() {
+		!isSomaf() && !isDpCaCopyActionf() && !isInitConfigActionf() {
 
 		log.Fatalf("no action specified... use apicupcfg -h for help...")
 	}
