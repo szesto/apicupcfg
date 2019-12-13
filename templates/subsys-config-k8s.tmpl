@@ -3,6 +3,8 @@
     "Version": {{ .Version | default "2018.4.1.x" | quote }},
     "Tag": "tag",
 
+    "UseVersion": false,
+
     "Mode": {{ .Mode | default "dev|standard" | quote }},
 
     "Namespace": {{ .Namespace | default "apic" | quote }},
@@ -12,7 +14,7 @@
     "StorageClass": "gp2|etc",
 
     "Certs": {
-        "DnFields": ["O=APIC|match ca reqs","C=US|match ca reqs"],
+        "DnFields": ["O=APIC","C=US"],
         "K8sNamespace": {{ .Namespace | default "apic" | quote }},
         "CaFile": "ca-chain-root-last.crt",
 

@@ -3,6 +3,8 @@
     "Version": {{ .Version | default "2018.4.1.x" | quote }},
     "Tag": "tag",
 
+    "UseVersion": false,
+
     "Mode": {{ .Mode | default "dev|standard" | quote }},
 
     "SshPublicKeyFile": "/path/to/public/key/file",
@@ -32,7 +34,7 @@
     },
 
     "Certs": {
-        "DnFields": ["O=APIC|match ca reqs","C=US|match ca reqs"],
+        "DnFields": ["O=APIC","C=US"],
         "K8sNamespace": "default",
         "CaFile": "ca-chain-root-last.crt",
 
@@ -147,19 +149,29 @@
         "SearchDomains": [],
         "DnsServers": [],
 
+        "NTPServer": "pool.ntp.org",
+
         "Hosts": [
-            {"Name": "dp1.my.domain.com", "HardDiskPassword": "password", "Device": "eth0",
-                "IpAddress": "ip-address", "SubnetMask": "dot.subnet.mask","Gateway": "gw-ip-address"},
-            {"Name": "dp2.my.domain.com", "HardDiskPassword": "password", "Device": "eth0",
-                "IpAddress": "ip-address", "SubnetMask": "dot.subnet.mask", "Gateway": "gw-ip-address"},
-            {"Name": "dp3.my.domain.com", "HardDiskPassword": "password", "Device": "eth0",
-                "IpAddress": "ip-address", "SubnetMask": "dot.subnet.mask", "Gateway": "gw-ip-address"}
+            {"Name": "dp1.my.domain.com", "Device": "eth0",
+                "IpAddress": "ip-address", "SubnetMask": "dot.subnet.mask","Gateway": "gw-ip-address",
+                "GwdPeeringPriority": 100, "RateLimitPeeringPriority": 100, "SubsPeeringPriority": 100},
+
+            {"Name": "dp2.my.domain.com", "Device": "eth0",
+                "IpAddress": "ip-address", "SubnetMask": "dot.subnet.mask", "Gateway": "gw-ip-address",
+                "GwdPeeringPriority": 90, "RateLimitPeeringPriority": 90, "SubsPeeringPriority": 90},
+
+            {"Name": "dp3.my.domain.com", "Device": "eth0",
+                "IpAddress": "ip-address", "SubnetMask": "dot.subnet.mask", "Gateway": "gw-ip-address",
+                "GwdPeeringPriority": 80, "RateLimitPeeringPriority": 80, "SubsPeeringPriority": 80}
         ],
 
         "ApiGateway": "gw.my.domain.com",
         "ApicGwService": "gwd.my.domain.com",
 
         "DatapowerDomain": "apiconnect",
-        "DatapowerApiGatewayPort": 9443
+        "DatapowerApiGatewayPort": 9443,
+
+        "CaFile": "dp-intermidiate-ca.pem",
+        "RootCaFile": "dp-root-ca.pem"
     }
 }
