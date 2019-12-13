@@ -282,10 +282,11 @@ in the cmd/apicupcfg directory:
 **Steps for datapower configuration**
 - change to the *datapower* directory.
     - run `all-datapower-csr.tag.bat|sh`
-    - submit 2 enpdoint csr's to the ca.
+    - submit 1 csr to the ca.
     - for each datapower, run initial configuration, set timezone, enable xml management interface. Apply fixpack.
     - create *dp.env* file with datapower admin creds: 1st line username, 2nd line password
-    - run `*zoma-datapower-name.bat|sh*` file for each datapower instance.
+    - run `*zoma-crypto-self-(datapower-name).bat|sh*` file for each datpower instance.
+    - run `*zoma-(datapower-name.bat|sh)*` file for each datapower instance.
     - complete datapower crypto update.
 
 **Datapower crypto update**
