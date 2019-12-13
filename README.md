@@ -253,7 +253,7 @@ in the cmd/apicupcfg directory:
 **Typical Steps for the OVA install.**
 - Create working directory.
 - Generate json configuration file *subsys-config.json*:
-    - `apicupcfg -gen -initconfig [-configtype ova]`
+    - `apicupcfg -initconfig [-configtype ova]`
 - Edit *subsys-config.json* configuration file. In what follows, *tag* is the value of the *Tag* property.
 - Validate subsystem (and datapower) ip addresses:
     - `apicupcfg -validateip`
