@@ -425,7 +425,9 @@ Comments are not part of *JSON* syntax.
         "K8sNamespace": "default",
         
         //
-        // The name of the ca bundle file
+        // name of the ca bundle file
+        // To create this bundle file from the ca.pem and rootca.pem files:
+        // apicupcfg -certconcat -ca /path/to/ca.pem -rootca /path/to/rootca.pem
         //
         "CaFile": "ca-chain-root-last.crt",
 
@@ -449,6 +451,8 @@ Comments are not part of *JSON* syntax.
         //
         // Types of certifiactes to generate.
         // public-certs and common-certs are advanced options.
+        // To copy certificates from the directory (this command will introspect all certificates in the directory and match them to the subystem endpoints):
+        // apicupcfg -certdir /path/to/dir
         //
         "PublicUserFacingCerts": true,
         "PublicCerts": false,
@@ -672,6 +676,12 @@ Comments are not part of *JSON* syntax.
         // datapower api gateway port
         //
         "DatapowerApiGatewayPort": 9443,
+
+        //
+        // datapower trust certificates.
+        // to copy datapower trust certificates run:
+        // apicupcfg -dpcopy -ca /path/to/ca.pem -rootca /path/to/root-ca.pem
+        //
 
         //
         // the name of the datapower intermediate ca cert file.
