@@ -339,7 +339,7 @@ Note that default output directory is current directory: -out .
 **Configuraton reference.** 
 
 Create *subsys-config.json* configuration file for the **OVA** install: `apicupcfg -initconfig`. 
-Note that comments are not supported in json syntax.
+Comments are not part of json syntax.
 
 {
 
@@ -519,10 +519,23 @@ Note that comments are not supported in json syntax.
         "ConsumerApi": "consumer.my.domain.com"
     },
 
+    //
+    // Analytics subsystem
+    //
     "Analytics": {
+        //
+        // Analytics subsystem name
+        //
         "SubsysName": "alt",
 
+        //
+        // analytics subsystem parameters for the first boot
+        //
         "VmFirstBoot": {
+        
+            //
+            // analytics subsystem hosts. 1 host for the dev mode, 3 hosts for the standard mode.
+            //
             "Hosts": [
                 {"Name": "a1.my.domain.com", "HardDiskPassword": "password", "Device": "eth0",
                     "IpAddress": "ip-address", "SubnetMask": "dot.subnet.mask","Gateway": "gw-ip-address"},
@@ -535,14 +548,29 @@ Note that comments are not supported in json syntax.
 
         "EnableMessageQueue": false,
 
+        //
+        // analytics subsystem endpoints
+        //
         "AnalyticsIngestion": "ai.my.domain.com",
         "AnalyticsClient": "ac.my.domain.com"
     },
 
+    //
+    // Portal subsystem
+    //
     "Portal": {
+        //
+        // portal subsystem name
+        //
         "SubsysName": "ptl",
 
+        //
+        // portal subsystem parameters for the first boot
+        //
         "VmFirstBoot": {
+            //
+            // portal subsystem hosts. 1 host for the dev mode, 3 hosts for the standard mode.
+            //
             "Hosts": [
                 {"Name": "p1.my.domain.com", "HardDiskPassword": "password", "Device": "eth0",
                     "IpAddress": "ip-address", "SubnetMask": "dot.subnet.mask","Gateway": "gw-ip-address"},
@@ -553,7 +581,15 @@ Note that comments are not supported in json syntax.
             ]
         },
 
+        //
+        // Portal site backup configuration.
+        // If BackupProtocol is empty, backup configuration is skipped.
+        //
         "SiteBackup": {
+            //
+            // Backup protocol. 
+            // For the sftp protocol, specify Backup* parameters. For the objstore protocol specify Objstore* parameters.
+            //
             "BackupProtocol": "sftp|objstore",
             "BackupAuthUser": "admin",
             "BackupAuthPass": "secret",
@@ -568,6 +604,9 @@ Note that comments are not supported in json syntax.
             "BackupSchedule": "0 2 * * *"
         },
 
+        //
+        // portal subsystem endpoints
+        //
         "PortalAdmin": "padmin.my.domain.com",
         "PortalWww": "portal.my.domain.com"
     },
