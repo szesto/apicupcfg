@@ -336,7 +336,234 @@ Note that default output directory is current directory: -out .
 - validate subsystem ip addresses (ova install only):  
 `apicupcfg -validateip [-config subsys-config.json]`
 
-**Configuraton reference.**
+**Configuraton reference.** 
 
-@todo
+Create *subsys-config.json* configuration file for the **OVA** install: `apicupcfg -initconfig`. 
+Note that comments are not supported in json syntax.
+
+{
+
+    //
+    // install type
+    //
+    "InstallType": "ova",
+
+    //
+    // example: windows_lts_v2018.4.1.9, linux_lts_v2018.4.1.9, mac_lts_v2018.4.1.9
+    //
+    "Version": "windows_lts_v2018.4.1.9", 
+
+    //
+    // tag generated scripts
+    //
+    "Tag": "tag",
+
+    //
+    // if set to 'true', then generated scripts use full version for the apicup executable.
+    //
+    "UseVersion": false, 
+
+    //
+    // apicup install mode
+    //
+    "Mode": "dev|standard",
+
+    //
+    // path to the public key for the ssh login to the management, portal, and analytics vm's.
+    // put this file into working directory
+    //
+    "SshPublicKeyFile": "/path/to/public/key/file",
+
+    //
+    // a list of search domains, applies to management, analytics, and portal subsystems.
+    //
+    "SearchDomains": ["my.domain.com", "domain.com"],
+
+    //
+    // these parameters take effect at first boot only.
+    // changing these parameters after the first boot does not take effect.
+    // applies to managment, portal, and analytics subystems.
+    //
+    "VmFirstBoot": {
+        "DnsServers": ["dns-ip-1","dns-ip-2"],
+        "VmwareConsolePasswordHash": "hash-output-b64",
+
+        "IpRanges": {
+            "PodNetwork": "172.16.0.0/16",
+            "ServiceNetwork": "172.17.0.0/16"
+        }
+    },
+
+    //
+    // cloud-init file. If CloudInitFile is empty no file will be generated.
+    //
+    "CloudInit": {
+        "CloudInitFile": "cloud-init-file.yml",
+        "InitValues": {
+            "rsyslog": {
+                "remotes": {
+                    "syslog_server1": "syslog-collector-ip-1:514|601",
+                    "syslog_server2": "syslog-collector-ip-2:514|601"
+                }
+            }
+        }
+    },
+
+    //
+    // certificates
+    //
+    "Certs": {
+        //
+        // dn fields that must be present in the csr.
+        // note that state is ST
+        //
+        "DnFields": ["O=APIC","C=US"],
+        
+        //
+        // kubernetes namespace. Do not change for the ova install
+        //
+        "K8sNamespace": "default",
+        
+        //
+        // The name of the ca bundle file
+        //
+        "CaFile": "ca-chain-root-last.crt",
+
+        "Certbot": {
+            "CertDir": "letsencrypt/live/my.domain.com",
+            "Cert": "cert.pem",
+            "Key": "privkey.pem",
+            "CaChain": "chain.pem"
+        },
+
+        "SharedEndpointTrust": false,
+
+        "PublicUserFacingCerts": true,
+        "PublicCerts": false,
+        "CommonCerts": false
+    },
+
+    "Management": {
+        "SubsysName": "mgmt",
+
+        "VmFirstBoot": {
+            "Hosts": [
+                {"Name": "m1.my.domain.com", "HardDiskPassword": "password", "Device": "eth0",
+                    "IpAddress": "ip-address", "SubnetMask": "dot.subnet.mask","Gateway": "gw-ip-address"},
+                {"Name": "m2.my.domain.com", "HardDiskPassword": "password", "Device": "eth0",
+                    "IpAddress": "ip-address", "SubnetMask": "dot.subnet.mask", "Gateway": "gw-ip-address"},
+                {"Name": "m3.my.domain.com", "HardDiskPassword": "password", "Device": "eth0",
+                    "IpAddress": "ip-address", "SubnetMask": "dot.subnet.mask", "Gateway": "gw-ip-address"}
+            ]
+        },
+
+        "CassandraBackup": {
+            "BackupProtocol": "sftp|objstore",
+            "BackupAuthUser": "admin",
+            "BackupAuthPass": "secret",
+            "BackupHost": "backup.my.domain.com",
+            "BackupPort": 1022,
+            "BackupPath": "/backup",
+            "ObjstoreS3SecretKeyId": "",
+            "ObjstoreS3SecretAccessKey": "",
+            "ObjstoreEndpointRegion": "",
+            "ObjstoreBucketSubfolder": "",
+            "BackupEncoding": "min(0-59) hour(0-23) dayofmonth(1-31) month(1-12) dayofweek(0-6)",
+            "BackupSchedule": "0 0 * * 0"
+        },
+
+        "CassandraEncryptionKeyFile": "encryption-secret.bin",
+
+        "PlatformApi": "platform.my.domain.com",
+        "ApiManagerUi": "ui.my.domain.com",
+        "CloudAdminUi": "cm.my.domain.com",
+        "ConsumerApi": "consumer.my.domain.com"
+    },
+
+    "Analytics": {
+        "SubsysName": "alt",
+
+        "VmFirstBoot": {
+            "Hosts": [
+                {"Name": "a1.my.domain.com", "HardDiskPassword": "password", "Device": "eth0",
+                    "IpAddress": "ip-address", "SubnetMask": "dot.subnet.mask","Gateway": "gw-ip-address"},
+                {"Name": "a2.my.domain.com", "HardDiskPassword": "password", "Device": "eth0",
+                    "IpAddress": "ip-address", "SubnetMask": "dot.subnet.mask", "Gateway": "gw-ip-address"},
+                {"Name": "a3.my.domain.com", "HardDiskPassword": "password", "Device": "eth0",
+                    "IpAddress": "ip-address", "SubnetMask": "dot.subnet.mask", "Gateway": "gw-ip-address"}
+            ]
+        },
+
+        "EnableMessageQueue": false,
+
+        "AnalyticsIngestion": "ai.my.domain.com",
+        "AnalyticsClient": "ac.my.domain.com"
+    },
+
+    "Portal": {
+        "SubsysName": "ptl",
+
+        "VmFirstBoot": {
+            "Hosts": [
+                {"Name": "p1.my.domain.com", "HardDiskPassword": "password", "Device": "eth0",
+                    "IpAddress": "ip-address", "SubnetMask": "dot.subnet.mask","Gateway": "gw-ip-address"},
+                {"Name": "p2.my.domain.com", "HardDiskPassword": "password", "Device": "eth0",
+                    "IpAddress": "ip-address", "SubnetMask": "dot.subnet.mask", "Gateway": "gw-ip-address"},
+                {"Name": "p3.my.domain.com", "HardDiskPassword": "password", "Device": "eth0",
+                    "IpAddress": "ip-address", "SubnetMask": "dot.subnet.mask", "Gateway": "gw-ip-address"}
+            ]
+        },
+
+        "SiteBackup": {
+            "BackupProtocol": "sftp|objstore",
+            "BackupAuthUser": "admin",
+            "BackupAuthPass": "secret",
+            "BackupHost": "backup.my.domain.com",
+            "BackupPort": 1022,
+            "BackupPath": "/backup",
+            "ObjstoreS3SecretKeyId": "",
+            "ObjstoreS3SecretAccessKey": "",
+            "ObjstoreEndpointRegion": "",
+            "ObjstoreBucketSubfolder": "",
+            "BackupEncoding": "min(0-59) hour(0-23) dayofmonth(1-31) month(1-12) dayofweek(0-6)",
+            "BackupSchedule": "0 2 * * *"
+        },
+
+        "PortalAdmin": "padmin.my.domain.com",
+        "PortalWww": "portal.my.domain.com"
+    },
+
+    "Gateway": {
+        "SubsysName": "gwy",
+        "Mode": "standard",
+
+        "SearchDomains": [],
+        "DnsServers": [],
+
+        "NTPServer": "pool.ntp.org",
+
+        "Hosts": [
+            {"Name": "dp1.my.domain.com", "Device": "eth0",
+                "IpAddress": "ip-address", "SubnetMask": "dot.subnet.mask","Gateway": "gw-ip-address",
+                "GwdPeeringPriority": 100, "RateLimitPeeringPriority": 100, "SubsPeeringPriority": 100},
+
+            {"Name": "dp2.my.domain.com", "Device": "eth0",
+                "IpAddress": "ip-address", "SubnetMask": "dot.subnet.mask", "Gateway": "gw-ip-address",
+                "GwdPeeringPriority": 90, "RateLimitPeeringPriority": 90, "SubsPeeringPriority": 90},
+
+            {"Name": "dp3.my.domain.com", "Device": "eth0",
+                "IpAddress": "ip-address", "SubnetMask": "dot.subnet.mask", "Gateway": "gw-ip-address",
+                "GwdPeeringPriority": 80, "RateLimitPeeringPriority": 80, "SubsPeeringPriority": 80}
+        ],
+
+        "ApiGateway": "gw.my.domain.com",
+        "ApicGwService": "gwd.my.domain.com",
+
+        "DatapowerDomain": "apiconnect",
+        "DatapowerApiGatewayPort": 9443,
+
+        "CaFile": "dp-intermidiate-ca.pem",
+        "RootCaFile": "dp-root-ca.pem"
+    }
+}
 
