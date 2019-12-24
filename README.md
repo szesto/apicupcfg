@@ -482,7 +482,15 @@ Note that comments are not supported in json syntax.
             ]
         },
 
+        //
+        // Cassandra backup configuration.
+        // If BackupProtocol is empty, backup configuration is skipped.
+        //
         "CassandraBackup": {
+            //
+            // Backup protocol. 
+            // For the sftp protocol, specify Backup* parameters. For the objstore protocol specify Objstore* parameters.
+            //
             "BackupProtocol": "sftp|objstore",
             "BackupAuthUser": "admin",
             "BackupAuthPass": "secret",
@@ -497,8 +505,14 @@ Note that comments are not supported in json syntax.
             "BackupSchedule": "0 0 * * 0"
         },
 
+        //
+        // Cassandra backup encryption key.
+        //
         "CassandraEncryptionKeyFile": "encryption-secret.bin",
 
+        //
+        // Management subsystem endpoints
+        //
         "PlatformApi": "platform.my.domain.com",
         "ApiManagerUi": "ui.my.domain.com",
         "CloudAdminUi": "cm.my.domain.com",
