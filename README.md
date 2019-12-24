@@ -283,8 +283,8 @@ in the cmd/apicupcfg directory:
 - change to the *datapower* directory.
     - run `all-datapower-csr.tag.bat|sh`
     - submit 1 csr to the ca.
-    - for each datapower, run initial configuration, set timezone, enable xml management interface. Apply fixpack.
-    - create *dp.env* file with datapower admin creds: 1st line username, 2nd line password
+    - for each datapower, run initial configuration, set timezone, and enable xml management interface. Apply fixpack.
+    - create *dp.env* file with the datapower admin creds: 1st line is username, 2nd line is password
     - run `*zoma-crypto-self-(datapower-name).bat|sh*` file for each datpower instance.
     - run `*zoma-(datapower-name.bat|sh)*` file for each datapower instance.
     - complete datapower crypto update.
@@ -301,24 +301,27 @@ in the cmd/apicupcfg directory:
 
 **Command line reference.**
 
-Note that default output directory is current directory: output: -out .
+Note that default output directory is current directory: -out .
 
 - help:  
 `apicupcfg -help`  
 - init config:  
-`apicupcfg -gen -initconfig -configtype ova|k8s [-config subsys-config.json]`  
-- generate subsys and cert scripts:  
+`apicupcfg -initconfig -configtype ova|k8s [-config subsys-config.json]`  
+- generate subsys, cert and datapower scripts:  
 `apicupcfg -gen [-out .] [-config subsys-config.json]`  
-- generate subsys or certs only:  
+- generate subsys or certs or datapower only:  
 `apicupcfg -gen -subsys [-out .] [-config subsys-config.json]`  
 `apicupcfg -gen -certs [-out .] [-config subsys-config.json]`
+`apicupcfg -gen -datapower [-out .] [-config subsys-config.json]`
 - copy certificate(s) to correct destination:  
 `apicupcfg -certcopy cerftile.pem [-out .] [-config subsys-config.json]`  
 `apicupcfg -certdir dir [-out .] [-config subsys-config.json]`  
 - verify certificate:  
 `apicupcfg -certverify [-noexpire] [-cert cert.pem] -ca ca.pem -rootca rootca.pem`  
-- concatenate intermediate and root ca certs and copy to the destination:  
+- concatenate intermediate and root ca certs and copy to correct destination for the script:  
 `apicupcfg -certconcat -ca ca.pem -rootca rootca.pem [-out .] [-config subsys-config.json]`  
+- copy datapower ca and root ca certificates to correct destination for the script:
+`apicupcfg -dpcopy -ca ca.pem -rootca root-ca.pem`
 - validate subsystem ip addresses (ova install only):  
 `apicupcfg -validateip [-config subsys-config.json]`
 
