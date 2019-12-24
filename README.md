@@ -339,7 +339,7 @@ Note that default output directory is current directory: -out .
 **Configuraton reference.** 
 
 Create *subsys-config.json* configuration file for the **OVA** install: `apicupcfg -initconfig`. 
-Comments are not part of json syntax.
+Comments are not part of *JSON* syntax.
 
 {
 
@@ -611,15 +611,38 @@ Comments are not part of json syntax.
         "PortalWww": "portal.my.domain.com"
     },
 
+    //
+    // Datapower gateway
+    //
     "Gateway": {
+        //
+        // Gateway subsystem name. Not used for the OVA install.
+        //
         "SubsysName": "gwy",
+        
+        //
+        // Datapower install mode.
+        //
         "Mode": "standard",
 
-        "SearchDomains": [],
-        "DnsServers": [],
+        //
+        // datapower search domains
+        //
+        "SearchDomains": ["my.domain.com","domain.com"],
+        
+        //
+        // datapower dns servers
+        //
+        "DnsServers": ["dns-ip-1","dns-ip-2"],
 
+        //
+        // datapower ntp server
+        //
         "NTPServer": "pool.ntp.org",
 
+        //
+        // Datapower hosts. 1 host in dev mode, 3 hosts in standard mode
+        //
         "Hosts": [
             {"Name": "dp1.my.domain.com", "Device": "eth0",
                 "IpAddress": "ip-address", "SubnetMask": "dot.subnet.mask","Gateway": "gw-ip-address",
@@ -634,13 +657,30 @@ Comments are not part of json syntax.
                 "GwdPeeringPriority": 80, "RateLimitPeeringPriority": 80, "SubsPeeringPriority": 80}
         ],
 
+        //
+        // datapower endpoints
+        //
         "ApiGateway": "gw.my.domain.com",
         "ApicGwService": "gwd.my.domain.com",
 
+        //
+        // datapower domain name for api connect
+        //
         "DatapowerDomain": "apiconnect",
+        
+        //
+        // datapower api gateway port
+        //
         "DatapowerApiGatewayPort": 9443,
 
+        //
+        // the name of the datapower intermediate ca cert file.
+        //
         "CaFile": "dp-intermidiate-ca.pem",
+        
+        //
+        // the name of the datapower root cert file
+        //
         "RootCaFile": "dp-root-ca.pem"
     }
 }
