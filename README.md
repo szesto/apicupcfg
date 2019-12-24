@@ -429,6 +429,10 @@ Note that comments are not supported in json syntax.
         //
         "CaFile": "ca-chain-root-last.crt",
 
+        //
+        // For certbot (like letsencrypt) specify crypto directory.
+        // if CertDir value is empty no certbot crypto scripts will be generated
+        //
         "Certbot": {
             "CertDir": "letsencrypt/live/my.domain.com",
             "Cert": "cert.pem",
@@ -436,17 +440,38 @@ Note that comments are not supported in json syntax.
             "CaChain": "chain.pem"
         },
 
+        //
+        // Shared endpoint trust is advanced trust model where trust is shared between susbystem endpoints
+        // If set to 'true' shared-csr directory will contain scripts to support this trust model.
+        //
         "SharedEndpointTrust": false,
 
+        //
+        // Types of certifiactes to generate.
+        // public-certs and common-certs are advanced options.
+        //
         "PublicUserFacingCerts": true,
         "PublicCerts": false,
         "CommonCerts": false
     },
 
+    //
+    // management subsystem
+    //
     "Management": {
+        //
+        // management subsystem name
+        //
         "SubsysName": "mgmt",
 
+        //
+        // management subsystem parameters for the first boot
+        //
         "VmFirstBoot": {
+        
+            //
+            // management subsystem hosts. 1 host for the dev mode, 3 hosts for the standard mode.
+            //
             "Hosts": [
                 {"Name": "m1.my.domain.com", "HardDiskPassword": "password", "Device": "eth0",
                     "IpAddress": "ip-address", "SubnetMask": "dot.subnet.mask","Gateway": "gw-ip-address"},
