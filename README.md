@@ -5,7 +5,7 @@
 Both Kubernetes and OVA installation types are supported.
 
 `apicupcfg` generates all subsystem and certificate scripts, all supportring certificate configuration
-scripts, and provides a number of validation options.
+scripts, datapower configuration scripts, and provides a number of validation options.
 
 To see all available command line options run:
 
@@ -19,7 +19,7 @@ The directory with the configuration file is working directory.
 To create input configuration file, change to the working directory and generate json 
 configuration file template:
 
-`apicupcfg -gen -initconfig -configtype ova|k8s [-config subsys-config.json]`
+`apicupcfg -initconfig -configtype ova|k8s [-config subsys-config.json]`
 
 `subsys-config.json` is the default configuration file name and is assumed when the `-config` option 
 is ommitted.
@@ -30,13 +30,13 @@ There are a number of sections in the input configuration file. There is a secti
 certificate configuration section, and defaults section that applies to all subystems.
 
 To generate configuration scripts and directories:
-`apicupcfg -gen -out output-directory [-config subsys-config.json]`
+`apicupcfg -gen [-out output-directory] [-config subsys-config.json]`
 
-Default output subdirectory is current directory and is assumed if `-out` command line option is ommitted.
-Default input configuration file is subsys-config.json
+Default output directory is *current* directory and is assumed if `-out` command line option is ommitted.
+Default input configuration file is *subsys-config.json*
 
 To generate configuration scripts and directories in the working directory:
-`apicupcfg -gen -out . [-config config-subsys.json]`
+`apicupcfg -gen [-out .] [-config config-subsys.json]`
 
 Generated directories:
 
@@ -45,6 +45,7 @@ Generated directories:
 - *custom-csr* - openssl scripts for custom certificates.
 - *common-csr* - openssl scripts for common certificates.
 - *shared-dir* - openssl scripts for shared endpoint trust.
+- *datapwer* - datapower configuration scripts.
   
 Generated scripts and configuration data depend on the input configuration file. 
 General rule is that all required scripts and configuration files are created. 
@@ -71,6 +72,16 @@ Generated certificate setting scripts.
 - `apicup-certs-set-shared-trust-user-facing-public.tag.(sh|bat)`
 - `apicup-certs-set-shared-trust-public.tag.(sh|bat)`
 - `apicup-certs-set-shared-trust-mutual-auth.tag.(sh|bat)`
+
+Generated datapower scripts. (OVA install only) 
+
+- `all-datapower-csr.tag.bat|sh`
+- `*.conf` one ssl configuration file for all endpoints and datapower machines`
+- `one *.conf.bat|sh` open ssl script
+- `zoma-crypto-self-*.bat|sh` script for each datapower machine for self-signed cryto.
+- `zoma-crypto-update-*.bat|sh` crypto script for each datapower machine
+- `zoma-*.bat|sh` datapower configuration script for each datapower machine
+- `soma` subdirectory with datapower xml request files.
  
 **Running generated scripts.**
  
