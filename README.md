@@ -451,7 +451,8 @@ Comments are not part of *JSON* syntax.
         //
         // Types of certifiactes to generate.
         // public-certs and common-certs are advanced options.
-        // To copy certificates from the directory (this command will introspect all certificates in the directory and match them to the subystem endpoints):
+        // To copy certificates from the directory (this command will introspect all certificates in the directory 
+        // and match them to the subystem endpoints):
         // apicupcfg -certdir /path/to/dir
         //
         "PublicUserFacingCerts": true,
