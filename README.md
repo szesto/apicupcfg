@@ -165,35 +165,15 @@ This command will compute and display trust chain. Pass `-noexpire` to ignore ce
 
 To configure datapower cluster, define configuration values in the Gateway:{} object. 
 
-`
-    "Gateway": {
-        "SubsysName": "gwy",
-        "Mode": "dev|standard",
-        "SearchDomains": ["my.domain.com","domain.com"],
-        "DnsServers": ["192.168.1.1","8.8.8.8"],
-        "Hosts": [
-            {"Name": "gw1.my.domain.com", "Device": "eth0", 
-                "IpAddress": "192.168.1.50", "SubnetMask": "255.255.255.0", "Gateway": "192.168.1.1"}
-        ],
-        "ApiGateway": "gw.my.domain.com",
-        "ApicGwService": "gwd.my.domain.com",
-        "DatapowerDomain": "apiconnect",
-        "DatapowerGatewayPort": "9443",
-        "NTPServer": "ntp.pool.org",
-        "CaFile": "dp-ca.pem",
-        "RootCaFile": "dp-root-ca.pem"
-    }
-`  
-
 Datapower configuration is generated in the *datapower* directory.  
 
 Datapower configuration defines 2 endpoints: gateway director endpoint and api invocation endpoint.
-One csr is generated for each endpoint with subject alternative names listing all datapower instances.
+One csr is generated for all endpoints with subject alternative names listing all datapower instances.
 
 To complete datapower configuration, change to the *datapower* directory and run *all-datapower-csr-tag.bat|shell* script.
 This creates private key, csr, and self-signed certificates.
 
-Datapower crypto is first configured with self signed certificates. Real certificates are installed with the crypto update script.
+Datapower crypto is first configured with self-signed certificates. Real certificates are installed with the crypto update script.
 
 There are a number of layers in the *Datapower* configuration. Each layer is configured with the *SOMA* request.
 Each *SOMA* request is named with the function that it executes, eg `dp-domain.xml` to create application domain.
@@ -209,9 +189,11 @@ Datapower configuration steps are combined into the *zoma* scripts, one for each
 Create *dp.env* file with 2 lines, one username and another password for datapower authentication.
 dp.env:
 admin
-dppassword
+dppassword 
 
-Run *zoma* file for each individual datapower.
+Run *zoma* self-signed scirpts for each individual datapower. 
+Run *zoma* script for each individual datapower. 
+Run *zoma* crypto update script for each individual datapower when signed certs are ready. 
 
 *Copying datapower certificates.*  
 To copy datapower certificates, place certificates in the directory and run:
