@@ -451,12 +451,20 @@ Comments are not part of *JSON* syntax.
 
         //
         // Types of certifiactes to generate.
-        // public-certs and common-certs are advanced options.
-        // To copy certificates from the directory (this command will introspect all certificates in the directory 
-        // and match them to the subystem endpoints):
-        // apicupcfg -certdir /path/to/dir
         //
+        // for the public user facing certs all open ssl scripts will be in the custom-csr directory
+        // to generate key pairs and csr's change to the custom-csr directory and run:
+        // all-user-facing-public-csr.tag.(bat|sh)
+        //
+        // submit csr's to ca
+        //
+        // To copy signed certificates: 
+        // (this command will introspect all certificates in the directory and match them to the subystem endpoints):
+        // apicupcfg -certdir /path/to/dir-with-signed-certs
+        // 
         "PublicUserFacingCerts": true,
+
+        // public-certs and common-certs are advanced options.
         "PublicCerts": false,
         "CommonCerts": false
     },
