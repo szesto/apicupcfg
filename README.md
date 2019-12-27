@@ -425,8 +425,9 @@ Comments are not part of *JSON* syntax.
         "K8sNamespace": "default",
         
         //
-        // name of the ca bundle file
+        // ca bundle file name
         // To create this bundle file from the ca.pem and rootca.pem files:
+        // (This command also validates trust chain)
         // apicupcfg -certconcat -ca /path/to/ca.pem -rootca /path/to/rootca.pem
         //
         "CaFile": "ca-chain-root-last.crt",
@@ -647,17 +648,18 @@ Comments are not part of *JSON* syntax.
 
         //
         // Datapower hosts. 1 host in dev mode, 3 hosts in standard mode
+        // [...] denotes optional fields with default value.
         //
         "Hosts": [
-            {"Name": "dp1.my.domain.com", "Device": "eth0",
+            {"Name": "dp1.my.domain.com", "Device": "eth0", ["HostAlias": "if_eth0",]
                 "IpAddress": "ip-address", "SubnetMask": "dot.subnet.mask","Gateway": "gw-ip-address",
                 "GwdPeeringPriority": 100, "RateLimitPeeringPriority": 100, "SubsPeeringPriority": 100},
 
-            {"Name": "dp2.my.domain.com", "Device": "eth0",
+            {"Name": "dp2.my.domain.com", "Device": "eth0", ["HostAlias": "if_eth0",]
                 "IpAddress": "ip-address", "SubnetMask": "dot.subnet.mask", "Gateway": "gw-ip-address",
                 "GwdPeeringPriority": 90, "RateLimitPeeringPriority": 90, "SubsPeeringPriority": 90},
 
-            {"Name": "dp3.my.domain.com", "Device": "eth0",
+            {"Name": "dp3.my.domain.com", "Device": "eth0", ["HostAlias": "if_eth0",]
                 "IpAddress": "ip-address", "SubnetMask": "dot.subnet.mask", "Gateway": "gw-ip-address",
                 "GwdPeeringPriority": 80, "RateLimitPeeringPriority": 80, "SubsPeeringPriority": 80}
         ],
@@ -680,7 +682,7 @@ Comments are not part of *JSON* syntax.
 
         //
         // datapower trust certificates.
-        // to copy datapower trust certificates run:
+        // to copy datapower trust certificates:
         // apicupcfg -dpcopy -ca /path/to/ca.pem -rootca /path/to/root-ca.pem
         //
 
