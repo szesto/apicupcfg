@@ -440,13 +440,15 @@ Comments are not part of *JSON* syntax.
         //
         // submit csr's to ca
         //
-        // To copy signed certificates: 
+        // To copy signed certificates to files expected by scripts: 
         // (this command will introspect all certificates in the directory and match them to the subystem endpoints):
         // apicupcfg -certdir /path/to/dir-with-signed-certs
         // 
         "PublicUserFacingCerts": true,
 
+        //
         // public-certs and common-certs are advanced options.
+        //
         "PublicCerts": false,
         "CommonCerts": false
     },
@@ -688,3 +690,330 @@ Comments are not part of *JSON* syntax.
     }
 }
 
+
+Create *subsys-config.json* configuration file for the **Kubernetes** install: `apicupcfg -initconfig -configtype k8s`. 
+Comments are not part of *JSON* syntax. 
+
+{
+
+    //
+    // install type
+    //    
+    "InstallType": "k8s",
+ 
+    //
+    // example: windows_lts_v2018.4.1.9, linux_lts_v2018.4.1.9, mac_lts_v2018.4.1.9
+    //
+    "Version": "windows_lts_v2018.4.1.9", 
+
+    //
+    // tag generated scripts
+    // 
+    "Tag": "tag",
+
+    //
+    // if set to 'true', then generated scripts use full version for the apicup executable.
+    //
+    "UseVersion": false,
+
+    //
+    // apicup install mode
+    //
+    "Mode": "dev|standard",
+
+    //
+    // kubernetes namespace
+    //
+    "Namespace": "apic",
+
+    //
+    // registry url for container images
+    //
+    "RegistryUrl": "container-image-registry-url",
+
+    //
+    // registry secret to pull images
+    //
+    "RegistrySecret": "container-image-registry-secret",
+
+    //
+    // ingress type: route for open-shift, ingress for all other kubernetes clusters
+    //
+    "IngressType": "ingress|route",
+
+    //
+    // storage class
+    //
+    "StorageClass": "gp2|etc",
+
+    //
+    // certificates
+    //
+    "Certs": {
+
+        //
+        // dn fields that must be present in the csr.
+        // note that state is ST
+        //
+        "DnFields": ["O=APIC","C=US"],
+
+        //
+        // kubernetes namespace. match to the value defined in the Namespace parameter
+        //
+        "K8sNamespace": "apic",
+
+        //
+        // ca bundle file name
+        // To create this bundle file from the ca.pem and rootca.pem files:
+        // (This command also validates trust chain)
+        // apicupcfg -certconcat -ca /path/to/ca.pem -rootca /path/to/rootca.pem
+        //
+        "CaFile": "ca-chain-root-last.crt",
+
+        //
+        // For certbot (like letsencrypt) specify crypto directory.
+        // if CertDir value is empty no certbot crypto scripts will be generated
+        //
+        "Certbot": {
+            "CertDir": "letsencrypt/live/my.domain.com",
+            "Cert": "cert.pem",
+            "Key": "privkey.pem",
+            "CaChain": "chain.pem"
+        },
+
+        //
+        // Shared endpoint trust is advanced trust model where trust is shared between susbystem endpoints
+        // If set to 'true' shared-csr directory will contain scripts to support this trust model.
+        //
+        "SharedEndpointTrust": false,
+
+        //
+        // Types of certifiactes to generate.
+        //
+        // for the public user facing certs all open ssl scripts will be in the custom-csr directory
+        // to generate key pairs and csr's change to the custom-csr directory and run:
+        // all-user-facing-public-csr.tag.(bat|sh)
+        //
+        // submit csr's to ca
+        //
+        // To copy signed certificates to files expected by scripts: 
+        // (this command will introspect all certificates in the directory and match them to the subystem endpoints):
+        // apicupcfg -certdir /path/to/dir-with-signed-certs
+        // 
+        "PublicUserFacingCerts": true,
+
+        //
+        // public-certs and common-certs are advanced options.
+        //
+        "PublicCerts": false,
+        "CommonCerts": false
+    },
+
+    //
+    // management subsystem
+    //
+    "Management": {
+        //
+        // management subsystem name
+        //
+        "SubsysName": "mgmt",
+
+        //
+        // extra values file for the management subsystem chart
+        //
+        "ExtraValuesFile": "mgmt-values.yaml",
+
+        //
+        // values for the management subsystem chart
+        //
+        "ExtraValues": {},
+
+        //
+        // Cassandra backup configuration.
+        // If BackupProtocol is empty, backup configuration is skipped.
+        //
+        "CassandraBackup": {
+            //
+            // Backup protocol. 
+            // For the sftp protocol, specify Backup* parameters. For the objstore protocol specify Objstore* parameters.
+            //
+            "BackupProtocol": "sftp|objstore",
+            "BackupAuthUser": "admin",
+            "BackupAuthPass": "secret",
+            "BackupHost": "backup.my.domain.com",
+            "BackupPort": 1022,
+            "BackupPath": "/backup",
+            "ObjstoreS3SecretKeyId": "",
+            "ObjstoreS3SecretAccessKey": "",
+            "ObjstoreEndpointRegion": "",
+            "ObjstoreBucketSubfolder": "",
+            "BackupEncoding": "min(0-59) hour(0-23) dayofmonth(1-31) month(1-12) dayofweek(0-6)",
+            "BackupSchedule": "0 0 * * 0"
+        },
+
+        "CassandraMaxMemoryGb": 9,
+        "CassandraVolumeSizeGb": 50,
+        "CassandraClusterSize": 3,
+        "ExternalCassandraHost": "ext.my.domain.com",
+        "CreateCrd": true,
+
+        //
+        // Cassandra backup encryption key
+        //
+        "CassandraEncryptionKeyFile": "encryption-secret.bin",
+
+        //
+        // Management subsystem endpoints
+        //
+        "PlatformApi": "api.my.domain.com",
+        "ApiManagerUi": "apim.my.domain.com",
+        "CloudAdminUi": "cm.my.domain.com",
+        "ConsumerApi": "consumer.my.domain.com"
+    },
+
+    //
+    // Analytics subsystem
+    //
+    "Analytics": {
+        //
+        // Analytics subsystem name
+        //
+        "SubsysName": "analyt",
+
+        //
+        // extra values file for the analytics subsystem chart
+        //
+        "ExtraValuesFile": "analyt-values.yaml",
+
+        //
+        // values for the analytics subsystem chart
+        //
+        "ExtraValues": {},
+
+        "CoordinatingMaxMemoryGb": 12,
+        "DataMaxMemoryGb": 12,
+        "DataStorageSizeGb": 200,
+        "MasterMaxMemoryGb": 12,
+        "MasterStorageSizeGb": 5,
+
+        "EnableMessageQueue": false,
+
+        "EsStorageClass": "",
+        "MqStorageClass": "",
+
+        //
+        // analytics subsystem endpoints
+        //
+        "AnalyticsIngestionEndpoint": "ai.my.domain.com",
+        "AnalyticsClientEndpoint": "ac.my.domain.com"
+    },
+
+    //
+    // Portal subsystem
+    //
+    "Portal": {
+        //
+        // portal subsystem name
+        //
+        "SubsysName": "ptl",
+
+        //
+        // extra values file for the portal subsystem chart
+        //
+        "ExtraValuesFile": "ptl-values.yaml",
+
+        //
+        // extra values for the portal subsystem chart
+        //
+        "ExtraValues": {},
+
+        //
+        // Portal backup configuration.
+        // If BackupProtocol is empty, backup configuration is skipped.
+        //
+        "SiteBackup": {
+            //
+            // Backup protocol. 
+            // For the sftp protocol, specify Backup* parameters. For the objstore protocol specify Objstore* parameters.
+            //
+            "BackupProtocol": "sftp|objstore",
+            "BackupAuthUser": "admin",
+            "BackupAuthPass": "secret",
+            "BackupHost": "backup.my.domain.com",
+            "BackupPort": 1022,
+            "BackupPath": "/backup",
+            "ObjstoreS3SecretKeyId": "",
+            "ObjstoreS3SecretAccessKey": "",
+            "ObjstoreEndpointRegion": "",
+            "ObjstoreBucketSubfolder": "",
+            "BackupEncoding": "min(0-59) hour(0-23) dayofmonth(1-31) month(1-12) dayofweek(0-6)",
+            "BackupSchedule": "0 0 * * 0"
+        },
+
+        "WwwStorageSizeGb": 5,
+        "BackupStorageSizeGb": 5,
+        "DbStorageSizeGb": 12,
+
+        //
+        // parameters that can not be changed for the portal subsystem
+        //
+        "Fixed": {
+            "DbLogsStorageSizeGb": 2,
+            "AdminStorageSizeGb": 1
+        },
+
+        //
+        // portal subsystem endpoints
+        //
+        "PortalAdmin": "padmin.my.domain.com",
+        "PortalWWW": "portal.my.domain.com"
+    },
+
+    //
+    // Gateway subsystem
+    //
+    "Gateway": {
+        //
+        // Gateway subsystem name
+        //
+        "SubsysName": "gwy",
+
+        //
+        // gateway subsystem deployment mode
+        //
+        "Mode": "dev",
+
+        //
+        // extra values file for the gateway subsystem chart
+        //
+        "ExtraValuesFile": "gwy-values.yaml",
+
+        //
+        // extra values for the gateway subsystem chart
+        //
+        "ExtraValues": {
+            "datapower": {
+                "webGuiManagementState": "enabled",
+                "apiDebugProbe": "enabled"
+            }
+        },
+
+        "LicenseVersion": "Production|Development",
+        "ImagePullPolicy": "IfNotPresent",
+
+        "ReplicaCount": 3,
+        "MaxCpu": 4,
+        "MaxMemoryGb": 6,
+
+        "V5ComatabilityMode": false,
+        "EnableTms": true,
+        "TmsPeeringStorageSizeGb": 10,
+        "EnableHighPerformancePeering": "true",
+
+        //
+        // Gateway subsystem endpoints
+        //
+        "ApiGateway": "gw.my.domain.com",
+        "ApicGwService": "gwd.my.domain.com"
+    }
+}
