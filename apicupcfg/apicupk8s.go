@@ -171,6 +171,9 @@ type SubsysK8s struct {
 	Analytics AlytSubsysK8s
 	Portal PtlSubsysK8s
 	Gateway GwSubsysK8s
+
+	// passive deployment, depend on active crypto
+	Passive bool
 }
 
 func LoadSubsysK8s(jsonConfigFile string) *SubsysK8s {
@@ -184,6 +187,8 @@ func LoadSubsysK8s(jsonConfigFile string) *SubsysK8s {
 	subsys.Gateway.copyDefaults(*subsys)
 	subsys.Analytics.copyDefaults(*subsys)
 	subsys.Portal.copyDefaults(*subsys)
+
+	subsys.Certs.Passive = subsys.Passive
 
 	return subsys
 }

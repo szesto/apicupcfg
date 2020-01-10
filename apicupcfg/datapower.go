@@ -283,7 +283,7 @@ func datapowerOpensslConfig(subsys *SubsysVm, outputdir string, osenv OsEnv, tbo
 
 	// key-pair
 	outpath = fileName(outputdir, cs.CsrConf + osenv.ShellExt)
-	writeTemplate(keypairTemplate, outpath, OsEnvCert{OsEnv: osenv, CertSpec: cs})
+	writeTemplate(keypairTemplate, outpath, OsEnvCert{OsEnv: osenv, CertSpec: cs, Passive: subsys.Passive})
 
 /*
 	// api gateway

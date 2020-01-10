@@ -31,6 +31,7 @@ type OsEnvCerts struct {
 type OsEnvCert struct {
 	OsEnv OsEnv
 	CertSpec CertSpec
+	Passive bool
 }
 
 type Certbot struct {
@@ -65,6 +66,7 @@ type Certs struct {
 	etCertSpecGwy CertSpec
 
 	OsEnv
+	Passive bool
 }
 
 // subsystem certs
@@ -367,7 +369,7 @@ func outputCerts(certs *Certs, outfiles map[string]string, tag string, version s
 
 				// key-pair
 				outpath = fileName(concatSubdir(outfiles[outdir], outfiles[CustomCsrOutDir]), certSpec.CsrConf + osenv.ShellExt)
-				writeTemplate(keypairTemplate, outpath, OsEnvCert{OsEnv: osenv, CertSpec: certSpec})
+				writeTemplate(keypairTemplate, outpath, OsEnvCert{OsEnv: osenv, CertSpec: certSpec, Passive: certs.Passive})
 			}
 		}
 	}
@@ -382,7 +384,7 @@ func outputCerts(certs *Certs, outfiles map[string]string, tag string, version s
 
 				// key-pair
 				outpath = fileName(concatSubdir(outfiles[outdir], outfiles[CustomCsrOutDir]), certSpec.CsrConf + osenv.ShellExt)
-				writeTemplate(keypairTemplate, outpath, OsEnvCert{OsEnv: osenv, CertSpec: certSpec})
+				writeTemplate(keypairTemplate, outpath, OsEnvCert{OsEnv: osenv, CertSpec: certSpec, Passive: certs.Passive})
 			}
 		}
 	}
@@ -397,7 +399,7 @@ func outputCerts(certs *Certs, outfiles map[string]string, tag string, version s
 
 				// key-pair
 				outpath = fileName(concatSubdir(outfiles[outdir], outfiles[CommonCsrOutDir]), certSpec.CsrConf + osenv.ShellExt)
-				writeTemplate(keypairTemplate, outpath, OsEnvCert{OsEnv: osenv, CertSpec: certSpec})
+				writeTemplate(keypairTemplate, outpath, OsEnvCert{OsEnv: osenv, CertSpec: certSpec, Passive: certs.Passive})
 			}
 		}
 
@@ -410,7 +412,7 @@ func outputCerts(certs *Certs, outfiles map[string]string, tag string, version s
 
 				// key-pair
 				outpath = fileName(concatSubdir(outfiles[outdir], outfiles[CommonCsrOutDir]), certSpec.CsrConf + osenv.ShellExt)
-				writeTemplate(keypairTemplate, outpath, OsEnvCert{OsEnv: osenv, CertSpec: certSpec})
+				writeTemplate(keypairTemplate, outpath, OsEnvCert{OsEnv: osenv, CertSpec: certSpec, Passive: certs.Passive})
 			}
 		}
 	}
@@ -514,7 +516,7 @@ func outputCerts(certs *Certs, outfiles map[string]string, tag string, version s
 
 			// key-pair
 			outpath = fileName(concatSubdir(outfiles[outdir], outfiles[SharedCsrOutDir]), certSpec.CsrConf + osenv.ShellExt)
-			writeTemplate(keypairTemplate, outpath, OsEnvCert{OsEnv: osenv, CertSpec: certSpec})
+			writeTemplate(keypairTemplate, outpath, OsEnvCert{OsEnv: osenv, CertSpec: certSpec, Passive: certs.Passive})
 
 			// ptl
 			certSpec = certs.etCertSpecPtl
@@ -525,7 +527,7 @@ func outputCerts(certs *Certs, outfiles map[string]string, tag string, version s
 
 			// key-pair
 			outpath = fileName(concatSubdir(outfiles[outdir], outfiles[SharedCsrOutDir]), certSpec.CsrConf + osenv.ShellExt)
-			writeTemplate(keypairTemplate, outpath, OsEnvCert{OsEnv: osenv, CertSpec: certSpec})
+			writeTemplate(keypairTemplate, outpath, OsEnvCert{OsEnv: osenv, CertSpec: certSpec, Passive: certs.Passive})
 
 			// combine public-user-facing key and csr scripts
 			certmap := make(map[string]CertSpec)
@@ -557,7 +559,7 @@ func outputCerts(certs *Certs, outfiles map[string]string, tag string, version s
 
 			// key-pair
 			outpath = fileName(concatSubdir(outfiles[outdir], outfiles[SharedCsrOutDir]), certSpec.CsrConf + osenv.ShellExt)
-			writeTemplate(keypairTemplate, outpath, OsEnvCert{OsEnv: osenv, CertSpec: certSpec})
+			writeTemplate(keypairTemplate, outpath, OsEnvCert{OsEnv: osenv, CertSpec: certSpec, Passive: certs.Passive})
 
 			// combine public key and csr scripts
 			certmap := make(map[string]CertSpec)
@@ -584,7 +586,7 @@ func outputCerts(certs *Certs, outfiles map[string]string, tag string, version s
 
 			// key-pair
 			outpath = fileName(concatSubdir(outfiles[outdir], outfiles[SharedCsrOutDir]), certSpec.CsrConf + osenv.ShellExt)
-			writeTemplate(keypairTemplate, outpath, OsEnvCert{OsEnv: osenv, CertSpec: certSpec})
+			writeTemplate(keypairTemplate, outpath, OsEnvCert{OsEnv: osenv, CertSpec: certSpec, Passive: certs.Passive})
 
 			// combine mutual-auth key and csr scripts
 			certmap := make(map[string]CertSpec)

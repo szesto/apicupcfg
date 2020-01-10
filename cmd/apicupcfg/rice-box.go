@@ -180,9 +180,9 @@ func init() {
 	}
 	fileu := &embedded.EmbeddedFile{
 		Filename:    "keypair.tmpl",
-		FileModTime: time.Unix(1575410845, 0),
+		FileModTime: time.Unix(1578695101, 0),
 
-		Content: string("{{$pathsep := .OsEnv.PathSeparator}}\r\n{{$shellext := .OsEnv.ShellExt}}\r\n\r\n{{ template \"scriptheader1\" .OsEnv }}\r\n\r\n{{ if .OsEnv.IsWindows }}\r\n    IF EXIST {{.CertSpec.KeyFile}} (\r\necho Private key file {{.CertSpec.KeyFile}} already exists... Skip key pair and csr generation...\r\n    ) ELSE (\r\nopenssl req -config {{.CertSpec.CsrConf}} -out {{.CertSpec.CertFile}}.csr -outform PEM -new -keyout {{.CertSpec.KeyFile}}\r\nopenssl req -x509 -config {{.CertSpec.CsrConf}} -out {{.CertSpec.CertFile}}.self -outform PEM -new -key {{.CertSpec.KeyFile}}\r\n    )\r\n{{ else }}\r\n    if [[ -f {{.CertSpec.KeyFile}} ]]; then\r\necho Private key file {{.CertSpec.KeyFile}} already exists... Skip key pair and csr generation...\r\n    else\r\nopenssl req -config {{.CertSpec.CsrConf}} -out {{.CertSpec.CertFile}}.csr -outform PEM -new -keyout {{.CertSpec.KeyFile}}\r\nopenssl req -x509 -config {{.CertSpec.CsrConf}} -out {{.CertSpec.CertFile}}.self -outform PEM -new -key {{.CertSpec.KeyFile}}\r\n    fi\r\n{{ end }}\r\n"),
+		Content: string("{{$pathsep := .OsEnv.PathSeparator}}\r\n{{$shellext := .OsEnv.ShellExt}}\r\n\r\n{{ template \"scriptheader1\" .OsEnv }}\r\n\r\n{{ if .OsEnv.IsWindows }}\r\n    {{ if .Passive }}\r\n        IF NOT EXIST {{.CertSpec.KeyFile}} (\r\n        echo Private key file {{.CertSpec.KeyFile}} does not exist... Skip csr generation...\r\n        ) ELSE (\r\n        openssl req -config {{.CertSpec.CsrConf}} -out {{.CertSpec.CertFile}}.csr -outform PEM -new -key {{.CertSpec.KeyFile}}\r\n        openssl req -x509 -config {{.CertSpec.CsrConf}} -out {{.CertSpec.CertFile}}.self -outform PEM -new -key {{.CertSpec.KeyFile}}\r\n        )\r\n    {{else}}\r\n        IF EXIST {{.CertSpec.KeyFile}} (\r\n        echo Private key file {{.CertSpec.KeyFile}} already exists... Skip key pair and csr generation...\r\n        ) ELSE (\r\n        openssl req -config {{.CertSpec.CsrConf}} -out {{.CertSpec.CertFile}}.csr -outform PEM -new -keyout {{.CertSpec.KeyFile}}\r\n        openssl req -x509 -config {{.CertSpec.CsrConf}} -out {{.CertSpec.CertFile}}.self -outform PEM -new -key {{.CertSpec.KeyFile}}\r\n        )\r\n    {{ end }}\r\n{{ else }}\r\n    {{ if .Passive }}\r\n        if [[ ! -f {{.CertSpec.KeyFile}} ]]; then\r\n        echo Private key file {{.CertSpec.KeyFile}} does not exist... Skip csr generation...\r\n        else\r\n        openssl req -config {{.CertSpec.CsrConf}} -out {{.CertSpec.CertFile}}.csr -outform PEM -new -key {{.CertSpec.KeyFile}}\r\n        openssl req -x509 -config {{.CertSpec.CsrConf}} -out {{.CertSpec.CertFile}}.self -outform PEM -new -key {{.CertSpec.KeyFile}}\r\n        fi\r\n    {{ else }}\r\n        if [[ -f {{.CertSpec.KeyFile}} ]]; then\r\n        echo Private key file {{.CertSpec.KeyFile}} already exists... Skip key pair and csr generation...\r\n        else\r\n        openssl req -config {{.CertSpec.CsrConf}} -out {{.CertSpec.CertFile}}.csr -outform PEM -new -keyout {{.CertSpec.KeyFile}}\r\n        openssl req -x509 -config {{.CertSpec.CsrConf}} -out {{.CertSpec.CertFile}}.self -outform PEM -new -key {{.CertSpec.KeyFile}}\r\n        fi\r\n    {{ end }}\r\n{{ end }}\r\n"),
 	}
 	filev := &embedded.EmbeddedFile{
 		Filename:    "management-k8s.tmpl",
@@ -236,7 +236,7 @@ func init() {
 	// define dirs
 	dir1 := &embedded.EmbeddedDir{
 		Filename:   "",
-		DirModTime: time.Unix(1576204557, 0),
+		DirModTime: time.Unix(1578695101, 0),
 		ChildFiles: []*embedded.EmbeddedFile{
 			file2,  // "analytics-k8s.tmpl"
 			file3,  // "analytics-vm.tmpl"
@@ -285,7 +285,7 @@ func init() {
 	// register embeddedBox
 	embedded.RegisterEmbeddedBox(`../../templates`, &embedded.EmbeddedBox{
 		Name: `../../templates`,
-		Time: time.Unix(1576204557, 0),
+		Time: time.Unix(1578695101, 0),
 		Dirs: map[string]*embedded.EmbeddedDir{
 			"": dir1,
 		},

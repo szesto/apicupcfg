@@ -382,6 +382,7 @@ type SubsysVm struct {
 	Tag string
 
 	UseVersion bool // use version for the apic executable
+	Passive bool // passive site deployment, crypto depends on active site
 
 	// defaults
 	Mode string // dev|standard
@@ -470,6 +471,9 @@ func LoadSubsysVm(jsonConfigFile string) *SubsysVm {
 	if isPortal {
 		subsys.Portal.copyDefaults(*subsys)
 	}
+
+	// copy certs defaults
+	subsys.Certs.Passive = subsys.Passive
 
 	return subsys
 }
