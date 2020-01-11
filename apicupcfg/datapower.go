@@ -89,7 +89,7 @@ type DpCryptoIdentCredentials struct {
 	Name string
 	CryptoKeyName string
 	CryptoCertName string
-	CaName string
+	CaCerts []string
 }
 
 func dpCryptoIndentCredentials(outdir, outfile string, dp DpCryptoIdentCredentials, tbox *rice.Box) {
@@ -250,6 +250,15 @@ type OsEnvSomaSpecs struct {
 	ReqSpecs []SomaSpec
 }
 
+type DpWebGui struct {
+	IdleTimeout int
+	SSLServer string
+}
+
+func dpWebGui(outdir, outfile string, dp DpWebGui, tbox *rice.Box) {
+	dpWriteTemplate(outdir, outfile, dp, "dp-web-gui.tmpl", tbox)
+}
+
 func datapowerOpensslConfig(subsys *SubsysVm, outputdir string, osenv OsEnv, tbox *rice.Box) {
 
 	// parse templates
@@ -314,6 +323,82 @@ func datapowerOpensslConfig(subsys *SubsysVm, outputdir string, osenv OsEnv, tbo
 	writeTemplate(combinedCsrTemplate, outpath, OsEnvCerts{OsEnv: osenv, CertSpecs: certmap})
 }
 
+func datapowerWebGuiConfig(gwy *GwySubsysVm, outputdir string, tbox *rice.Box) {
+
+	dpdomain := "default" // web-gui: always default domain
+
+	// crypto-key
+	dpcryptokey := DpCryptoKey{
+		Domain:        dpdomain,
+		CryptoKeyName: "web-gui-crypto-key", //gwy.GetGwdKeyOrDefault(),
+		CryptoKeyFile: fmt.Sprintf("%s:///%s.pem",
+			gwy.GetCryptoDirectoryOrDefault(), gwy.GetGwdKeyOrDefault()),
+	}
+	outfile := fmt.Sprintf("%s", "dp-web-gui-crypto-key.xml")
+	dpCryptoKey(outputdir, outfile, dpcryptokey, tbox)
+
+	// crypto certificate
+	dpcryptocert := DpCryptoCertificate{
+		Domain:         dpdomain,
+		CryptoCertName: "web-gui-crypto-cert", //fmt.Sprintf("%s", gwy.GetGwdCertOrDefault()),
+		CryptoCertFile: fmt.Sprintf("%s:///%s.pem",
+			gwy.GetCryptoDirectoryOrDefault(), gwy.GetGwdCertOrDefault()),
+	}
+	outfile = fmt.Sprintf("%s", "dp-web-gui-crypto-cert.xml")
+	dpCryptoCertificate(outputdir, outfile, dpcryptocert, tbox)
+
+	// crypto cert - ca
+	dpcryptocert = DpCryptoCertificate{
+		Domain:         dpdomain,
+		CryptoCertName: "web-gui-crypto-cert-ca", //fmt.Sprintf("%s", gwy.GetCaCertOrDefault()),
+		CryptoCertFile: fmt.Sprintf("%s:///%s.pem",
+			gwy.GetCryptoDirectoryOrDefault(), gwy.GetCaCertOrDefault()),
+	}
+	outfile = fmt.Sprintf("%s", "dp-web-gui-crypto-cert-ca.xml")
+	dpCryptoCertificate(outputdir, outfile, dpcryptocert, tbox)
+
+	// crypto cert - root ca
+	dpcryptocert = DpCryptoCertificate{
+		Domain:         dpdomain,
+		CryptoCertName: "web-gui-crypto-cert-root-ca",//fmt.Sprintf("%s", gwy.GetRootCertOrDefault()),
+		CryptoCertFile: fmt.Sprintf("%s:///%s.pem",
+			gwy.GetCryptoDirectoryOrDefault(), gwy.GetRootCertOrDefault()),
+	}
+	outfile = fmt.Sprintf("%s", "dp-web-gui-crypto-cert-root-ca.xml")
+	dpCryptoCertificate(outputdir, outfile, dpcryptocert, tbox)
+
+	// crypto identification credentials
+	dpidcreds := DpCryptoIdentCredentials{
+		Domain:         dpdomain,
+		Name:           "web-gui-crypto-id-creds", //gwdIdCred,
+		CryptoKeyName:  "web-gui-crypto-key", //gwy.GetGwdKeyOrDefault(),
+		CryptoCertName: "web-gui-crypto-cert", //fmt.Sprintf("%s_self", gwy.GetGwdCertOrDefault()),
+		CaCerts:         []string{"web-gui-crypto-cert-ca", "web-gui-crypto-cert-root-ca"},
+	}
+	outfile = fmt.Sprintf("%s", "dp-web-gui-crypto-id-creds.xml")
+	dpCryptoIndentCredentials(outputdir, outfile, dpidcreds, tbox)
+
+	// ssl-server
+	dpsslsrv := DpSSLServerProfile{
+		Domain:               dpdomain,
+		Name:                 "web-gui-ssl-server", //sslGwdServer, // gwd_server
+		CryptoIdentCreds: "web-gui-crypto-id-creds",
+		CryptoValCreds:   "", // no valcreds...
+	}
+
+	outfile = fmt.Sprintf("%s", "dp-web-gui-ssl-server.xml")
+	dpSSLServerProfile(outputdir, outfile, dpsslsrv, tbox)
+
+	// web-gui
+	dpwebgui := DpWebGui{
+		IdleTimeout:      gwy.GetWebGuiIdleTimeoutOrDefault(),
+		SSLServer: "web-gui-ssl-server",
+	}
+
+	outfile = fmt.Sprintf("%s", "dp-web-gui.xml")
+	dpWebGui(outputdir, outfile, dpwebgui, tbox)
+}
+
 func datapowerCryptoConfig(gwy *GwySubsysVm, outputdir string, tbox *rice.Box) {
 
 	dpdomain := gwy.GetDatapowerDomainOrDefault()
@@ -374,7 +459,7 @@ func datapowerCryptoConfig(gwy *GwySubsysVm, outputdir string, tbox *rice.Box) {
 		Name:           gwdIdCred,
 		CryptoKeyName:  gwy.GetGwdKeyOrDefault(),
 		CryptoCertName: fmt.Sprintf("%s_self", gwy.GetGwdCertOrDefault()),
-		CaName:         "",
+		CaCerts:         []string{},
 	}
 	outfile = fmt.Sprintf("%s", "dp-crypto-id-creds.xml")
 	dpCryptoIndentCredentials(outputdir, outfile, dpidcreds, tbox)
@@ -998,6 +1083,119 @@ func somaApiConnect(gwy *GwySubsysVm, dpoutdir string, osenv OsEnv, configFileNa
 	}
 }
 
+func somaWebGui(gwy *GwySubsysVm, dpoutdir string, osenv OsEnv, configFileName string, somaTemplate *template.Template) {
+
+	// crypto key
+	// crypto cert
+	// crypto cert ca
+	// crypto cert root ca
+	// crypto id creds
+	// ssl server
+	// web gui
+
+	for _, host := range gwy.Hosts {
+
+		if len(host.Name) == 0 {
+			continue
+		}
+
+		dpenv := "dp.env"
+		url := somaServiceUrl(host.Name)
+
+		setfileSpecs := make([]SomaSpec, 0)
+		reqSpecs := make([]SomaSpec, 0)
+
+		// crypto key
+		reqSpecs = append(reqSpecs, SomaSpec{
+			Req:    somaPref() + fmt.Sprintf("%s", "dp-web-gui-crypto-key.xml"),
+			File:   "",
+			Dpdir:  "",
+			Dpfile: "",
+			Auth:   dpenv,
+			Url:    url,
+		})
+
+		// crypto cert
+		reqSpecs = append(reqSpecs, SomaSpec{
+			Req:    somaPref() + fmt.Sprintf("%s", "dp-web-gui-crypto-cert.xml"),
+			File:   "",
+			Dpdir:  "",
+			Dpfile: "",
+			Auth:   dpenv,
+			Url:    url,
+		})
+
+		// crypto cert ca
+		reqSpecs = append(reqSpecs, SomaSpec{
+			Req:    somaPref() + fmt.Sprintf("%s", "dp-web-gui-crypto-cert-ca.xml"),
+			File:   "",
+			Dpdir:  "",
+			Dpfile: "",
+			Auth:   dpenv,
+			Url:    url,
+		})
+
+		// crypto cert root ca
+		reqSpecs = append(reqSpecs, SomaSpec{
+			Req:    somaPref() + fmt.Sprintf("%s", "dp-web-gui-crypto-cert-root-ca.xml"),
+			File:   "",
+			Dpdir:  "",
+			Dpfile: "",
+			Auth:   dpenv,
+			Url:    url,
+		})
+
+		// crypto id creds
+		reqSpecs = append(reqSpecs, SomaSpec{
+			Req:    somaPref() + fmt.Sprintf("%s", "dp-web-gui-crypto-id-creds.xml"),
+			File:   "",
+			Dpdir:  "",
+			Dpfile: "",
+			Auth:   dpenv,
+			Url:    url,
+		})
+
+		// ssl server
+		reqSpecs = append(reqSpecs, SomaSpec{
+			Req:    somaPref() + fmt.Sprintf("%s", "dp-web-gui-ssl-server.xml"),
+			File:   "",
+			Dpdir:  "",
+			Dpfile: "",
+			Auth:   dpenv,
+			Url:    url,
+		})
+
+		// web gui
+		reqSpecs = append(reqSpecs, SomaSpec{
+			Req:    somaPref() + fmt.Sprintf("%s", "dp-web-gui.xml"),
+			File:   "",
+			Dpdir:  "",
+			Dpfile: "",
+			Auth:   dpenv,
+			Url:    url,
+		})
+
+		// save configuration for the default domain
+		reqSpecs = append(reqSpecs, SomaSpec{
+			Req:    somaPref() + fmt.Sprintf("dp-save-config-%s.xml", "default"),
+			File:   "",
+			Dpdir:  "",
+			Dpfile: "",
+			Auth:   dpenv,
+			Url:    url,
+		})
+
+		// write soma script for a host
+		outpath := dpoutdir + osenv.PathSeparator + "zoma-web-gui-" + dot2dash(host.Name) + osenv.ShellExt
+		writeTemplate(somaTemplate, outpath, OsEnvSomaSpecs{
+			OsEnv:        osenv,
+			Config:	configFileName,
+			SetFileSpecs: setfileSpecs,
+			ReqSpecs:     reqSpecs,
+		})
+	}
+}
+
 func datapowerCluster(subsys *SubsysVm, outfiles map[string]string, tbox *rice.Box) {
 
 	// parse templates
@@ -1091,7 +1289,8 @@ func datapowerCluster(subsys *SubsysVm, outfiles map[string]string, tbox *rice.B
 	dpSSLClientProfile(somaoutdir, outfile, dpsslclient, tbox)
 
 	// gateway peering
-	datapowerGatewayPeeringConfig(&gwy, somaoutdir, tbox)
+	// todo: handle error
+	_ = datapowerGatewayPeeringConfig(&gwy, somaoutdir, tbox)
 
 	// gateway peering manager: default
 	peeringmgr := DpGatewayPeeringManager{
@@ -1156,6 +1355,9 @@ func datapowerCluster(subsys *SubsysVm, outfiles map[string]string, tbox *rice.B
 	outfile = fmt.Sprintf("%s", "dp-crypto-ident-cred-modify.xml")
 	datapowerCryptoIdentCredModify(somaoutdir, outfile, dpcryptoidentcredmod, tbox)
 
+	// web-gui
+	datapowerWebGuiConfig(&gwy, somaoutdir, tbox)
+
 	// write out soma scripts...
 
 	// soma crypto self-signed scripts
@@ -1166,4 +1368,7 @@ func datapowerCluster(subsys *SubsysVm, outfiles map[string]string, tbox *rice.B
 
 	// soma crypto update scripts
 	somaCryptoUpdate(&subsys.Gateway, dpoutdir, osenv, subsys.configFileName, somaTemplate)
+
+	// soma web-gui scripts
+	somaWebGui(&subsys.Gateway, dpoutdir, osenv, subsys.configFileName, somaTemplate)
 }

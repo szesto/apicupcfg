@@ -9,7 +9,10 @@
                     <mAdminState>enabled</mAdminState>
                     <Key>{{.CryptoKeyName}}</Key>
                     <Certificate>{{.CryptoCertName}}</Certificate>
-                    <CA>{{.CaName}}</CA>
+                    {{- range .CaCerts}}
+                    {{- $ca:=.}}
+                    <CA>{{- $ca}}</CA>
+                    {{- end}}
                 </CryptoIdentCred>
             </ma:set-config>
         </ma:request>

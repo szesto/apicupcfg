@@ -1,0 +1,15 @@
+<SOAP-ENV:Envelope xmlns:SOAP-ENV="http://schemas.xmlsoap.org/soap/envelope/"
+                   xmlns:ma="http://www.datapower.com/schemas/management">
+    <SOAP-ENV:Header/>
+    <SOAP-ENV:Body>
+        <ma:request domain="default">
+            <ma:modify-config>
+                <WebGUI>
+                    <mAdminState>enabled</mAdminState>
+                    <IdleTimeout>{{.IdleTimeout}}</IdleTimeout>
+                    <SSLServer>{{.SSLServer}}</SSLServer>
+                </WebGUI>
+            </ma:modify-config>
+        </ma:request>
+    </SOAP-ENV:Body>
+</SOAP-ENV:Envelope>

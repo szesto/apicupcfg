@@ -185,6 +185,8 @@ type GwySubsysVm struct {
 	SubsysName string
 	Mode string
 
+	WebGuiIdleTimeout int
+
 	SearchDomains []string
 	DnsServers []string
 	Hosts []HostGateway
@@ -241,6 +243,12 @@ type GwySubsysVm struct {
 	// apic_ca_cert, apic_root_cert
 	DatapowerCaCert string
 	DatapowerRootCert string
+}
+
+func (gwy *GwySubsysVm) GetWebGuiIdleTimeoutOrDefault() int {
+	webGuiIdleTimeoutDefault := 600
+	if gwy.WebGuiIdleTimeout == 0 { return webGuiIdleTimeoutDefault }
+	return gwy.WebGuiIdleTimeout
 }
 
 func (gwy *GwySubsysVm) GetCryptoDirectoryOrDefault() string {
