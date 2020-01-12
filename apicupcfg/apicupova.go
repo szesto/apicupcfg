@@ -236,13 +236,20 @@ type GwySubsysVm struct {
 	// gwd_cert
 	DatapowerGwdCert string
 
-	// ca, root-ca
+	// ca, root-ca, ca-chain (ca+root-ca)
 	CaFile string
 	RootCaFile string
+	CaChainFile string
 
 	// apic_ca_cert, apic_root_cert
 	DatapowerCaCert string
 	DatapowerRootCert string
+}
+
+func (gwy *GwySubsysVm) GetCaChainFileOrDefault() string {
+	caChainDefault := "dp-ca-chain.pem"
+	if len(gwy.CaChainFile) == 0 { return caChainDefault }
+	return gwy.CaChainFile
 }
 
 func (gwy *GwySubsysVm) GetWebGuiIdleTimeoutOrDefault() int {
@@ -390,7 +397,7 @@ type SubsysVm struct {
 	Tag string
 
 	UseVersion bool // use version for the apic executable
-	Passive bool // passive site deployment, crypto depends on active site
+	Passive bool // passive site deployment, import crypto from active site
 
 	// defaults
 	Mode string // dev|standard

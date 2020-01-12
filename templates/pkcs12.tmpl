@@ -1,0 +1,3 @@
+{{ template "scriptheader1" .OsEnv }}
+
+openssl pkcs12 -inkey {{.CertSpec.KeyFile}} -in {{.CertSpec.CertFile}} -export -out {{.CertSpec.KeyFile}}.p12 -CAfile {{.CertSpec.CaFile}} -chain

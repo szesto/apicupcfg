@@ -5,13 +5,15 @@ import (
 	"os"
 )
 
-func CertConcat(cacertfile string, rootcafile string, outfile string, outdir,
-	commoncsrdir, customcsrdir string, configfile string) error {
+func CertConcat(cacertfile string, rootcafile string, outfile string, basedir string, outdirs ...string) error {
 
 	// make sure output file is defined
 	if len(outfile) == 0 {
-		return fmt.Errorf("cert-concat... output ca file name is empty, value required... check Certs.CaFile parameter in the config file '%s'\n",
-			configfile)
+		return fmt.Errorf("cert-concat... output ca bundle file name is empty...\n")
+	}
+
+	if len(outdirs) == 0 {
+		return fmt.Errorf("cert-concat... list of output directories is empty...\n")
 	}
 
 	// verify ca cert file
@@ -25,15 +27,12 @@ func CertConcat(cacertfile string, rootcafile string, outfile string, outdir,
 	}
 
 	// concatenate
-	dstfile := outdir + string(os.PathSeparator) + commoncsrdir + string(os.PathSeparator) + outfile
+	for _, dir := range outdirs {
+		dstfile := basedir + string(os.PathSeparator) + dir + string(os.PathSeparator) + outfile
 
-	fmt.Printf("concat ca cert '%s' and root cert '%s' into '%s'\n", cacertfile, rootcafile, dstfile)
-	concatFiles(cacertfile, rootcafile, dstfile)
-
-	dstfile = outdir + string(os.PathSeparator) + customcsrdir + string(os.PathSeparator) + outfile
-
-	fmt.Printf("concat ca cert '%s' and root cert '%s' into '%s'\n", cacertfile, rootcafile, dstfile)
-	concatFiles(cacertfile, rootcafile, dstfile)
+		fmt.Printf("concat ca cert '%s' and root cert '%s' into '%s'\n", cacertfile, rootcafile, dstfile)
+		concatFiles(cacertfile, rootcafile, dstfile)
+	}
 
 	return nil
 }

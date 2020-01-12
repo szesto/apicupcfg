@@ -265,6 +265,7 @@ func datapowerOpensslConfig(subsys *SubsysVm, outputdir string, osenv OsEnv, tbo
 	ekuServerClient := parseTemplate(tbox, tpdir(tbox) + "csr-server-client-eku.tmpl")
 	keypairTemplate := parseTemplates(tbox, tpdir(tbox) + "keypair.tmpl", tpdir(tbox) + "helpers.tmpl")
 	combinedCsrTemplate := parseTemplates(tbox, tpdir(tbox) + "combined-csr.tmpl", tpdir(tbox) + "helpers.tmpl")
+	p12Template := parseTemplates(tbox, tpdir(tbox) + "pkcs12.tmpl", tpdir(tbox) + "helpers.tmpl")
 
 	certmap := make(map[string]CertSpec)
 
@@ -293,6 +294,12 @@ func datapowerOpensslConfig(subsys *SubsysVm, outputdir string, osenv OsEnv, tbo
 	// key-pair
 	outpath = fileName(outputdir, cs.CsrConf + osenv.ShellExt)
 	writeTemplate(keypairTemplate, outpath, OsEnvCert{OsEnv: osenv, CertSpec: cs, Passive: subsys.Passive})
+
+	// p12
+	cs12 := cs
+	cs12.CaFile = subsys.Gateway.GetCaChainFileOrDefault()
+	outpath = fileName(outputdir, cs12.KeyFile + ".p12" + osenv.ShellExt)
+	writeTemplate(p12Template, outpath, OsEnvCert{OsEnv: osenv, CertSpec: cs12, Passive: subsys.Passive})
 
 /*
 	// api gateway

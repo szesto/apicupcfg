@@ -166,7 +166,7 @@ func main() {
 				// cert concat action
 
 				err = apicupcfg.CertConcat(cafile, rootcafile, subsysvm.Certs.CaFile, outdir,
-					apicupcfg.CommonCsrOutDir, apicupcfg.CustomCsrOutDir, input)
+					apicupcfg.CommonCsrOutDir, apicupcfg.CustomCsrOutDir)
 
 				if err != nil {
 					log.Fatal(err)
@@ -175,6 +175,13 @@ func main() {
 
 			} else if isDpCaCopyActionf() {
 				err = apicupcfg.CaCopy(cafile, rootcafile, subsysvm.Gateway.CaFile, subsysvm.Gateway.RootCaFile, outdir, apicupcfg.DatapowerOutDir, input)
+
+				if err != nil {
+					log.Fatal(err)
+
+				}
+
+				err = apicupcfg.CertConcat(cafile, rootcafile, subsysvm.Gateway.GetCaChainFileOrDefault(), outdir, apicupcfg.DatapowerOutDir)
 
 				if err != nil {
 					log.Fatal(err)

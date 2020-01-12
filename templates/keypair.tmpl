@@ -8,8 +8,12 @@
         IF NOT EXIST {{.CertSpec.KeyFile}} (
         echo Private key file {{.CertSpec.KeyFile}} does not exist... Skip csr generation...
         ) ELSE (
-        openssl req -config {{.CertSpec.CsrConf}} -out {{.CertSpec.CertFile}}.csr -outform PEM -new -key {{.CertSpec.KeyFile}}
-        openssl req -x509 -config {{.CertSpec.CsrConf}} -out {{.CertSpec.CertFile}}.self -outform PEM -new -key {{.CertSpec.KeyFile}}
+            IF EXIST {{.CertSpec.CertFile}}.csr (
+            echo Csr file {{.CertSpec.CertFile}}.csr already exists... Skip csr generation...
+            ) ELSE (
+            openssl req -config {{.CertSpec.CsrConf}} -out {{.CertSpec.CertFile}}.csr -outform PEM -new -key {{.CertSpec.KeyFile}}
+            openssl req -x509 -config {{.CertSpec.CsrConf}} -out {{.CertSpec.CertFile}}.self -outform PEM -new -key {{.CertSpec.KeyFile}}
+            )
         )
     {{else}}
         IF EXIST {{.CertSpec.KeyFile}} (
@@ -23,6 +27,8 @@
     {{ if .Passive }}
         if [[ ! -f {{.CertSpec.KeyFile}} ]]; then
         echo Private key file {{.CertSpec.KeyFile}} does not exist... Skip csr generation...
+        elif [[ -f {{.CertSpec.CertFile}}.csr ]]; then
+        echo Csr file {{.CertSpec.CertFile}}.csr already exists... Skip csr generation...
         else
         openssl req -config {{.CertSpec.CsrConf}} -out {{.CertSpec.CertFile}}.csr -outform PEM -new -key {{.CertSpec.KeyFile}}
         openssl req -x509 -config {{.CertSpec.CsrConf}} -out {{.CertSpec.CertFile}}.self -outform PEM -new -key {{.CertSpec.KeyFile}}
