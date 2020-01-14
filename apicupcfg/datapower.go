@@ -50,17 +50,17 @@ type DpFile struct {
 	FileContent string
 }
 
-func dpSetFile(outdir, outfile, dpdomain, dpdir, dpfile string, tbox *rice.Box) {
-
-	dp := DpFile{
-		Domain:      dpdomain,
-		Directory:   dpdir,
-		FileName:    dpfile,
-		FileContent: "hello",
-	}
-
-	dpWriteTemplate(outdir, outfile, dp, "dp-set-file.tmpl", tbox)
-}
+//func dpSetFile(outdir, outfile, dpdomain, dpdir, dpfile string, tbox *rice.Box) {
+//
+//	dp := DpFile{
+//		Domain:      dpdomain,
+//		Directory:   dpdir,
+//		FileName:    dpfile,
+//		FileContent: "hello",
+//	}
+//
+//	dpWriteTemplate(outdir, outfile, dp, "dp-set-file.tmpl", tbox)
+//}
 
 type DpCryptoKey struct {
 	Domain string
@@ -277,11 +277,20 @@ func datapowerOpensslConfig(subsys *SubsysVm, outputdir string, osenv OsEnv, tbo
 	// add api gateway to alt cns
 	cs.AltCns = append(cs.AltCns, subsys.Gateway.ApiGateway)
 
+	// add datpower hosts to alt cns
 	for _, host := range subsys.Gateway.Hosts {
 		if len(host.Name) == 0 {
 			continue
 		}
 		cs.AltCns = append(cs.AltCns, host.Name)
+	}
+
+	// add passive datapower cluster to alt cns
+	for _, hostname := range subsys.Gateway.PassiveDatapowerCluster {
+		if len(hostname) == 0 {
+			continue
+		}
+		cs.AltCns = append(cs.AltCns, hostname)
 	}
 
 	// save cert-spec in combined cert-map
@@ -297,7 +306,6 @@ func datapowerOpensslConfig(subsys *SubsysVm, outputdir string, osenv OsEnv, tbo
 
 	// p12
 	cs12 := cs
-	cs12.CaFile = subsys.Gateway.GetCaChainFileOrDefault()
 	outpath = fileName(outputdir, cs12.KeyFile + ".p12" + osenv.ShellExt)
 	writeTemplate(p12Template, outpath, OsEnvCert{OsEnv: osenv, CertSpec: cs12, Passive: subsys.Passive})
 
@@ -338,8 +346,7 @@ func datapowerWebGuiConfig(gwy *GwySubsysVm, outputdir string, tbox *rice.Box) {
 	dpcryptokey := DpCryptoKey{
 		Domain:        dpdomain,
 		CryptoKeyName: "web-gui-crypto-key", //gwy.GetGwdKeyOrDefault(),
-		CryptoKeyFile: fmt.Sprintf("%s:///%s.pem",
-			gwy.GetCryptoDirectoryOrDefault(), gwy.GetGwdKeyOrDefault()),
+		CryptoKeyFile: fmt.Sprintf("%s:///%s.pem", gwy.GetCryptoDirectoryOrDefault(), gwy.GetGwdKeyOrDefault()),
 	}
 	outfile := fmt.Sprintf("%s", "dp-web-gui-crypto-key.xml")
 	dpCryptoKey(outputdir, outfile, dpcryptokey, tbox)
@@ -348,8 +355,7 @@ func datapowerWebGuiConfig(gwy *GwySubsysVm, outputdir string, tbox *rice.Box) {
 	dpcryptocert := DpCryptoCertificate{
 		Domain:         dpdomain,
 		CryptoCertName: "web-gui-crypto-cert", //fmt.Sprintf("%s", gwy.GetGwdCertOrDefault()),
-		CryptoCertFile: fmt.Sprintf("%s:///%s.pem",
-			gwy.GetCryptoDirectoryOrDefault(), gwy.GetGwdCertOrDefault()),
+		CryptoCertFile: fmt.Sprintf("%s:///%s.pem", gwy.GetCryptoDirectoryOrDefault(), gwy.GetGwdCertOrDefault()),
 	}
 	outfile = fmt.Sprintf("%s", "dp-web-gui-crypto-cert.xml")
 	dpCryptoCertificate(outputdir, outfile, dpcryptocert, tbox)
@@ -358,8 +364,7 @@ func datapowerWebGuiConfig(gwy *GwySubsysVm, outputdir string, tbox *rice.Box) {
 	dpcryptocert = DpCryptoCertificate{
 		Domain:         dpdomain,
 		CryptoCertName: "web-gui-crypto-cert-ca", //fmt.Sprintf("%s", gwy.GetCaCertOrDefault()),
-		CryptoCertFile: fmt.Sprintf("%s:///%s.pem",
-			gwy.GetCryptoDirectoryOrDefault(), gwy.GetCaCertOrDefault()),
+		CryptoCertFile: fmt.Sprintf("%s:///%s.pem", gwy.GetCryptoDirectoryOrDefault(), gwy.GetCaCertOrDefault()),
 	}
 	outfile = fmt.Sprintf("%s", "dp-web-gui-crypto-cert-ca.xml")
 	dpCryptoCertificate(outputdir, outfile, dpcryptocert, tbox)
@@ -368,8 +373,7 @@ func datapowerWebGuiConfig(gwy *GwySubsysVm, outputdir string, tbox *rice.Box) {
 	dpcryptocert = DpCryptoCertificate{
 		Domain:         dpdomain,
 		CryptoCertName: "web-gui-crypto-cert-root-ca",//fmt.Sprintf("%s", gwy.GetRootCertOrDefault()),
-		CryptoCertFile: fmt.Sprintf("%s:///%s.pem",
-			gwy.GetCryptoDirectoryOrDefault(), gwy.GetRootCertOrDefault()),
+		CryptoCertFile: fmt.Sprintf("%s:///%s.pem", gwy.GetCryptoDirectoryOrDefault(), gwy.GetRootCertOrDefault()),
 	}
 	outfile = fmt.Sprintf("%s", "dp-web-gui-crypto-cert-root-ca.xml")
 	dpCryptoCertificate(outputdir, outfile, dpcryptocert, tbox)
@@ -414,8 +418,7 @@ func datapowerCryptoConfig(gwy *GwySubsysVm, outputdir string, tbox *rice.Box) {
 	dpcryptokey := DpCryptoKey{
 		Domain:        dpdomain,
 		CryptoKeyName: gwy.GetGwdKeyOrDefault(),
-		CryptoKeyFile: fmt.Sprintf("%s:///%s.pem",
-			gwy.GetCryptoDirectoryOrDefault(), gwy.GetGwdKeyOrDefault()),
+		CryptoKeyFile: fmt.Sprintf("%s:///%s.pem", gwy.GetCryptoDirectoryOrDefault(), gwy.GetGwdKeyOrDefault()),
 	}
 	outfile := fmt.Sprintf("%s", "dp-crypto-key.xml")
 	dpCryptoKey(outputdir, outfile, dpcryptokey, tbox)
@@ -424,8 +427,7 @@ func datapowerCryptoConfig(gwy *GwySubsysVm, outputdir string, tbox *rice.Box) {
 	dpcryptocert := DpCryptoCertificate{
 		Domain:         dpdomain,
 		CryptoCertName: fmt.Sprintf("%s_self", gwy.GetGwdCertOrDefault()),
-		CryptoCertFile: fmt.Sprintf("%s:///%s_self.pem",
-			gwy.GetCryptoDirectoryOrDefault(), gwy.GetGwdCertOrDefault()),
+		CryptoCertFile: fmt.Sprintf("%s:///%s_self.pem", gwy.GetCryptoDirectoryOrDefault(), gwy.GetGwdCertOrDefault()),
 	}
 	outfile = fmt.Sprintf("%s","dp-crypto-cert-self.xml")
 	dpCryptoCertificate(outputdir, outfile, dpcryptocert, tbox)
@@ -434,8 +436,7 @@ func datapowerCryptoConfig(gwy *GwySubsysVm, outputdir string, tbox *rice.Box) {
 	dpcryptocert = DpCryptoCertificate{
 		Domain:         dpdomain,
 		CryptoCertName: fmt.Sprintf("%s", gwy.GetGwdCertOrDefault()),
-		CryptoCertFile: fmt.Sprintf("%s:///%s.pem",
-			gwy.GetCryptoDirectoryOrDefault(), gwy.GetGwdCertOrDefault()),
+		CryptoCertFile: fmt.Sprintf("%s:///%s.pem", gwy.GetCryptoDirectoryOrDefault(), gwy.GetGwdCertOrDefault()),
 	}
 	outfile = fmt.Sprintf("%s", "dp-crypto-cert.xml")
 	dpCryptoCertificate(outputdir, outfile, dpcryptocert, tbox)
@@ -444,8 +445,7 @@ func datapowerCryptoConfig(gwy *GwySubsysVm, outputdir string, tbox *rice.Box) {
 	dpcryptocert = DpCryptoCertificate{
 		Domain:         dpdomain,
 		CryptoCertName: fmt.Sprintf("%s", gwy.GetCaCertOrDefault()),
-		CryptoCertFile: fmt.Sprintf("%s:///%s.pem",
-			gwy.GetCryptoDirectoryOrDefault(), gwy.GetCaCertOrDefault()),
+		CryptoCertFile: fmt.Sprintf("%s:///%s.pem", gwy.GetCryptoDirectoryOrDefault(), gwy.GetCaCertOrDefault()),
 	}
 	outfile = fmt.Sprintf("%s", "dp-crypto-cert-ca.xml")
 	dpCryptoCertificate(outputdir, outfile, dpcryptocert, tbox)
@@ -454,8 +454,7 @@ func datapowerCryptoConfig(gwy *GwySubsysVm, outputdir string, tbox *rice.Box) {
 	dpcryptocert = DpCryptoCertificate{
 		Domain:         dpdomain,
 		CryptoCertName: fmt.Sprintf("%s", gwy.GetRootCertOrDefault()),
-		CryptoCertFile: fmt.Sprintf("%s:///%s.pem",
-			gwy.GetCryptoDirectoryOrDefault(), gwy.GetRootCertOrDefault()),
+		CryptoCertFile: fmt.Sprintf("%s:///%s.pem", gwy.GetCryptoDirectoryOrDefault(), gwy.GetRootCertOrDefault()),
 	}
 	outfile = fmt.Sprintf("%s", "dp-crypto-cert-root-ca.xml")
 	dpCryptoCertificate(outputdir, outfile, dpcryptocert, tbox)
@@ -845,7 +844,7 @@ func somaCryptoUpdate(gwy *GwySubsysVm, dpoutdir string, osenv OsEnv, configFile
 
 		setfileSpecs = append(setfileSpecs, SomaSpec{
 			Req:    "",
-			File:   gwy.CaFile,
+			File:   dot2dash(gwy.ApicGwService) + ".issuing-ca.pem",
 			Dpdir:  gwy.GetCryptoDirectoryOrDefault(),
 			Dpfile: fmt.Sprintf("%s.pem", gwy.GetCaCertOrDefault()),
 			Dpdomain: "default",
@@ -855,7 +854,7 @@ func somaCryptoUpdate(gwy *GwySubsysVm, dpoutdir string, osenv OsEnv, configFile
 
 		setfileSpecs = append(setfileSpecs, SomaSpec{
 			Req:    "",
-			File:   gwy.RootCaFile,
+			File:   dot2dash(gwy.ApicGwService) + ".root-ca.pem",
 			Dpdir:  gwy.GetCryptoDirectoryOrDefault(),
 			Dpfile: fmt.Sprintf("%s.pem", gwy.GetRootCertOrDefault()),
 			Dpdomain: "default",

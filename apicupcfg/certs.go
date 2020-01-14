@@ -3,7 +3,6 @@ package apicupcfg
 import (
 	"fmt"
 	rice "github.com/GeertJohan/go.rice"
-	"strings"
 )
 
 type CertSpec struct {
@@ -44,7 +43,7 @@ type Certbot struct {
 type Certs struct {
 	DnFields []string
 	K8sNamespace string
-	CaFile string
+	//CaFile string
 
 	PublicUserFacingCerts bool
 	PublicCerts bool
@@ -56,9 +55,9 @@ type Certs struct {
 	MutualAuthEkuServerAuth map[string]CertSpec
 	CommonEkuClientAuth map[string]CertSpec
 
-	Certbot Certbot
+	//Certbot Certbot
 
-	SharedEndpointTrust bool
+	//SharedEndpointTrust bool
 
 	etCertSpecMgt CertSpec
 	etCertSpecPtl CertSpec
@@ -110,23 +109,25 @@ func updateCertSpec(certs *Certs, subsysName string, certName string, certSpec *
 		certSpec.K8sNamespace = certs.K8sNamespace
 	}
 
+	// ca chain file: issuing-ca + root-ca
 	if len(certSpec.CaFile) == 0 {
-		certSpec.CaFile = certs.CaFile
+		//certSpec.CaFile = certs.CaFile
+		certSpec.CaFile = dot2dash(certSpec.Cn) + ".chain.pem"
 	}
 
 	certSpec.SubsysName = subsysName
 
 	// default file names
 	if len(certSpec.CsrConf) == 0 {
-		certSpec.CsrConf = strings.ReplaceAll(certSpec.Cn, ".", "-") + ".conf"
+		certSpec.CsrConf = dot2dash(certSpec.Cn) + ".conf"
 	}
 
 	if len(certSpec.KeyFile) == 0 {
-		certSpec.KeyFile = strings.ReplaceAll(certSpec.Cn, ".", "-") + ".key"
+		certSpec.KeyFile = dot2dash(certSpec.Cn) + ".key"
 	}
 
 	if len(certSpec.CertFile) == 0 {
-		certSpec.CertFile = strings.ReplaceAll(certSpec.Cn, ".", "-") + ".crt"
+		certSpec.CertFile = dot2dash(certSpec.Cn) + ".crt"
 	}
 
 	if len(certSpec.CsrSubdir) == 0 {
@@ -145,8 +146,9 @@ func updateCertSpec(certs *Certs, subsysName string, certName string, certSpec *
 		certSpec.CaSubdir = csrSubdir
 	}
 
-	// todo: reallocate existing alt-cns
-	certSpec.AltCns = make([]string, 0, 50)
+	// alt-cns
+	certSpec.AltCns = make([]string, 0, 500)
+
 }
 
 func createCertMaps(certs *Certs) {
@@ -284,10 +286,10 @@ func updateCertSpecs(certs *Certs, mgmt ManagementSubsysDescriptor, alyt Analyti
 		certmap[CertKeyAnalyticsClientIngress] = certSpec
 	}
 
-	// shared endpoint trust
-	if certs.SharedEndpointTrust {
-		setupSharedEndpointTrust(certs, mgmt, alyt, ptl, gwy, commonCsrOutDir, customCsrOutDir)
-	}
+	//// shared endpoint trust
+	//if certs.SharedEndpointTrust {
+	//	setupSharedEndpointTrust(certs, mgmt, alyt, ptl, gwy, commonCsrOutDir, customCsrOutDir)
+	//}
 }
 
 func setupSharedEndpointTrust(certs *Certs, mgmt ManagementSubsysDescriptor, alyt AnalyticsSubsysDescriptor,
@@ -461,152 +463,152 @@ func outputCerts(certs *Certs, outfiles map[string]string, tag string, version s
 		writeTemplate(subsysCertsTemplate, outpath, OsEnvCerts{OsEnv: osenv, CertSpecs: certs.CommonEkuClientAuth})
 	}
 
-	if len(certs.Certbot.CertDir) > 0 {
+	//if len(certs.Certbot.CertDir) > 0 {
+	//
+	//	updateFromCertbot := func(certs map[string]CertSpec, certbot Certbot) map[string]CertSpec {
+	//		cbmap := make(map[string]CertSpec)
+	//		for cname, cs := range certs {
+	//			cs.CsrSubdir = certbot.CertDir
+	//			cs.CertSubdir = certbot.CertDir
+	//			cs.KeySubdir = certbot.CertDir
+	//			cs.CaSubdir = certbot.CertDir
+	//			cs.KeyFile = certbot.Key
+	//			cs.CertFile = certbot.Cert
+	//			cs.CaFile = certbot.CaChain
+	//			cbmap[cname] = cs
+	//		}
+	//		return cbmap
+	//	}
+	//
+	//	// apicup certs user-facing-public certbot
+	//	if certs.PublicUserFacingCerts {
+	//		cbmap := updateFromCertbot(certs.PublicUserFacingEkuServerAuth, certs.Certbot)
+	//		outpath = fileName(outfiles["outdir"], tagOutputFileName(outfiles[certbotUserFacingPublicCertOut], tag)) + osenv.ShellExt
+	//		writeTemplate(subsysCertsTemplate, outpath, OsEnvCerts{OsEnv: osenv, CertSpecs: cbmap})
+	//	}
+	//
+	//	// apicup certs public certbot
+	//	if certs.PublicCerts {
+	//		cbmap := updateFromCertbot(certs.PublicEkuServerAuth, certs.Certbot)
+	//		outpath = fileName(outfiles["outdir"], tagOutputFileName(outfiles[certbotPublicCertOut], tag)) + osenv.ShellExt
+	//		writeTemplate(subsysCertsTemplate, outpath, OsEnvCerts{OsEnv: osenv, CertSpecs: cbmap})
+	//	}
+	//}
 
-		updateFromCertbot := func(certs map[string]CertSpec, certbot Certbot) map[string]CertSpec {
-			cbmap := make(map[string]CertSpec)
-			for cname, cs := range certs {
-				cs.CsrSubdir = certbot.CertDir
-				cs.CertSubdir = certbot.CertDir
-				cs.KeySubdir = certbot.CertDir
-				cs.CaSubdir = certbot.CertDir
-				cs.KeyFile = certbot.Key
-				cs.CertFile = certbot.Cert
-				cs.CaFile = certbot.CaChain
-				cbmap[cname] = cs
-			}
-			return cbmap
-		}
-
-		// apicup certs user-facing-public certbot
-		if certs.PublicUserFacingCerts {
-			cbmap := updateFromCertbot(certs.PublicUserFacingEkuServerAuth, certs.Certbot)
-			outpath = fileName(outfiles["outdir"], tagOutputFileName(outfiles[certbotUserFacingPublicCertOut], tag)) + osenv.ShellExt
-			writeTemplate(subsysCertsTemplate, outpath, OsEnvCerts{OsEnv: osenv, CertSpecs: cbmap})
-		}
-
-		// apicup certs public certbot
-		if certs.PublicCerts {
-			cbmap := updateFromCertbot(certs.PublicEkuServerAuth, certs.Certbot)
-			outpath = fileName(outfiles["outdir"], tagOutputFileName(outfiles[certbotPublicCertOut], tag)) + osenv.ShellExt
-			writeTemplate(subsysCertsTemplate, outpath, OsEnvCerts{OsEnv: osenv, CertSpecs: cbmap})
-		}
-	}
-
-	if certs.SharedEndpointTrust {
-
-		updateFromEndpointTrust := func(certs map[string]CertSpec, et map[string]CertSpec) map[string]CertSpec {
-			cbmap := make(map[string]CertSpec)
-			for cname, cs := range certs {
-				// shared endpoint trust - one key shared by subsystem endpoints
-				cs.KeySubdir = et[cname].KeySubdir
-				cs.KeyFile = et[cname].KeyFile
-				cbmap[cname] = cs
-			}
-			return cbmap
-		}
-
-		if certs.PublicUserFacingCerts {
-			// mgmt
-			certSpec := certs.etCertSpecMgt
-
-			// csr
-			outpath = fileName(concatSubdir(outfiles[outdir], outfiles[SharedCsrOutDir]), certSpec.CsrConf)
-			writeTemplate(ekuServerAuth, outpath, certSpec)
-
-			// key-pair
-			outpath = fileName(concatSubdir(outfiles[outdir], outfiles[SharedCsrOutDir]), certSpec.CsrConf + osenv.ShellExt)
-			writeTemplate(keypairTemplate, outpath, OsEnvCert{OsEnv: osenv, CertSpec: certSpec, Passive: certs.Passive})
-
-			// ptl
-			certSpec = certs.etCertSpecPtl
-
-			// csr
-			outpath = fileName(concatSubdir(outfiles[outdir], outfiles[SharedCsrOutDir]), certSpec.CsrConf)
-			writeTemplate(ekuServerAuth, outpath, certSpec)
-
-			// key-pair
-			outpath = fileName(concatSubdir(outfiles[outdir], outfiles[SharedCsrOutDir]), certSpec.CsrConf + osenv.ShellExt)
-			writeTemplate(keypairTemplate, outpath, OsEnvCert{OsEnv: osenv, CertSpec: certSpec, Passive: certs.Passive})
-
-			// combine public-user-facing key and csr scripts
-			certmap := make(map[string]CertSpec)
-			certmap["shared-endpoint-trust-management"] = certs.etCertSpecMgt
-			certmap["shared-endpoint-trust-portal"] = certs.etCertSpecPtl
-
-			outpath = fileName(concatSubdir(outfiles[outdir], outfiles[SharedCsrOutDir]), tagOutputFileName("all-user-facing-public-csr", tag) + osenv.ShellExt)
-			writeTemplate(combinedCsrTemplate, outpath, OsEnvCerts{OsEnv: osenv, CertSpecs: certmap})
-
-			// apicup certs user-facing-public
-			m := make(map[string]CertSpec)
-			m[CertKeyPlatformApi] = certs.etCertSpecMgt
-			m[CertKeyConsumerApi] = certs.etCertSpecMgt
-			m[CertKeyApiManagerUi] = certs.etCertSpecMgt
-			m[CertKeyCloudAdminUi] = certs.etCertSpecMgt
-			m[CertKeyPortalWwwIngress] = certs.etCertSpecPtl
-
-			outpath = fileName(outfiles["outdir"], tagOutputFileName(outfiles[etUserFacingPublicCertsOut], tag)) + osenv.ShellExt
-			writeTemplate(subsysCertsTemplate, outpath, OsEnvCerts{OsEnv: osenv, CertSpecs: updateFromEndpointTrust(certs.PublicUserFacingEkuServerAuth, m)})
-		}
-
-		if certs.PublicCerts {
-			// gateway
-			certSpec := certs.etCertSpecGwy
-
-			// csr
-			outpath = fileName(concatSubdir(outfiles[outdir], outfiles[SharedCsrOutDir]), certSpec.CsrConf)
-			writeTemplate(ekuServerAuth, outpath, certSpec)
-
-			// key-pair
-			outpath = fileName(concatSubdir(outfiles[outdir], outfiles[SharedCsrOutDir]), certSpec.CsrConf + osenv.ShellExt)
-			writeTemplate(keypairTemplate, outpath, OsEnvCert{OsEnv: osenv, CertSpec: certSpec, Passive: certs.Passive})
-
-			// combine public key and csr scripts
-			certmap := make(map[string]CertSpec)
-			certmap["shared-endpoint-trust-gateway"] = certs.etCertSpecGwy
-
-			outpath = fileName(concatSubdir(outfiles[outdir], outfiles[SharedCsrOutDir]), tagOutputFileName("all-public-csr", tag) + osenv.ShellExt)
-			writeTemplate(combinedCsrTemplate, outpath, OsEnvCerts{OsEnv: osenv, CertSpecs: certmap})
-
-			// apicup certs public
-			m := make(map[string]CertSpec)
-			m[CertKeyApicGwServiceIngress] = certs.etCertSpecGwy
-
-			outpath = fileName(outfiles["outdir"], tagOutputFileName(outfiles[etPublicCertsOut], tag)) + osenv.ShellExt
-			writeTemplate(subsysCertsTemplate, outpath, OsEnvCerts{OsEnv: osenv, CertSpecs: updateFromEndpointTrust(certs.PublicEkuServerAuth, m)})
-		}
-
-		if certs.CommonCerts {
-			// alyt
-			certSpec := certs.etCertSpecAlyt
-
-			// csr
-			outpath = fileName(concatSubdir(outfiles[outdir], outfiles[SharedCsrOutDir]), certSpec.CsrConf)
-			writeTemplate(ekuServerAuth, outpath, certSpec)
-
-			// key-pair
-			outpath = fileName(concatSubdir(outfiles[outdir], outfiles[SharedCsrOutDir]), certSpec.CsrConf + osenv.ShellExt)
-			writeTemplate(keypairTemplate, outpath, OsEnvCert{OsEnv: osenv, CertSpec: certSpec, Passive: certs.Passive})
-
-			// combine mutual-auth key and csr scripts
-			certmap := make(map[string]CertSpec)
-			certmap["shared-endpoint-trust-analytics"] = certs.etCertSpecAlyt
-
-			outpath = fileName(concatSubdir(outfiles[outdir], outfiles[SharedCsrOutDir]), tagOutputFileName("all-mutual-auth-csr", tag) + osenv.ShellExt)
-			writeTemplate(combinedCsrTemplate, outpath, OsEnvCerts{OsEnv: osenv, CertSpecs: certmap})
-
-			// combine common key and csr scripts
-			//outpath = fileName(concatSubdir(outfiles[outdir], outfiles[CommonCsrOutDir]), tagOutputFileName("all-common-csr", tag) + osenv.ShellExt)
-			//writeTemplate(combinedCsrTemplate, outpath, OsEnvCerts{OsEnv: osenv, CertSpecs: certs.CommonEkuClientAuth})
-
-			// apicup certs mutual auth
-			m := make(map[string]CertSpec)
-			m[CertKeyAnalyticsClientIngress] = certs.etCertSpecAlyt
-			m[CertKeyAnalyticsIngestionIngress] = certs.etCertSpecAlyt
-			m[CertKeyPortalAdminIngress] = certs.etCertSpecPtl
-
-			outpath = fileName(outfiles["outdir"], tagOutputFileName(outfiles[etMutualAuthCertsOut], tag)) + osenv.ShellExt
-			writeTemplate(subsysCertsTemplate, outpath, OsEnvCerts{OsEnv: osenv, CertSpecs: updateFromEndpointTrust(certs.MutualAuthEkuServerAuth,m)})
-		}
-	}
+	//if certs.SharedEndpointTrust {
+	//
+	//	updateFromEndpointTrust := func(certs map[string]CertSpec, et map[string]CertSpec) map[string]CertSpec {
+	//		cbmap := make(map[string]CertSpec)
+	//		for cname, cs := range certs {
+	//			// shared endpoint trust - one key shared by subsystem endpoints
+	//			cs.KeySubdir = et[cname].KeySubdir
+	//			cs.KeyFile = et[cname].KeyFile
+	//			cbmap[cname] = cs
+	//		}
+	//		return cbmap
+	//	}
+	//
+	//	if certs.PublicUserFacingCerts {
+	//		// mgmt
+	//		certSpec := certs.etCertSpecMgt
+	//
+	//		// csr
+	//		outpath = fileName(concatSubdir(outfiles[outdir], outfiles[SharedCsrOutDir]), certSpec.CsrConf)
+	//		writeTemplate(ekuServerAuth, outpath, certSpec)
+	//
+	//		// key-pair
+	//		outpath = fileName(concatSubdir(outfiles[outdir], outfiles[SharedCsrOutDir]), certSpec.CsrConf + osenv.ShellExt)
+	//		writeTemplate(keypairTemplate, outpath, OsEnvCert{OsEnv: osenv, CertSpec: certSpec, Passive: certs.Passive})
+	//
+	//		// ptl
+	//		certSpec = certs.etCertSpecPtl
+	//
+	//		// csr
+	//		outpath = fileName(concatSubdir(outfiles[outdir], outfiles[SharedCsrOutDir]), certSpec.CsrConf)
+	//		writeTemplate(ekuServerAuth, outpath, certSpec)
+	//
+	//		// key-pair
+	//		outpath = fileName(concatSubdir(outfiles[outdir], outfiles[SharedCsrOutDir]), certSpec.CsrConf + osenv.ShellExt)
+	//		writeTemplate(keypairTemplate, outpath, OsEnvCert{OsEnv: osenv, CertSpec: certSpec, Passive: certs.Passive})
+	//
+	//		// combine public-user-facing key and csr scripts
+	//		certmap := make(map[string]CertSpec)
+	//		certmap["shared-endpoint-trust-management"] = certs.etCertSpecMgt
+	//		certmap["shared-endpoint-trust-portal"] = certs.etCertSpecPtl
+	//
+	//		outpath = fileName(concatSubdir(outfiles[outdir], outfiles[SharedCsrOutDir]), tagOutputFileName("all-user-facing-public-csr", tag) + osenv.ShellExt)
+	//		writeTemplate(combinedCsrTemplate, outpath, OsEnvCerts{OsEnv: osenv, CertSpecs: certmap})
+	//
+	//		// apicup certs user-facing-public
+	//		m := make(map[string]CertSpec)
+	//		m[CertKeyPlatformApi] = certs.etCertSpecMgt
+	//		m[CertKeyConsumerApi] = certs.etCertSpecMgt
+	//		m[CertKeyApiManagerUi] = certs.etCertSpecMgt
+	//		m[CertKeyCloudAdminUi] = certs.etCertSpecMgt
+	//		m[CertKeyPortalWwwIngress] = certs.etCertSpecPtl
+	//
+	//		outpath = fileName(outfiles["outdir"], tagOutputFileName(outfiles[etUserFacingPublicCertsOut], tag)) + osenv.ShellExt
+	//		writeTemplate(subsysCertsTemplate, outpath, OsEnvCerts{OsEnv: osenv, CertSpecs: updateFromEndpointTrust(certs.PublicUserFacingEkuServerAuth, m)})
+	//	}
+	//
+	//	if certs.PublicCerts {
+	//		// gateway
+	//		certSpec := certs.etCertSpecGwy
+	//
+	//		// csr
+	//		outpath = fileName(concatSubdir(outfiles[outdir], outfiles[SharedCsrOutDir]), certSpec.CsrConf)
+	//		writeTemplate(ekuServerAuth, outpath, certSpec)
+	//
+	//		// key-pair
+	//		outpath = fileName(concatSubdir(outfiles[outdir], outfiles[SharedCsrOutDir]), certSpec.CsrConf + osenv.ShellExt)
+	//		writeTemplate(keypairTemplate, outpath, OsEnvCert{OsEnv: osenv, CertSpec: certSpec, Passive: certs.Passive})
+	//
+	//		// combine public key and csr scripts
+	//		certmap := make(map[string]CertSpec)
+	//		certmap["shared-endpoint-trust-gateway"] = certs.etCertSpecGwy
+	//
+	//		outpath = fileName(concatSubdir(outfiles[outdir], outfiles[SharedCsrOutDir]), tagOutputFileName("all-public-csr", tag) + osenv.ShellExt)
+	//		writeTemplate(combinedCsrTemplate, outpath, OsEnvCerts{OsEnv: osenv, CertSpecs: certmap})
+	//
+	//		// apicup certs public
+	//		m := make(map[string]CertSpec)
+	//		m[CertKeyApicGwServiceIngress] = certs.etCertSpecGwy
+	//
+	//		outpath = fileName(outfiles["outdir"], tagOutputFileName(outfiles[etPublicCertsOut], tag)) + osenv.ShellExt
+	//		writeTemplate(subsysCertsTemplate, outpath, OsEnvCerts{OsEnv: osenv, CertSpecs: updateFromEndpointTrust(certs.PublicEkuServerAuth, m)})
+	//	}
+	//
+	//	if certs.CommonCerts {
+	//		// alyt
+	//		certSpec := certs.etCertSpecAlyt
+	//
+	//		// csr
+	//		outpath = fileName(concatSubdir(outfiles[outdir], outfiles[SharedCsrOutDir]), certSpec.CsrConf)
+	//		writeTemplate(ekuServerAuth, outpath, certSpec)
+	//
+	//		// key-pair
+	//		outpath = fileName(concatSubdir(outfiles[outdir], outfiles[SharedCsrOutDir]), certSpec.CsrConf + osenv.ShellExt)
+	//		writeTemplate(keypairTemplate, outpath, OsEnvCert{OsEnv: osenv, CertSpec: certSpec, Passive: certs.Passive})
+	//
+	//		// combine mutual-auth key and csr scripts
+	//		certmap := make(map[string]CertSpec)
+	//		certmap["shared-endpoint-trust-analytics"] = certs.etCertSpecAlyt
+	//
+	//		outpath = fileName(concatSubdir(outfiles[outdir], outfiles[SharedCsrOutDir]), tagOutputFileName("all-mutual-auth-csr", tag) + osenv.ShellExt)
+	//		writeTemplate(combinedCsrTemplate, outpath, OsEnvCerts{OsEnv: osenv, CertSpecs: certmap})
+	//
+	//		// combine common key and csr scripts
+	//		//outpath = fileName(concatSubdir(outfiles[outdir], outfiles[CommonCsrOutDir]), tagOutputFileName("all-common-csr", tag) + osenv.ShellExt)
+	//		//writeTemplate(combinedCsrTemplate, outpath, OsEnvCerts{OsEnv: osenv, CertSpecs: certs.CommonEkuClientAuth})
+	//
+	//		// apicup certs mutual auth
+	//		m := make(map[string]CertSpec)
+	//		m[CertKeyAnalyticsClientIngress] = certs.etCertSpecAlyt
+	//		m[CertKeyAnalyticsIngestionIngress] = certs.etCertSpecAlyt
+	//		m[CertKeyPortalAdminIngress] = certs.etCertSpecPtl
+	//
+	//		outpath = fileName(outfiles["outdir"], tagOutputFileName(outfiles[etMutualAuthCertsOut], tag)) + osenv.ShellExt
+	//		writeTemplate(subsysCertsTemplate, outpath, OsEnvCerts{OsEnv: osenv, CertSpecs: updateFromEndpointTrust(certs.MutualAuthEkuServerAuth,m)})
+	//	}
+	//}
 }

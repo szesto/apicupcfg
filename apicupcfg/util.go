@@ -55,6 +55,10 @@ func openFile(file string) (*os.File, error) {
 	return os.OpenFile(file, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0666)
 }
 
+func openFileAppend(file string) (*os.File, error) {
+	return os.OpenFile(file, os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0666)
+}
+
 func readFileBytes(file string) []byte {
 	c, err := ioutil.ReadFile(file)
 
@@ -94,10 +98,10 @@ func CreateOutputDirectories(outdir, commonCsrSubdir, customCsrSubdir, sharedCsr
 		return err
 	}
 
-	sharedCsrDir := concatSubdir(basedir, sharedCsrSubdir)
-	if err = os.MkdirAll(sharedCsrDir, os.ModePerm); err != nil {
-		return err
-	}
+	//sharedCsrDir := concatSubdir(basedir, sharedCsrSubdir)
+	//if err = os.MkdirAll(sharedCsrDir, os.ModePerm); err != nil {
+	//	return err
+	//}
 
 	projectDir := concatSubdir(basedir, projectSubdir)
 	if err = os.MkdirAll(projectDir, os.ModePerm); err != nil {

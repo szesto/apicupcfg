@@ -63,10 +63,10 @@ func concatSubdir(dir1 string, dir2 string) string {
 }
 
 func Input() (input string, outdir1 string, validateIp bool, initConfig bool, initConfigType string,
-	subsysOnly bool, certsOnly bool, certcopy string, certdir string,
+	subsysOnly bool, certsOnly bool, certcopy bool, certdir string,
 	certverify bool, certfile, cafile string, rootcafile string, noexpire bool, certconcat bool, gen bool,
 	soma bool, req string, auth string, url string, setfile string, dpdir string, dpfile string,
-	datapowerOnly bool, dpdomain string, dpcacopy bool) {
+	datapowerOnly bool, dpdomain string, dpcacopy bool, certchaincopy bool) {
 
 	// define command line flags
 	inputArg := flag.String("config", "subsys-config.json", "-config input-file")
@@ -83,8 +83,10 @@ func Input() (input string, outdir1 string, validateIp bool, initConfig bool, in
 	subsysOnlyArg := flag.Bool("subsys", false, "-subsys [true] generate subsystem scripts only")
 	certsOnlyArg := flag.Bool("certs", false, "-certs [true] generate certs scripts only")
 
-	certCopyArg := flag.String("certcopy", "", "-certcopy certfile copy certificate to destination")
-	certDirArg := flag.String("certdir", "","-certdir dir copy all certificate files in dir to destination")
+	//certCopyArg := flag.String("certcopy", "", "-certcopy certfile copy certificate to destination")
+	certCopyArg := flag.Bool("certcopy", false, "-certcopy -cert cert.pem -ca ca.pem -rootca rootca.pem")
+
+	//certDirArg := flag.String("certdir", "","-certdir dir copy all certificate files in dir to destination")
 
 	// -certverify [-cert] ... -ca ... -rootca ... -noexpire
 	// -certconcat -ca ... -rootca ... -noexpire
@@ -96,7 +98,7 @@ func Input() (input string, outdir1 string, validateIp bool, initConfig bool, in
 	rootcafileArg := flag.String("rootca", "", "-rootca file, root ca file, use with -certverify")
 	noexpireArg := flag.Bool("noexpire", false,"-noexpire, check for cert expiration")
 
-	certconcatArg := flag.Bool("certconcat", false, "-certconcat, concatinate ca certs")
+	//certconcatArg := flag.Bool("certconcat", false, "-certconcat, concatinate ca certs")
 
 	genArg := flag.Bool("gen", false, "-gen, generate scripts")
 
@@ -112,7 +114,9 @@ func Input() (input string, outdir1 string, validateIp bool, initConfig bool, in
 
 	dpdomainArg := flag.String("dpdomain", "default","-dpdomain datapower-domain, use for file upload")
 
-	dpcacopyArg := flag.Bool("dpcacopy", false, "-dpcacopy [true], copy datapower ca and root certificates, -dpcacopy -ca cafile.pem -rootca rootca.pem")
+	//dpcacopyArg := flag.Bool("dpcacopy", false, "-dpcacopy [true], copy datapower ca and root certificates, -dpcacopy -ca cafile.pem -rootca rootca.pem")
+
+	//certchaincopyArg := flag.Bool("certchaincopy", false, "-certchaincopy -cert cert.pem -ca ca.pem -rootca rootca.pem")
 
 	// scan command line args
 	flag.Parse()
@@ -128,14 +132,14 @@ func Input() (input string, outdir1 string, validateIp bool, initConfig bool, in
 	subsysOnly = *subsysOnlyArg
 	certsOnly = *certsOnlyArg
 	certcopy = *certCopyArg
-	certdir = *certDirArg
+	//certdir = *certDirArg
 
 	certverify = *certverifyArg
 	certfile = *certfileArg
 	cafile = *cafileArg
 	rootcafile = *rootcafileArg
 	noexpire = *noexpireArg
-	certconcat = *certconcatArg
+	//certconcat = *certconcatArg
 	gen = *genArg
 
 	soma = *somaArg
@@ -150,9 +154,11 @@ func Input() (input string, outdir1 string, validateIp bool, initConfig bool, in
 
 	dpdomain = *dpdomainArg
 
-	dpcacopy = *dpcacopyArg
+	//dpcacopy = *dpcacopyArg
+
+	//certchaincopy = *certchaincopyArg
 
 	return input, outdir1, validateIp, initConfig, initConfigType, subsysOnly, certsOnly, certcopy, certdir,
 		certverify, certfile, cafile, rootcafile, noexpire, certconcat, gen,
-		soma, req, auth, url, setfile, dpdir, dpfile, datapowerOnly, dpdomain, dpcacopy
+		soma, req, auth, url, setfile, dpdir, dpfile, datapowerOnly, dpdomain, dpcacopy, certchaincopy
 }

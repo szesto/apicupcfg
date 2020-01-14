@@ -7,7 +7,9 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
+	"path/filepath"
 	"strings"
+	"time"
 )
 
 func copyCerts(certdir string, certs *Certs, mgmt ManagementSubsysDescriptor, alyt AnalyticsSubsysDescriptor,
@@ -30,6 +32,240 @@ func copyCerts(certdir string, certs *Certs, mgmt ManagementSubsysDescriptor, al
 		err = copyCert(certfile, certs, mgmt, alyt, ptl, gwy, commonCsrOutDir, customCsrOutDir, isOva)
 		if err != nil {
 			fmt.Printf("%v\n", err)
+		}
+	}
+
+	return nil
+}
+
+func logCertCopy(dir, logm string) error {
+
+	logf, err := openFileAppend(dir + string(os.PathSeparator) + "cert-copy.log")
+	if err != nil {
+		return err
+	}
+
+	defer func() {_ = logf.Close()}()
+
+	_, _ = fmt.Fprintf(logf, "%s: %s\n", time.Now().Format(time.RFC822), logm)
+	return nil
+}
+
+func concatChainFile(cafile, rootcafile, chainfile string, cacert, rootcert *x509.Certificate) error {
+
+	// check if destination chain file exists
+	exists, err := isFileExist(chainfile)
+	if err != nil {
+		return err
+	}
+
+	if exists {
+		fmt.Printf("skip cert chain merge, destination file '%s' already exists...\n", chainfile)
+
+	} else {
+		concatFiles(cafile, rootcafile, chainfile)
+
+		logm := fmt.Sprintf("merged issuing-ca cert file '%s' (%s<-%s) and root-ca cert file '%s' (%s<-%s) into ca chain file '%s'",
+			cafile, cacert.Subject.CommonName, cacert.Issuer.CommonName,
+			rootcafile, rootcert.Subject.CommonName, rootcert.Issuer.CommonName, chainfile)
+
+		fmt.Printf("%s\n", logm)
+
+		if err := logCertCopy(filepath.Dir(chainfile), logm); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func copyCaFile(cacertfile, dstfile string, cacert *x509.Certificate, carole string) error {
+
+	// check if destination file exists
+	exists, err := isFileExist(dstfile)
+	if err != nil {
+		return err
+	}
+
+	if exists {
+		fmt.Printf("skip copying %s ca cert file '%s' (%s<-%s)... destination file '%s' already exists...\n",
+			carole, cacertfile, cacert.Subject.CommonName, cacert.Issuer.CommonName, dstfile)
+
+	} else {
+		copyFile(cacertfile, dstfile)
+
+		logm := fmt.Sprintf("copied %s ca cert file '%s' (%s<-%s) to '%s'",
+			carole, cacertfile, cacert.Subject.CommonName, cacert.Issuer.CommonName, dstfile)
+
+		fmt.Printf("%s\n", logm)
+
+		if err := logCertCopy(filepath.Dir(dstfile), logm); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func CopyCertChain(certfile, cafile, rootcafile string, certs *Certs, mgmt ManagementSubsysDescriptor,
+	alyt AnalyticsSubsysDescriptor, ptl PortalSubsysDescriptor, gwy GatewaySubsysDescriptor,
+	commonCsrOutDir string, customCsrOutDir string, isOva bool) error {
+
+	// check input
+	if len(certfile) == 0 {
+		return fmt.Errorf("certfile name is empty")
+	}
+
+	if len(cafile) == 0 {
+		return fmt.Errorf("issuing ca certfile name is empty")
+	}
+
+	if len(rootcafile) == 0 {
+		return fmt.Errorf("root ca certfile name is empty")
+	}
+
+	// build trust chain
+	const noexpire = false
+	if ischain, err := CertVerify(certfile, cafile, rootcafile, noexpire); err != nil {
+		return err
+
+	} else if ischain == false {
+		// no trust chain, return...
+		return fmt.Errorf("could not build a trust chain from certificates %s, %s, %s\n", certfile, cafile, rootcafile)
+	}
+
+	var cert *x509.Certificate
+	var cacert *x509.Certificate
+	var rootcert *x509.Certificate
+	var err error
+
+	// parse certfile
+	if cert, err = ParseCertFile(certfile); err != nil {
+		return err
+	}
+
+	// parse ca file
+	if cacert, err = ParseCertFile(cafile); err != nil {
+		return err
+	}
+
+	// parse root ca file
+	if rootcert, err = ParseCertFile(rootcafile); err != nil {
+		return err
+	}
+
+	// update cert specs
+	updateCertSpecs(certs, mgmt, alyt, ptl, gwy, commonCsrOutDir, customCsrOutDir)
+
+	var verifyErrors = make([]error, 100)
+
+	// wildcard cert can match one or more hostnames
+	matchcount := 0
+
+	// public user facing certs
+	for _, certSpec := range certs.PublicUserFacingEkuServerAuth {
+		// copy cert file
+		err = verifyCopyCertfile(certfile, cert, &certSpec)
+
+		if err != nil {
+			verifyErrors = append(verifyErrors, err)
+		} else {
+			matchcount++
+
+			// concat issuing ca and root ca files into ca chain file
+			dstfile := certSpec.CsrSubdir + string(os.PathSeparator) + certSpec.CaFile
+			if err = concatChainFile(cafile, rootcafile, dstfile, cacert, rootcert); err != nil {
+				return err
+			}
+		}
+	}
+
+	// mutual auth server auth
+	for _, certSpec := range certs.MutualAuthEkuServerAuth {
+		err := verifyCopyCertfile(certfile, cert, &certSpec)
+		if err != nil {
+			verifyErrors = append(verifyErrors, err)
+
+		} else {
+			matchcount++
+
+			// concat issuing ca and root ca files into ca chain file
+			dstfile := certSpec.CsrSubdir + string(os.PathSeparator) + certSpec.CaFile
+			if err = concatChainFile(cafile, rootcafile, dstfile, cacert, rootcert); err != nil {
+				return err
+			}
+		}
+	}
+
+	// common client certs
+	for _, certSpec := range certs.CommonEkuClientAuth {
+		err := verifyCopyCertfile(certfile, cert, &certSpec)
+		if err != nil {
+			verifyErrors = append(verifyErrors, err)
+
+		} else {
+			matchcount++
+
+			// concat issuing ca and root ca files into ca chain file
+			dstfile := certSpec.CsrSubdir + string(os.PathSeparator) + certSpec.CaFile
+			if err = concatChainFile(cafile, rootcafile, dstfile, cacert, rootcert); err != nil {
+				return err
+			}
+		}
+	}
+
+	// gateway subsystem for ova
+	if isOva {
+		// gateway director
+		certSpec := CertSpec{}
+		certSpec.Cn = gwy.GetApicGatewayServiceEndpoint()
+		updateCertSpec(certs, gwy.GetGatewaySubsysName(), "gateway-director", &certSpec, DatapowerOutDir)
+
+		err = verifyCopyCertfile(certfile, cert, &certSpec)
+		if err != nil {
+			verifyErrors = append(verifyErrors, err)
+
+		} else {
+			matchcount++
+
+			// concat issuing-ca and root-ca files into ca chain file
+			dstfile := certSpec.CsrSubdir + string(os.PathSeparator) + certSpec.CaFile
+			if err = concatChainFile(cafile, rootcafile, dstfile, cacert, rootcert); err != nil {
+				return err
+			}
+
+			// copy issuing-ca cert file
+			dstfile = certSpec.CsrSubdir + string(os.PathSeparator) + dot2dash(certSpec.Cn) + ".issuing-ca.pem"
+			if err := copyCaFile(cafile, dstfile, cacert, "issuing"); err != nil {
+				return err
+			}
+
+			// copy root-ca cert file
+			dstfile = certSpec.CsrSubdir + string(os.PathSeparator) + dot2dash(certSpec.Cn) + ".root-ca.pem"
+			if err := copyCaFile(rootcafile, dstfile, rootcert, "root"); err != nil {
+				return err
+			}
+		}
+
+		//// api gateway
+		//certSpec = CertSpec{}
+		//certSpec.Cn = gwy.GetApiGatewayEndpoint()
+		//updateCertSpec(certs, gwy.GetGatewaySubsysName(), "api-gateway", &certSpec, DatapowerOutDir)
+		//
+		//err = verifyCopyCertfile(certfile, cert, &certSpec)
+		//if err != nil {
+		//	verifyErrors = append(verifyErrors, err)
+		//} else {
+		//	matchcount++
+		//}
+	}
+
+	// no hostname match for the cert, show errors
+	if matchcount == 0 {
+		for _, err := range verifyErrors {
+			if err != nil {
+				fmt.Printf("failed verify... %v\n", err)
+			}
 		}
 	}
 
@@ -68,7 +304,7 @@ func copyCert(certfile string, certs *Certs, mgmt ManagementSubsysDescriptor, al
 		//	certfile, cert.Subject.CommonName, cert.Issuer.CommonName)
 	}
 
-	var verifyErrors []error = make([]error, 100)
+	var verifyErrors = make([]error, 100)
 
 	// update cert specs
 	updateCertSpecs(certs, mgmt, alyt, ptl, gwy, commonCsrOutDir, customCsrOutDir)
@@ -161,7 +397,7 @@ func verifyCopyCertfile(certfile string, cert *x509.Certificate, certSpec *CertS
 	err := VerifyHostName(certSpec.Cn, cert)
 
 	if err == nil {
-		fmt.Printf("hostname %s verifies...\n", certSpec.Cn)
+		fmt.Printf("\nhostname %s verifies...\n", certSpec.Cn)
 
 		// copy cert...
 		dstfile := certSpec.CsrSubdir + string(os.PathSeparator) + certSpec.CertFile
@@ -173,11 +409,19 @@ func verifyCopyCertfile(certfile string, cert *x509.Certificate, certSpec *CertS
 		}
 
 		if exists {
-			fmt.Printf("cert file '%s' destination '%s' already exists... skip...\n", certfile, dstfile)
+			fmt.Printf("skip copying cert file '%s' (%s<-%s), destination file '%s' already exists...\n",
+				certfile, cert.Subject.CommonName, cert.Issuer.CommonName, dstfile)
 
 		} else {
 			copyFile(certfile, dstfile)
-			fmt.Printf("cert file '%s' copied to destination %s\n", certfile, dstfile)
+
+			logm := fmt.Sprintf("copied cert file '%s' (%s<-%s) to '%s'", certfile, cert.Subject.CommonName, cert.Issuer.CommonName, dstfile)
+
+			fmt.Printf("%s\n", logm)
+
+			if err := logCertCopy(filepath.Dir(dstfile), logm); err != nil {
+				return err
+			}
 
 		}
 
@@ -288,6 +532,6 @@ func ParseCertBytes(bytes []byte) (*x509.Certificate, error) {
 }
 
 func VerifyHostName(hostname string, cert *x509.Certificate) error {
-	err := cert.VerifyHostname(hostname);
+	err := cert.VerifyHostname(hostname)
 	return err
 }

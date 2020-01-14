@@ -6,10 +6,10 @@ import (
 	"time"
 )
 
-func CertVerify(certfile string, chainfile string, rootcafile string, noexpire bool) (bool, error) {
+func CertVerify(certfile string, cafile string, rootcafile string, noexpire bool) (bool, error) {
 
 	var cert *x509.Certificate
-	var chaincert *x509.Certificate
+	var cacert *x509.Certificate
 	var rootcert *x509.Certificate
 	var err error
 
@@ -28,16 +28,16 @@ func CertVerify(certfile string, chainfile string, rootcafile string, noexpire b
 		}
 	}
 
-	if len(chainfile) > 0 {
+	if len(cafile) > 0 {
 		//fmt.Printf("parsing file '%s'...\n", chainfile)
-		if chaincert, err = ParseCertFile(chainfile); err != nil {
+		if cacert, err = ParseCertFile(cafile); err != nil {
 			return false, err
 		}
 
 		// must be ca cert
-		if ! chaincert.IsCA {
+		if ! cacert.IsCA {
 			err := fmt.Errorf("file '%s' is not a ca certificate... subject cn %v, issuer cn %v",
-				chainfile, chaincert.Subject.CommonName, chaincert.Issuer.CommonName)
+				cafile, cacert.Subject.CommonName, cacert.Issuer.CommonName)
 			return false, err
 		}
 	}
@@ -61,14 +61,16 @@ func CertVerify(certfile string, chainfile string, rootcafile string, noexpire b
 		}
 	}
 
-	chains, err := BuildChain(cert, chaincert, rootcert, noexpire)
-	fmt.Printf("%v, %v\n", chains, err)
+	chains, err := BuildChain(cert, cacert, rootcert, noexpire)
+	//fmt.Printf("%v, %v\n", chains, err)
 
 	if err != nil {
 		return false, err
 	}
 
 	//fmt.Printf("not-before: %v, not after %v\n", cert.NotBefore, cert.NotAfter)
+
+	fmt.Printf("\nbuilding trust chain...\n")
 
 	for chi, chain := range chains {
 

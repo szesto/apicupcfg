@@ -185,11 +185,14 @@ type GwySubsysVm struct {
 	SubsysName string
 	Mode string
 
+	// web-gui timeout
 	WebGuiIdleTimeout int
 
 	SearchDomains []string
 	DnsServers []string
 	Hosts []HostGateway
+
+	PassiveDatapowerCluster []string
 
 	ApiGateway string
 	ApicGwService string
@@ -236,21 +239,33 @@ type GwySubsysVm struct {
 	// gwd_cert
 	DatapowerGwdCert string
 
-	// ca, root-ca, ca-chain (ca+root-ca)
-	CaFile string
-	RootCaFile string
-	CaChainFile string
+	// ca file, root-ca file, ca-chain file (ca+root-ca)
+	//CaFile string
+	//RootCaFile string
+	//CaChainFile string
 
-	// apic_ca_cert, apic_root_cert
+	// datapower crypto ca certs
 	DatapowerCaCert string
 	DatapowerRootCert string
 }
 
-func (gwy *GwySubsysVm) GetCaChainFileOrDefault() string {
-	caChainDefault := "dp-ca-chain.pem"
-	if len(gwy.CaChainFile) == 0 { return caChainDefault }
-	return gwy.CaChainFile
-}
+//func (gwy *GwySubsysVm) GetCaFileOrDefault() string {
+//	caFileDefault := "dp-ca.pem"
+//	if len(gwy.CaFile) == 0 { return caFileDefault }
+//	return gwy.CaFile
+//}
+//
+//func (gwy *GwySubsysVm) GetRootCaFileOrDefault() string {
+//	rootCaFileDefault := "dp-root-ca.pem"
+//	if len(gwy.RootCaFile) == 0 { return rootCaFileDefault }
+//	return gwy.RootCaFile
+//}
+//
+//func (gwy *GwySubsysVm) GetCaChainFileOrDefault() string {
+//	caChainDefault := "dp-ca-chain.pem"
+//	if len(gwy.CaChainFile) == 0 { return caChainDefault }
+//	return gwy.CaChainFile
+//}
 
 func (gwy *GwySubsysVm) GetWebGuiIdleTimeoutOrDefault() int {
 	webGuiIdleTimeoutDefault := 600
