@@ -38,6 +38,170 @@ func copyCerts(certdir string, certs *Certs, mgmt ManagementSubsysDescriptor, al
 	return nil
 }
 
+func CopyCertDir(certdir, trustdir string, certs *Certs, mgmt ManagementSubsysDescriptor,
+	alyt AnalyticsSubsysDescriptor, ptl PortalSubsysDescriptor, gwy GatewaySubsysDescriptor,
+	commonCsrOutDir string, customCsrOutDir string, isOva bool) error {
+
+	msubjfile := make(map[string]string)
+	mcerts := make(map[string]*x509.Certificate)
+	mcacerts := make(map[string]*x509.Certificate)
+	mrootcerts := make(map[string]*x509.Certificate)
+
+	parseCertFilef := func(certfile string) (*x509.Certificate, string, error) {
+
+		certlist, blockTypes, err := ParseCertFile2(certfile)
+		if err != nil {
+			return nil, "", err
+		}
+
+		// it is possible that certlist is empty eg for private key file
+		if len(certlist) == 0 {
+			fmt.Printf("file '%s' is not a cert, skip...\n", certfile)
+			return nil, "", nil
+		}
+
+		if len(certlist) > 1 {
+			fmt.Printf("file '%s' is a cert chain... %v, skip", certfile, blockTypes)
+			return nil, "", nil
+		}
+
+		return certlist[0], blockTypes[0], nil
+	}
+
+	saveCertf := func(certfile string, cert *x509.Certificate, blockType string) {
+
+		if _, ok := msubjfile[cert.Subject.CommonName]; ok {
+			fmt.Printf("cert file '%s' is a duplicate, skip...\n", certfile)
+			return
+		}
+
+		if cert.IsCA {
+			if cert.Subject.CommonName == cert.Issuer.CommonName {
+				fmt.Printf("found Root CA cert '%s', block-type '%s'\n", certfile, blockType)
+
+				msubjfile[cert.Subject.CommonName] = certfile
+				mrootcerts[cert.Subject.CommonName] = cert
+
+			} else {
+				fmt.Printf("found CA cert '%s', block-type '%s'\n", certfile, blockType)
+
+				msubjfile[cert.Subject.CommonName] = certfile
+				mcacerts[cert.Subject.CommonName] = cert
+			}
+
+		} else {
+			fmt.Printf("found cert '%s', block-type '%s'\n", certfile, blockType)
+
+			msubjfile[cert.Subject.CommonName] = certfile
+			mcerts[cert.Subject.CommonName] = cert
+		}
+	}
+
+	processDirf := func(certdir string) error {
+
+		infos, err := ioutil.ReadDir(certdir)
+		if err != nil {
+			return err
+		}
+
+		for _, info := range infos {
+
+			if info.IsDir() {
+				continue
+			}
+
+			// look for certs, issuing-ca certs, and root-ca certs
+
+			// parse cert file
+			certfile := certdir + string(os.PathSeparator) + info.Name()
+			cert, blockType, err := parseCertFilef(certfile)
+
+			if err != nil {
+				fmt.Printf("%v\n", err)
+				continue
+			}
+
+			if cert == nil {
+				continue
+			}
+
+			// save cert
+			saveCertf(certfile, cert, blockType)
+		}
+
+		return nil
+	}
+
+	if err := processDirf(certdir); err != nil {
+		return err
+	}
+
+	if len(trustdir) > 0 {
+		if err := processDirf(trustdir); err != nil {
+			return err
+		}
+	}
+
+	//fmt.Printf("msubjfile... %v\n", msubjfile)
+	//fmt.Printf("mcerts... %v\n", mcerts)
+	//fmt.Printf("mcacerts... %v\n", mcacerts)
+	//fmt.Printf("mrootcerts... %v\n", mrootcerts)
+
+	// iterate over certs and try to find a path to a leaf node
+
+	fmt.Printf("\nsearching for trust paths...\n\n")
+
+	isleaf := false
+
+	for subj, cert := range mcerts {
+		fmt.Printf("cert subject: %s\n", subj)
+
+		// start at the current cert
+		isleaf = false
+
+		for casubj, cacert := range mcacerts {
+			if isleaf {
+				// got to the leaf for the current cert
+				break
+			}
+
+			if cert.Issuer.CommonName == casubj {
+				for rootsubj, rootcert := range mrootcerts {
+					if isleaf {
+						// got to the leaf for the current cert
+						break
+					}
+
+					if cacert.Issuer.CommonName == rootsubj {
+						// got to the leaf...
+						fmt.Printf("leaf root subject: %s\n", rootcert.Subject.CommonName)
+
+						// copy cert chain
+						certfile := msubjfile[subj]
+						cafile := msubjfile[casubj]
+						rootcafile := msubjfile[rootsubj]
+
+						fmt.Printf("copy-cert-chain args: '%s', '%s', '%s'", certfile, cafile, rootcafile)
+
+						err := CopyCertChain(certfile, cafile, rootcafile,
+							certs, mgmt, alyt, ptl, gwy,
+							commonCsrOutDir, customCsrOutDir, isOva)
+
+						if err != nil {
+							fmt.Printf("%v\n", err)
+						}
+
+						// at the leaf for the current cert
+						isleaf = true
+					}
+				}
+			}
+		}
+	}
+
+	return nil
+}
+
 func logCertCopy(dir, logm string) error {
 
 	logf, err := openFileAppend(dir + string(os.PathSeparator) + "cert-copy.log")

@@ -66,7 +66,7 @@ func Input() (input string, outdir1 string, validateIp bool, initConfig bool, in
 	subsysOnly bool, certsOnly bool, certcopy bool, certdir string,
 	certverify bool, certfile, cafile string, rootcafile string, noexpire bool, certconcat bool, gen bool,
 	soma bool, req string, auth string, url string, setfile string, dpdir string, dpfile string,
-	datapowerOnly bool, dpdomain string, dpcacopy bool, certchaincopy bool) {
+	datapowerOnly bool, dpdomain string, dpcacopy bool, certchaincopy bool, trustdir string) {
 
 	// define command line flags
 	inputArg := flag.String("config", "subsys-config.json", "-config input-file")
@@ -84,9 +84,10 @@ func Input() (input string, outdir1 string, validateIp bool, initConfig bool, in
 	certsOnlyArg := flag.Bool("certs", false, "-certs [true] generate certs scripts only")
 
 	//certCopyArg := flag.String("certcopy", "", "-certcopy certfile copy certificate to destination")
-	certCopyArg := flag.Bool("certcopy", false, "-certcopy -cert cert.pem -ca ca.pem -rootca rootca.pem")
+	certCopyArg := flag.Bool("certcopy", false, "-certcopy -cert cert.pem -ca ca.pem -rootca rootca.pem (copy certificate chain)")
 
-	//certDirArg := flag.String("certdir", "","-certdir dir copy all certificate files in dir to destination")
+	certDirArg := flag.String("certdir", "","-certcopy -certdir dir [-trustdir dir] (copy certificate chains from certdir and trustdir)")
+	trustDirArg := flag.String("trustdir", "","-certcopy -certdir dir -trustdir dir (copy certificate chains from certdir and trustdir)")
 
 	// -certverify [-cert] ... -ca ... -rootca ... -noexpire
 	// -certconcat -ca ... -rootca ... -noexpire
@@ -132,7 +133,9 @@ func Input() (input string, outdir1 string, validateIp bool, initConfig bool, in
 	subsysOnly = *subsysOnlyArg
 	certsOnly = *certsOnlyArg
 	certcopy = *certCopyArg
-	//certdir = *certDirArg
+
+	certdir = *certDirArg
+	trustdir = *trustDirArg
 
 	certverify = *certverifyArg
 	certfile = *certfileArg
@@ -160,5 +163,5 @@ func Input() (input string, outdir1 string, validateIp bool, initConfig bool, in
 
 	return input, outdir1, validateIp, initConfig, initConfigType, subsysOnly, certsOnly, certcopy, certdir,
 		certverify, certfile, cafile, rootcafile, noexpire, certconcat, gen,
-		soma, req, auth, url, setfile, dpdir, dpfile, datapowerOnly, dpdomain, dpcacopy, certchaincopy
+		soma, req, auth, url, setfile, dpdir, dpfile, datapowerOnly, dpdomain, dpcacopy, certchaincopy, trustdir
 }

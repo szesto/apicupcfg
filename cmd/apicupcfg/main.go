@@ -14,14 +14,14 @@ func main() {
 	// input: configuration file, output dir, csr subdirectories
 	input, outdir, validateIp, initConfig, initConfigType, subsysOnly, certsOnly,
 	certcopy, certdir, certverify, certfile, cafile, rootcafile, noexpire, certconcat, gen,
-	soma, req, auth, url, setfile, dpdir, dpfile, datapowerOnly, dpdomain, dpcacopy, certchaincopy := apicupcfg.Input()
+	soma, req, auth, url, setfile, dpdir, dpfile, datapowerOnly, dpdomain, dpcacopy, certchaincopy, trustdir := apicupcfg.Input()
 
 	func (certdir string, certconcat bool, dpcacopy bool, certchaincopy bool) {} (certdir, certconcat, dpcacopy, certchaincopy)
 
 	// input actions
 	isValidateIpActionf := func() bool {return validateIp}
-	isCertCopyActionf := func() bool {return certcopy }
-	//isCertDirActionf := func() bool {return len(certdir) > 0}
+	isCertCopyActionf := func() bool {return certcopy && len(certdir) == 0 }
+	isCertDirActionf := func() bool {return certcopy && len(certdir) > 0}
 	isCertVerifyActionf := func() bool {return certverify}
 	isGenActionf := func() bool {return gen}
 
@@ -35,10 +35,9 @@ func main() {
 	isInitConfigActionf := func() bool {return initConfig}
 
 	// check input actions
-	//!isCertDirActionf()
 	if !isValidateIpActionf() && !isCertCopyActionf() &&
 		!isCertVerifyActionf() && !isGenActionf() &&
-		!isSomaf() && !isInitConfigActionf() {
+		!isSomaf() && !isInitConfigActionf() && !isCertDirActionf() {
 
 		log.Fatalf("no action specified... use apicupcfg -h for help...")
 	}
@@ -144,6 +143,16 @@ func main() {
 
 				}
 
+			} else if isCertDirActionf() {
+
+				err = apicupcfg.CopyCertDir(certdir, trustdir, &subsysvm.Certs,
+					&subsysvm.Management, &subsysvm.Analytics, &subsysvm.Portal, &subsysvm.Gateway,
+					apicupcfg.CommonCsrOutDir, apicupcfg.CustomCsrOutDir, true)
+
+				if err != nil {
+					log.Fatal(err)
+				}
+
 			} else if isGenActionf() {
 				// gen action
 
@@ -194,11 +203,21 @@ func main() {
 
 				err = apicupcfg.CopyCertChain(certfile, cafile, rootcafile, &subsysk8s.Certs,
 					&subsysk8s.Management, &subsysk8s.Analytics, &subsysk8s.Portal, &subsysk8s.Gateway,
-					apicupcfg.CommonCsrOutDir, apicupcfg.CustomCsrOutDir, true)
+					apicupcfg.CommonCsrOutDir, apicupcfg.CustomCsrOutDir, false)
 
 				if err != nil {
 					log.Fatal(err)
 
+				}
+
+			} else if isCertDirActionf() {
+
+				err = apicupcfg.CopyCertDir(certdir, trustdir, &subsysk8s.Certs,
+					&subsysk8s.Management, &subsysk8s.Analytics, &subsysk8s.Portal, &subsysk8s.Gateway,
+					apicupcfg.CommonCsrOutDir, apicupcfg.CustomCsrOutDir, false)
+
+				if err != nil {
+					log.Fatal(err)
 				}
 
 			} else if isGenActionf() {
