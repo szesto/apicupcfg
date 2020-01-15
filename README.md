@@ -4,6 +4,89 @@
 
 Both Kubernetes and OVA installation types are supported.
 
+**Typical Steps for the OVA install.**
+- Create working directory.
+- Generate json configuration file *subsys-config.json*:
+    - `apicupcfg -initconfig [-configtype ova]`
+- Edit *subsys-config.json* configuration file. In what follows, *tag* is the value of the *Tag* property.
+- Validate subsystem (and datapower) ip addresses:
+    - `apicupcfg -validateip`
+- Generate subsystem and certificate setting scripts:
+    - `apicupcfg -gen`
+- Generate CSR's. 
+    - From the *custom-csr* directory:
+        - `all-user-facing-public-csr.tag.bat|sh`
+- Submit generated csr files to the ca.
+- Place certificates recieved from the ca in a directory. You can optionally split certificates in one directory (received-certs)
+and ca certificates in another directory (trust-root). 
+- Copy certificates to correct destinations:
+    - `apicupcfg -certcopy -certdir dir [-trustdir dir] `
+- Run subsystem and certificate setting scripts. 
+    - From the *project* directory: 
+        - `..\apicup-subsys-set-management.tag.bat|sh`
+        - `..\apicup-subsys-set-analytics.tag.bat|sh`
+        - `..\apicup-subsys-set-portal.tag.bat|sh`
+        - `..\apicup-certs-set-user-facing-public.tag.bat|sh`
+- Install subsystems with the `apicup subsys install` command as usual. 
+    - From the *project* directory:
+        - `..\bin\apicup subsys install mgmt --out mgmt-plan-out`
+        - `..\bin\apicup subsys install alyt --out alyt-plan-out`
+        - `..\bin\apicup subsys install ptl --out ptl-plan-out`
+- Configure datapower cluster.
+
+**Steps for datapower configuration**
+- change to the *datapower* directory.
+    - run `all-datapower-csr.tag.bat|sh`
+    - submit 1 csr to the ca.
+    - for each datapower, run initial configuration, set timezone, and enable xml management interface. Apply fixpack.
+    - create *dp.env* file with the datapower admin creds: 1st line is username, 2nd line is password
+    - run `*zoma-crypto-self-(datapower-name).bat|sh*` file for each datpower instance.
+    - run `*zoma-(datapower-name.bat|sh)*` file for each datapower instance.
+    - complete datapower crypto update 
+    - run `*zoma-web-gui-(datapower-name).bat|sh*` file for each datpower instance.
+
+**Datapower crypto update**
+- Place signed certificates in the `received-certs` directory 
+- Place issuing ca and root ca certificates in `trust-root` directory. You can also place trust certs together with other certificates.
+- Copy certificates: `apicupcfg -certcopy -certdir received-certs [-trustdir trust-root]`
+- Change to the *datapower* directory
+    - run *zoma-crypto-update-datapower-name.bat|sh* script for each datapower instance
+
+**Typical Steps for the Kubernetes install.** 
+- Create working directory.
+- Generate json configuration file *subsys-config.json*:
+    - `apicupcfg -initconfig -configtype k8s`
+- Edit *subsys-config.json* configuration file. In what follows, *tag* is the value of the *Tag* property.
+- Validate subsystem ip addresses:
+    - `apicupcfg -validateip`
+- Generate subsystem and certificate setting scripts:
+    - `apicupcfg -gen`
+- Generate CSR's. 
+    - From the *custom-csr* directory:
+        - `all-user-facing-public-csr.tag.bat|sh`
+- Submit generated csr files to the ca.
+- Place certificates recieved from the ca in a directory. You can optionally split certificates in one directory (received-certs)
+and ca certificates in another directory (trust-root). 
+- Copy certificates to correct destinations:
+    - `apicupcfg -certcopy -certdir dir [-trustdir dir] `
+- Run subsystem and certificate setting scripts. 
+    - From the *project* directory: 
+        - `..\apicup-subsys-set-management.tag.bat|sh`
+        - `..\apicup-subsys-set-analytics.tag.bat|sh`
+        - `..\apicup-subsys-set-portal.tag.bat|sh`
+        - `..\apicup-subsys-set-gateway.tag.bat|sh`
+        - `..\apicup-certs-set-user-facing-public.tag.bat|sh`
+- Install subsystems with the `apicup subsys install` command as usual. 
+    - From the *project* directory:
+        - `..\bin\apicup subsys install mgmt`
+        - `..\bin\apicup subsys install gwy`
+        - `..\bin\apicup subsys install alyt`
+        - `..\bin\apicup subsys install ptl`
+
+**General Info.**
+
+*No IBM API Connect software is required to build or use this tool.*
+
 `apicupcfg` generates all subsystem and certificate scripts, all supportring certificate configuration
 scripts, datapower configuration scripts, and provides a number of validation options.
 
@@ -221,55 +304,6 @@ if you *udpate* templates, generate new rice-box.go:
 in the cmd/apicupcfg directory:
 `rice clean`
 `rice embed-go`
-
-**General Info.**
-
-*No IBM API Connect software is required to build or use this tool.*
-
-**Typical Steps for the OVA install.**
-- Create working directory.
-- Generate json configuration file *subsys-config.json*:
-    - `apicupcfg -initconfig [-configtype ova]`
-- Edit *subsys-config.json* configuration file. In what follows, *tag* is the value of the *Tag* property.
-- Validate subsystem (and datapower) ip addresses:
-    - `apicupcfg -validateip`
-- Generate subsystem and certificate setting scripts:
-    - `apicupcfg -gen`
-- Generate CSR's. From the *custom-csr* directory:
-    - `all-user-facing-public-csr.tag.bat|sh`
-- Submit generated csr files to the ca.
-- Place certificates recieved from the ca in a directory. You can optionally split certificates in one directory (received-certs)
-and ca certificates in another directory (trust-root). 
-- Copy certificates to correct destinations:
-    - `apicupcfg -certcopy -certdir dir [-trustdir dir] `
-- Run subsystem and certificate setting scripts. From the *project* directory: 
-    - `..\apicup-subsys-set-management.tag.bat|sh`
-    - `..\apicup-subsys-set-analytics.tag.bat|sh`
-    - `..\apicup-subsys-set-portal.tag.bat|sh`
-    - `..\apicup-certs-set-user-facing-public.tag.bat|sh`
-- Install subsystems with the `apicup subsys install` command as usual. From the *project* directory:
-    - `..\bin\apicup subsys install mgmt --out mgmt-plan-out`
-    - `..\bin\apicup subsys install alyt --out alyt-plan-out`
-    - `..\bin\apicup subsys install ptl --out ptl-plan-out`
-- Configure datapower cluster.
-
-**Steps for datapower configuration**
-- change to the *datapower* directory.
-    - run `all-datapower-csr.tag.bat|sh`
-    - submit 1 csr to the ca.
-    - for each datapower, run initial configuration, set timezone, and enable xml management interface. Apply fixpack.
-    - create *dp.env* file with the datapower admin creds: 1st line is username, 2nd line is password
-    - run `*zoma-crypto-self-(datapower-name).bat|sh*` file for each datpower instance.
-    - run `*zoma-(datapower-name.bat|sh)*` file for each datapower instance.
-    - complete datapower crypto update 
-    - run `*zoma-web-gui-(datapower-name).bat|sh*` file for each datpower instance.
-
-**Datapower crypto update**
-- Place signed certificates in the `received-certs` directory 
-- Optionally place ca and root ca certificates in `trust-root` directory. You can also place ca certs together with other certificates.
-- Copy certificates: `apicupcfg -certcopy -certdir received-certs [-trustdir trust-root]`
-- Change to the *datapower* directory
-    - run *zoma-crypto-update-datapower-name.bat|sh* script for each datapower instance
 
 **Command line reference.**
 
