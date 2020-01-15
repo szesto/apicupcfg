@@ -16,16 +16,6 @@
     "Certs": {
         "DnFields": ["O=APIC","C=US"],
         "K8sNamespace": {{ .Namespace | default "apic" | quote }},
-        "CaFile": "ca-chain-root-last.crt",
-
-        "Certbot": {
-            "CertDir": "letsencrypt/live/my.domain.com",
-            "Cert": "cert.pem",
-            "Key": "privkey.pem",
-            "CaChain": "chain.pem"
-        },
-
-        "SharedEndpointTrust": false,
 
         "PublicUserFacingCerts": true,
         "PublicCerts": false,

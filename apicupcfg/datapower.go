@@ -24,6 +24,7 @@ const defaultApicGwServiceAddress = "if_eth0"
 const gwdPeering = "gwd"
 const rateLimitPeering = "rate-limit"
 const subsPeering = "subs"
+const apiProbePeering = "api-probe"
 
 const gwdPeeringLocalPort = 16380
 const gwdPeeringMonitorPort = 26380
@@ -33,6 +34,9 @@ const rateLimitPeeringMonitorPort = 26383
 
 const subsPeeringLocalPort = 16384
 const subsPeeringMonitorPort = 26384
+
+const apiProbePeeringLocalPort = 16382
+const apiProbePeeringMonitorPort = 26382
 
 type DpConfigSequence struct {
 	Domain string
@@ -345,7 +349,7 @@ func datapowerWebGuiConfig(gwy *GwySubsysVm, outputdir string, tbox *rice.Box) {
 	// crypto-key
 	dpcryptokey := DpCryptoKey{
 		Domain:        dpdomain,
-		CryptoKeyName: "web-gui-crypto-key", //gwy.GetGwdKeyOrDefault(),
+		CryptoKeyName: "web_gui_crypto_key", //gwy.GetGwdKeyOrDefault(),
 		CryptoKeyFile: fmt.Sprintf("%s:///%s.pem", gwy.GetCryptoDirectoryOrDefault(), gwy.GetGwdKeyOrDefault()),
 	}
 	outfile := fmt.Sprintf("%s", "dp-web-gui-crypto-key.xml")
@@ -354,7 +358,7 @@ func datapowerWebGuiConfig(gwy *GwySubsysVm, outputdir string, tbox *rice.Box) {
 	// crypto certificate
 	dpcryptocert := DpCryptoCertificate{
 		Domain:         dpdomain,
-		CryptoCertName: "web-gui-crypto-cert", //fmt.Sprintf("%s", gwy.GetGwdCertOrDefault()),
+		CryptoCertName: "web_gui_crypto_cert", //fmt.Sprintf("%s", gwy.GetGwdCertOrDefault()),
 		CryptoCertFile: fmt.Sprintf("%s:///%s.pem", gwy.GetCryptoDirectoryOrDefault(), gwy.GetGwdCertOrDefault()),
 	}
 	outfile = fmt.Sprintf("%s", "dp-web-gui-crypto-cert.xml")
@@ -363,7 +367,7 @@ func datapowerWebGuiConfig(gwy *GwySubsysVm, outputdir string, tbox *rice.Box) {
 	// crypto cert - ca
 	dpcryptocert = DpCryptoCertificate{
 		Domain:         dpdomain,
-		CryptoCertName: "web-gui-crypto-cert-ca", //fmt.Sprintf("%s", gwy.GetCaCertOrDefault()),
+		CryptoCertName: "web_gui_crypto_cert_ca", //fmt.Sprintf("%s", gwy.GetCaCertOrDefault()),
 		CryptoCertFile: fmt.Sprintf("%s:///%s.pem", gwy.GetCryptoDirectoryOrDefault(), gwy.GetCaCertOrDefault()),
 	}
 	outfile = fmt.Sprintf("%s", "dp-web-gui-crypto-cert-ca.xml")
@@ -372,7 +376,7 @@ func datapowerWebGuiConfig(gwy *GwySubsysVm, outputdir string, tbox *rice.Box) {
 	// crypto cert - root ca
 	dpcryptocert = DpCryptoCertificate{
 		Domain:         dpdomain,
-		CryptoCertName: "web-gui-crypto-cert-root-ca",//fmt.Sprintf("%s", gwy.GetRootCertOrDefault()),
+		CryptoCertName: "web_gui_crypto_cert_root_ca",//fmt.Sprintf("%s", gwy.GetRootCertOrDefault()),
 		CryptoCertFile: fmt.Sprintf("%s:///%s.pem", gwy.GetCryptoDirectoryOrDefault(), gwy.GetRootCertOrDefault()),
 	}
 	outfile = fmt.Sprintf("%s", "dp-web-gui-crypto-cert-root-ca.xml")
@@ -381,10 +385,10 @@ func datapowerWebGuiConfig(gwy *GwySubsysVm, outputdir string, tbox *rice.Box) {
 	// crypto identification credentials
 	dpidcreds := DpCryptoIdentCredentials{
 		Domain:         dpdomain,
-		Name:           "web-gui-crypto-id-creds", //gwdIdCred,
-		CryptoKeyName:  "web-gui-crypto-key", //gwy.GetGwdKeyOrDefault(),
-		CryptoCertName: "web-gui-crypto-cert", //fmt.Sprintf("%s_self", gwy.GetGwdCertOrDefault()),
-		CaCerts:         []string{"web-gui-crypto-cert-ca", "web-gui-crypto-cert-root-ca"},
+		Name:           "web_gui_crypto_id_creds", //gwdIdCred,
+		CryptoKeyName:  "web_gui_crypto_key", //gwy.GetGwdKeyOrDefault(),
+		CryptoCertName: "web_gui_crypto_cert", //fmt.Sprintf("%s_self", gwy.GetGwdCertOrDefault()),
+		CaCerts:         []string{"web_gui_crypto_cert_ca", "web_gui_crypto_cert_root_ca"},
 	}
 	outfile = fmt.Sprintf("%s", "dp-web-gui-crypto-id-creds.xml")
 	dpCryptoIndentCredentials(outputdir, outfile, dpidcreds, tbox)
@@ -392,8 +396,8 @@ func datapowerWebGuiConfig(gwy *GwySubsysVm, outputdir string, tbox *rice.Box) {
 	// ssl-server
 	dpsslsrv := DpSSLServerProfile{
 		Domain:               dpdomain,
-		Name:                 "web-gui-ssl-server", //sslGwdServer, // gwd_server
-		CryptoIdentCreds: "web-gui-crypto-id-creds",
+		Name:                 "web_gui_ssl_server", //sslGwdServer, // gwd_server
+		CryptoIdentCreds: "web_gui_crypto_id_creds",
 		CryptoValCreds:   "", // no valcreds...
 	}
 
@@ -403,7 +407,7 @@ func datapowerWebGuiConfig(gwy *GwySubsysVm, outputdir string, tbox *rice.Box) {
 	// web-gui
 	dpwebgui := DpWebGui{
 		IdleTimeout:      gwy.GetWebGuiIdleTimeoutOrDefault(),
-		SSLServer: "web-gui-ssl-server",
+		SSLServer: "web_gui_ssl_server",
 	}
 
 	outfile = fmt.Sprintf("%s", "dp-web-gui.xml")
@@ -546,12 +550,12 @@ func datapowerGatewayPeeringConfig(gwy *GwySubsysVm, outputdir string, tbox *ric
 		peer1, peer2 := computepeers(hidx)
 
 		// each host is participating in all peering groups
-		peerings := []string {gwy.GetGwdPeeringOrDefault(), gwy.GetRateLimitPeeringOrDefault(), gwy.GetSubsPeeringOrDefault()}
-		localPorts := []int {gwy.GetGwdPeeringLocalPortOrDefault(), gwy.GetRateLimitPeeringLocalPortOrDefault(), gwy.GetSubsPeeringLocalPortOrDefault()}
-		monitorPorts := []int {gwy.GetGwdPeeringMonitorPortOrDefault(), gwy.GetRateLimitPeeringMonitorPortOrDefault(), gwy.GetSubsPeeringMonitorPortOrDefault()}
+		peerings := []string {gwy.GetGwdPeeringOrDefault(), gwy.GetRateLimitPeeringOrDefault(), gwy.GetSubsPeeringOrDefault(), gwy.GetApiProbePeeringOrDefault()}
+		localPorts := []int {gwy.GetGwdPeeringLocalPortOrDefault(), gwy.GetRateLimitPeeringLocalPortOrDefault(), gwy.GetSubsPeeringLocalPortOrDefault(), gwy.GetApiProbePeeringLocalPortOrDefault()}
+		monitorPorts := []int {gwy.GetGwdPeeringMonitorPortOrDefault(), gwy.GetRateLimitPeeringMonitorPortOrDefault(), gwy.GetSubsPeeringMonitorPortOrDefault(), gwy.GetApiProbePeeringMonitorPortOrDefault()}
 
-		priorities := []int {host.GwdPeeringPriority, host.RateLimitPeeringPriority, host.SubsPeeringPriority}
-		peeringintfs := []string {host.GwdPeeringInterface, host.RateLimitPeeringInterface, host.SubsPeeringInterface}
+		priorities := []int {host.GwdPeeringPriority, host.RateLimitPeeringPriority, host.SubsPeeringPriority, host.ApiProbePeeringPriority}
+		peeringintfs := []string {host.GwdPeeringInterface, host.RateLimitPeeringInterface, host.SubsPeeringInterface, host.ApiProbePeeringInterface}
 
 		for j := 0; j < len(peerings); j++ {
 
@@ -567,7 +571,7 @@ func datapowerGatewayPeeringConfig(gwy *GwySubsysVm, outputdir string, tbox *ric
 				return err
 			}
 
-			// gateway peering: gwd, rate-limit, subs, (api-probe)
+			// gateway peering: gwd, rate-limit, subs, api-probe
 			dpgwpeering := DpGatewayPeering{
 				Domain:              gwy.GetDatapowerDomainOrDefault(),
 				Name:                pgroup,
@@ -1033,6 +1037,16 @@ func somaApiConnect(gwy *GwySubsysVm, dpoutdir string, osenv OsEnv, configFileNa
 		})
 
 		peeringkey = fmt.Sprintf(fmt.Sprintf("dp-peering-%s-%s.xml", subsPeering, dot2dash(host.Name)))
+		reqSpecs = append(reqSpecs, SomaSpec{
+			Req:    somaPref() + peeringkey,
+			File:   "",
+			Dpdir:  "",
+			Dpfile: "",
+			Auth:   dpenv,
+			Url:    url,
+		})
+
+		peeringkey = fmt.Sprintf(fmt.Sprintf("dp-peering-%s-%s.xml", apiProbePeering, dot2dash(host.Name)))
 		reqSpecs = append(reqSpecs, SomaSpec{
 			Req:    somaPref() + peeringkey,
 			File:   "",

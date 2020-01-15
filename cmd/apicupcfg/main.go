@@ -98,7 +98,7 @@ func main() {
 
 			} else if isSetfilef() {
 				// soma set-file request
-				status, statusCode, reply, err := apicupcfg.SomaUpload(subsysvm, setfile, dpdir, dpfile, dpdomain, auth, url, tbox)
+				status, statusCode, reply, err := apicupcfg.SomaUpload(setfile, dpdir, dpfile, dpdomain, auth, url, tbox)
 				if err != nil {
 					fmt.Printf("%v\n\n", err)
 

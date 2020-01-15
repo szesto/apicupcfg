@@ -48,6 +48,9 @@ type HostGateway struct {
 
 	SubsPeeringPriority int
 	SubsPeeringInterface string
+
+	ApiProbePeeringPriority int
+	ApiProbePeeringInterface string
 }
 
 func (vm *HostVm) validateIp() {
@@ -230,6 +233,10 @@ type GwySubsysVm struct {
 	SubsPeeringLocalPort int
 	SubsPeeringMonitorPort int
 
+	ApiProbePeering string
+	ApiProbePeeringLocalPort int
+	ApiProbePeeringMonitorPort int
+
 	// datapower cert configuration
 	DatapowerCryptoDir string
 
@@ -383,6 +390,27 @@ func (gwy *GwySubsysVm) GetSubsPeeringMonitorPortOrDefault() int {
 		return subsPeeringMonitorPort
 	}
 	return gwy.SubsPeeringMonitorPort
+}
+
+func (gwy *GwySubsysVm) GetApiProbePeeringOrDefault() string {
+	if len(gwy.ApiProbePeering) == 0 {
+		return apiProbePeering
+	}
+	return gwy.ApiProbePeering
+}
+
+func (gwy *GwySubsysVm) GetApiProbePeeringLocalPortOrDefault() int {
+	if gwy.ApiProbePeeringLocalPort == 0 {
+		return apiProbePeeringLocalPort
+	}
+	return gwy.ApiProbePeeringLocalPort
+}
+
+func (gwy *GwySubsysVm) GetApiProbePeeringMonitorPortOrDefault() int {
+	if gwy.ApiProbePeeringLocalPort == 0 {
+		return apiProbePeeringMonitorPort
+	}
+	return gwy.ApiProbePeeringMonitorPort
 }
 
 func (gwy *GwySubsysVm) GetApiGatewayPortOrDefault() int {
@@ -575,19 +603,19 @@ func ApplyTemplateVm(subsys *SubsysVm, outfiles map[string]string, subsysOnly, c
 	}
 }
 
-func CopyCertVm(certfile string, isdir bool, subsys *SubsysVm, commonCsrDir string, customCsrDir string) error {
+//func CopyCertVm(certfile string, isdir bool, subsys *SubsysVm, commonCsrDir string, customCsrDir string) error {
+//
+//	if isdir {
+//		return copyCerts(certfile, &subsys.Certs, &subsys.Management, &subsys.Analytics,
+//			&subsys.Portal, &subsys.Gateway, commonCsrDir, customCsrDir, true)
+//
+//	} else {
+//		return copyCert(certfile, &subsys.Certs, &subsys.Management, &subsys.Analytics,
+//			&subsys.Portal, &subsys.Gateway, commonCsrDir, customCsrDir, true)
+//	}
+//}
 
-	if isdir {
-		return copyCerts(certfile, &subsys.Certs, &subsys.Management, &subsys.Analytics,
-			&subsys.Portal, &subsys.Gateway, commonCsrDir, customCsrDir, true)
-
-	} else {
-		return copyCert(certfile, &subsys.Certs, &subsys.Management, &subsys.Analytics,
-			&subsys.Portal, &subsys.Gateway, commonCsrDir, customCsrDir, true)
-	}
-}
-
-func SomaUpload(subsys *SubsysVm, uploadfile, dpdir, dpfile, dpdomain, dpenv, url string, tbox *rice.Box) (status string, statusCode int, reply string, err error) {
+func SomaUpload(uploadfile, dpdir, dpfile, dpdomain, dpenv, url string, tbox *rice.Box) (status string, statusCode int, reply string, err error) {
 
 	return SomaUploadFile(uploadfile, dpdir, dpfile, dpdomain, dpenv, url, tbox)
 }

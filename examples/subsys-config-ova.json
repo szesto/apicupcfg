@@ -1,6 +1,6 @@
 {
     "InstallType": "ova",
-    "Version": "2018.1.x",
+    "Version": "windows_lts_v2018.4.1.9",
     "Tag": "tag",
 
     "Mode": "dev|standard",
@@ -34,16 +34,6 @@
     "Certs": {
         "DnFields": ["O=APIC|match ca reqs","C=US|match ca reqs"],
         "K8sNamespace": "default",
-        "CaFile": "ca-chain-root-last.crt",
-
-        "Certbot": {
-            "CertDir": "letsencrypt/live/my.domain.com",
-            "Cert": "cert.pem",
-            "Key": "privkey.pem",
-            "CaChain": "chain.pem"
-        },
-
-        "SharedEndpointTrust": false,
 
         "PublicUserFacingCerts": true,
         "PublicCerts": false,
@@ -150,11 +140,11 @@
         "Hosts": [
             {"Name": "dp1.my.domain.com", "Device": "eth0", "HostAlias": "if_eth0",
                 "IpAddress": "ip-address", "SubnetMask": "dot.subnet.mask","Gateway": "gw-ip-address",
-                "GwdPeeringPriority": 100, "RateLimitPeeringPriority": 100, "SubsPeeringPriority": 100},
+                "GwdPeeringPriority": 100, "RateLimitPeeringPriority": 100, "SubsPeeringPriority": 100, "ApiProbePeeringPriority": 100},
 
             {"Name": "dp2.my.domain.com", "Device": "eth0", "HostAlias": "if_eth0",
                 "IpAddress": "ip-address", "SubnetMask": "dot.subnet.mask", "Gateway": "gw-ip-address",
-                "GwdPeeringPriority": 90, "RateLimitPeeringPriority": 90, "SubsPeeringPriority": 90},
+                "GwdPeeringPriority": 90, "RateLimitPeeringPriority": 90, "SubsPeeringPriority": 90, "ApiProbePeeringPriority": 90},
 
             {"Name": "dp3.my.domain.com",
 
@@ -179,7 +169,8 @@
 
                 "GwdPeeringPriority": 80, "GwdPeeringInterface": "eth0",
                 "RateLimitPeeringPriority": 80, "RateLimitPeeringInterface": "eth0",
-                "SubsPeeringPriority": 80, "SubsPeeringInterface": "eth0"
+                "SubsPeeringPriority": 80, "SubsPeeringInterface": "eth0",
+                "ApiProbePeeringPriority": 80, "ApiProbePeeringInterface": "eth0"
             }
         ],
 

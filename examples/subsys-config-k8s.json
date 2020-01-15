@@ -1,6 +1,6 @@
 {
     "InstallType": "k8s",
-    "Version": "2018.4.1.x",
+    "Version": "linux_lts_v2018.4.1.9",
     "Tag": "tag",
 
     "Mode": "dev|standard",
@@ -14,16 +14,6 @@
     "Certs": {
         "DnFields": ["O=APIC|match ca reqs","C=US|match ca reqs"],
         "K8sNamespace": "apic",
-        "CaFile": "ca-chain-root-last.crt",
-
-        "Certbot": {
-            "CertDir": "letsencrypt/live/my.domain.com",
-            "Cert": "cert.pem",
-            "Key": "privkey.pem",
-            "CaChain": "chain.pem"
-        },
-
-        "SharedEndpointTrust": false,
 
         "PublicUserFacingCerts": true,
         "PublicCerts": false,
