@@ -44,7 +44,6 @@ Generated directories:
 - *project* - apicup install configuration.
 - *custom-csr* - openssl scripts for custom certificates.
 - *common-csr* - openssl scripts for common certificates.
-- *shared-dir* - openssl scripts for shared endpoint trust.
 - *datapwer* - datapower configuration scripts.
   
 Generated scripts and configuration data depend on the input configuration file. 
@@ -66,13 +65,6 @@ Generated certificate setting scripts.
 - `apicup-certs-set-mutual-auth.tag.(sh|bat)`
 - `apicup-certs-set-common.tag.(sh|bat)`
  
-- `apicup-certs-set-certbot-user-facing-public.tag.(sh|bat)`
-- `apicup-certs-set-certbot-public.tag.(sh|bat)`
- 
-- `apicup-certs-set-shared-trust-user-facing-public.tag.(sh|bat)`
-- `apicup-certs-set-shared-trust-public.tag.(sh|bat)`
-- `apicup-certs-set-shared-trust-mutual-auth.tag.(sh|bat)`
-
 Generated datapower scripts. (OVA install only) 
 
 - `all-datapower-csr.tag.bat|sh`
@@ -80,6 +72,7 @@ Generated datapower scripts. (OVA install only)
 - `one *.conf.bat|sh` open ssl script
 - `zoma-crypto-self-*.bat|sh` script for each datapower machine for self-signed cryto.
 - `zoma-crypto-update-*.bat|sh` crypto script for each datapower machine
+- `zoma-web-gui-*.bat|sh` web gui configuration scripts
 - `zoma-*.bat|sh` datapower configuration script for each datapower machine
 - `soma` subdirectory with datapower xml request files.
  
@@ -107,7 +100,6 @@ It is recommended to generate public user facing certs only. Other types of cert
 
 *custom-csr* subdirectory contains openssl scripts for public user facing certs and public certs.
 *common-csr* subdirectory contains openssl scripts for common certificates, this includes mutual auth and client certs.
-*shared-csr* subdirectory contains openssl scripts for shared endpoint trust.
 
 Each endpoint the json configuration file is transformed into the cn and openssl csr configuration
 file and script are generated in the csr subdirectory.
@@ -126,30 +118,22 @@ Copy received certificates to the correct destination.
 **Copying certificates to the correct files**.
 
 Certificate settings scripts expect to find certificates, private keys and root certificates at specific locations.
-Certificates recieved from the ca can be manually copied to the correct destination but this is error prone.
 
-To copy a certificate received from the ca to the correct destination:
-`apicupcfg -certcopy path-to-certificate-file.pem [-out outdir] [-config subsys-config.json]`
+To copy certificate chain received from ca:
+`-certcopy -cert cert.pem -ca ca.pem -rootca rootca.pem`
 
-This command will introspect the certificate, match it with endpoints defined in the configuration file
-and copy certificate to the correct destination. Note that if certificate matches mulitple endpoints
-(wildcard or shared trust) then a separate copy will be made for each endpoint.
+This command will introspect the certificate, build validation path, match subject common name with endpoints defined 
+in the configuration file and copy certificate chain to the correct destinations. As part of a copy process
+`ca.pem` and `rootca.pem` will be merged into certificate file. Each copy will be recorded in the cert-copy.log.
 
-To process all certificates received from the ca together, place them in a directory and run:
-`apicupcfg -certdir path-to-a-directory-with-certificates -out outdir [-config subsys-config.json]`
+Note that if certificate subject common name matches mulitple endpoints then a separate copy will be made for each endpoint.
 
-This command will copy all certificates in the directory to the correct destination.
+To process all certificates received from ca together, place them in one directory or put certificates in one
+directory (certdir) and ca and ca root certificates in another directory (trustdir) and run:
+`-certcopy -certdir dir [-trustdir dir]`
 
-**Copying ca trust file**
-
-You must create a file that concatenates intermidiate ca certificate and root ca certificate and copy it to the correct destination.
-This could be done manually but it is error prone.
-
-To concatenate intermediate ca cert and root ca cert and copy this file to correct destination:
-`apicupcfg -certconcat -ca path-to-ca.pem -rootca path-to-root-ca.pem -out outdir`
-
-This command will verify certificates and if valid copy combined file to a destination specified
-in the Certs.CaFile value. Combined file will be copied to the custom-csr and common-csr subdirectories.
+This command will build trust chains for all certificates in the certificate directory and copy each certificate
+chain as described above.
 
 **Verifying certificates**
 
@@ -194,13 +178,12 @@ dppassword
 Run *zoma* self-signed scirpts for each individual datapower. 
 Run *zoma* script for each individual datapower. 
 Run *zoma* crypto update script for each individual datapower when signed certs are ready. 
+Run *zoma-web-gui-*" scripts for each individual datapower. 
 
 *Copying datapower certificates.*  
-To copy datapower certificates, place certificates in the directory and run:
-`apicupcfg -certdir dir`  
-
-To copy trusted datapower certificates, place ca cert and root cert into a directory, and run:
-`apicupcfg -dpcacopy -ca ca.pem -rootca rootca.pem`
+Datapower certificates can be copied with either command (see above): 
+`apicupcfg -certcopy -cert cert.pem -ca ca.pem -rootca rootca.pem` 
+`apicupcfg -certcopy -certdir dir [-trustdir dir]` 
 
 *Updating datapower crypto configuration.*  
 After copying datapower certificates and datapower trust certificates run
@@ -255,18 +238,16 @@ in the cmd/apicupcfg directory:
 - Generate CSR's. From the *custom-csr* directory:
     - `all-user-facing-public-csr.tag.bat|sh`
 - Submit generated csr files to the ca.
-- Place certificates recieved from the ca in a directory. Here we assume *received-certs* directory.
-- Copy certificates to correct destination:
-    - `apicupcfg -certdir received-certs`
-- Place trusted root certificates received from the the ca in a directory. Here we assume *ca-trust* subdir.`
-- Concatenate and copy trusted ca certs:
-    - `apicupcfg -certconcat -ca ca-trust\ca.pem -rootca ca-trust\rootca.pem`
+- Place certificates recieved from the ca in a directory. You can optionally split certificates in one directory (received-certs)
+and ca certificates in another directory (trust-root). 
+- Copy certificates to correct destinations:
+    - `apicupcfg -certcopy -certdir dir [-trustdir dir] `
 - Run subsystem and certificate setting scripts. From the *project* directory: 
     - `..\apicup-subsys-set-management.tag.bat|sh`
     - `..\apicup-subsys-set-analytics.tag.bat|sh`
     - `..\apicup-subsys-set-portal.tag.bat|sh`
     - `..\apicup-certs-set-user-facing-public.tag.bat|sh`
-- Install subsystems with the `apicup subsys install` command. From the *project* directory:
+- Install subsystems with the `apicup subsys install` command as usual. From the *project* directory:
     - `..\bin\apicup subsys install mgmt --out mgmt-plan-out`
     - `..\bin\apicup subsys install alyt --out alyt-plan-out`
     - `..\bin\apicup subsys install ptl --out ptl-plan-out`
@@ -280,15 +261,13 @@ in the cmd/apicupcfg directory:
     - create *dp.env* file with the datapower admin creds: 1st line is username, 2nd line is password
     - run `*zoma-crypto-self-(datapower-name).bat|sh*` file for each datpower instance.
     - run `*zoma-(datapower-name.bat|sh)*` file for each datapower instance.
-    - complete datapower crypto update.
+    - complete datapower crypto update 
+    - run `*zoma-web-gui-(datapower-name).bat|sh*` file for each datpower instance.
 
 **Datapower crypto update**
-- Place signed certificates in the dp-certs directory
-- Copy certificates: 
-    - `apicupcfg -certdir dp-certs`
-- Place datapower trust certificates in the dp-trust directory
-- Copy datapower certificates:
-    - apicupcfg -dpcopy -ca dp-trust/ca.pem -rootca dp-trust/root-ca.pem
+- Place signed certificates in the `received-certs` directory 
+- Optionally place ca and root ca certificates in `trust-root` directory. You can also place ca certs together with other certificates.
+- Copy certificates: `apicupcfg -certcopy -certdir received-certs [-trustdir trust-root]`
 - Change to the *datapower* directory
     - run *zoma-crypto-update-datapower-name.bat|sh* script for each datapower instance
 
@@ -303,18 +282,14 @@ Note that default output directory is current directory: -out .
 - generate subsys, cert and datapower scripts:  
 `apicupcfg -gen [-out .] [-config subsys-config.json]`  
 - generate subsys or certs or datapower only:  
-`apicupcfg -gen -subsys [-out .] [-config subsys-config.json]`  
-`apicupcfg -gen -certs [-out .] [-config subsys-config.json]`
-`apicupcfg -gen -datapower [-out .] [-config subsys-config.json]`
+`apicupcfg -gen -subsys [-out .] [-config subsys-config.json]`   
+`apicupcfg -gen -certs [-out .] [-config subsys-config.json]` 
+`apicupcfg -gen -datapower [-out .] [-config subsys-config.json]` 
 - copy certificate(s) to correct destination:  
-`apicupcfg -certcopy cerftile.pem [-out .] [-config subsys-config.json]`  
-`apicupcfg -certdir dir [-out .] [-config subsys-config.json]`  
+`apicupcfg -certcopy -cert cert.pem -ca ca.pem -rootca rootca.pem [-out .] [-config subsys-config.json]` 
+`apicupcfg -certcopy -certdir dir [-trustdir dir] [-out .] [-config subsys-config.json]` 
 - verify certificate:  
 `apicupcfg -certverify [-noexpire] [-cert cert.pem] -ca ca.pem -rootca rootca.pem`  
-- concatenate intermediate and root ca certs and copy to correct destination for the script:  
-`apicupcfg -certconcat -ca ca.pem -rootca rootca.pem [-out .] [-config subsys-config.json]`  
-- copy datapower ca and root ca certificates to correct destination for the script:
-`apicupcfg -dpcopy -ca ca.pem -rootca root-ca.pem`
 - validate subsystem ip addresses (ova install only):  
 `apicupcfg -validateip [-config subsys-config.json]`
 
@@ -407,31 +382,6 @@ Comments are not part of *JSON* syntax.
         "K8sNamespace": "default",
         
         //
-        // ca bundle file name
-        // To create this bundle file from the ca.pem and rootca.pem files:
-        // (This command also validates trust chain)
-        // apicupcfg -certconcat -ca /path/to/ca.pem -rootca /path/to/rootca.pem
-        //
-        "CaFile": "ca-chain-root-last.crt",
-
-        //
-        // For certbot (like letsencrypt) specify crypto directory.
-        // if CertDir value is empty no certbot crypto scripts will be generated
-        //
-        "Certbot": {
-            "CertDir": "letsencrypt/live/my.domain.com",
-            "Cert": "cert.pem",
-            "Key": "privkey.pem",
-            "CaChain": "chain.pem"
-        },
-
-        //
-        // Shared endpoint trust is advanced trust model where trust is shared between susbystem endpoints
-        // If set to 'true' shared-csr directory will contain scripts to support this trust model.
-        //
-        "SharedEndpointTrust": false,
-
-        //
         // Types of certifiactes to generate.
         //
         // for the public user facing certs all open ssl scripts will be in the custom-csr directory
@@ -441,8 +391,7 @@ Comments are not part of *JSON* syntax.
         // submit csr's to ca
         //
         // To copy signed certificates to files expected by scripts: 
-        // (this command will introspect all certificates in the directory and match them to the subystem endpoints):
-        // apicupcfg -certdir /path/to/dir-with-signed-certs
+        // apicupcfg -certcopy -certdir dir [-trustdir dir]
         // 
         "PublicUserFacingCerts": true,
 
@@ -645,15 +594,18 @@ Comments are not part of *JSON* syntax.
         "Hosts": [
             {"Name": "dp1.my.domain.com", "Device": "eth0", ["HostAlias": "if_eth0",]
                 "IpAddress": "ip-address", "SubnetMask": "dot.subnet.mask","Gateway": "gw-ip-address",
-                "GwdPeeringPriority": 100, "RateLimitPeeringPriority": 100, "SubsPeeringPriority": 100},
+                "GwdPeeringPriority": 100, "RateLimitPeeringPriority": 100, "SubsPeeringPriority": 100,
+                "ApiProbePeeringPriority: 100},
 
             {"Name": "dp2.my.domain.com", "Device": "eth0", ["HostAlias": "if_eth0",]
                 "IpAddress": "ip-address", "SubnetMask": "dot.subnet.mask", "Gateway": "gw-ip-address",
-                "GwdPeeringPriority": 90, "RateLimitPeeringPriority": 90, "SubsPeeringPriority": 90},
+                "GwdPeeringPriority": 90, "RateLimitPeeringPriority": 90, "SubsPeeringPriority": 90,
+                "ApiProbePeeringPriority": 90},
 
             {"Name": "dp3.my.domain.com", "Device": "eth0", ["HostAlias": "if_eth0",]
                 "IpAddress": "ip-address", "SubnetMask": "dot.subnet.mask", "Gateway": "gw-ip-address",
-                "GwdPeeringPriority": 80, "RateLimitPeeringPriority": 80, "SubsPeeringPriority": 80}
+                "GwdPeeringPriority": 80, "RateLimitPeeringPriority": 80, "SubsPeeringPriority": 80,
+                "ApiProbePeeringPriority": 80}
         ],
 
         //
@@ -671,22 +623,6 @@ Comments are not part of *JSON* syntax.
         // datapower api gateway port
         //
         "DatapowerApiGatewayPort": 9443,
-
-        //
-        // datapower trust certificates.
-        // to copy datapower trust certificates:
-        // apicupcfg -dpcopy -ca /path/to/ca.pem -rootca /path/to/root-ca.pem
-        //
-
-        //
-        // the name of the datapower intermediate ca cert file.
-        //
-        "CaFile": "dp-intermidiate-ca.pem",
-        
-        //
-        // the name of the datapower root cert file
-        //
-        "RootCaFile": "dp-root-ca.pem"
     }
 }
 
@@ -763,31 +699,6 @@ Comments are not part of *JSON* syntax.
         "K8sNamespace": "apic",
 
         //
-        // ca bundle file name
-        // To create this bundle file from the ca.pem and rootca.pem files:
-        // (This command also validates trust chain)
-        // apicupcfg -certconcat -ca /path/to/ca.pem -rootca /path/to/rootca.pem
-        //
-        "CaFile": "ca-chain-root-last.crt",
-
-        //
-        // For certbot (like letsencrypt) specify crypto directory.
-        // if CertDir value is empty no certbot crypto scripts will be generated
-        //
-        "Certbot": {
-            "CertDir": "letsencrypt/live/my.domain.com",
-            "Cert": "cert.pem",
-            "Key": "privkey.pem",
-            "CaChain": "chain.pem"
-        },
-
-        //
-        // Shared endpoint trust is advanced trust model where trust is shared between susbystem endpoints
-        // If set to 'true' shared-csr directory will contain scripts to support this trust model.
-        //
-        "SharedEndpointTrust": false,
-
-        //
         // Types of certifiactes to generate.
         //
         // for the public user facing certs all open ssl scripts will be in the custom-csr directory
@@ -797,8 +708,7 @@ Comments are not part of *JSON* syntax.
         // submit csr's to ca
         //
         // To copy signed certificates to files expected by scripts: 
-        // (this command will introspect all certificates in the directory and match them to the subystem endpoints):
-        // apicupcfg -certdir /path/to/dir-with-signed-certs
+        // apicupcfg -certcopy -certdir dir [-trustdir dir]
         // 
         "PublicUserFacingCerts": true,
 
