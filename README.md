@@ -202,7 +202,7 @@ Copy received certificates to the correct destination.
 
 Certificate settings scripts expect to find certificates, private keys and root certificates at specific locations. 
 
-To copy certificate chain received from ca: 
+To copy certificate chain received from ca:  
 `apicupcfg -certcopy -cert cert.pem -ca ca.pem -rootca rootca.pem` 
 
 This command will introspect the certificate, build validation path, match subject common name with endpoints defined 
@@ -212,7 +212,7 @@ in the configuration file and copy certificate chain to the correct destinations
 Note that if certificate subject common name matches mulitple endpoints then a separate copy will be made for each endpoint. 
 
 To process all certificates received from ca together, place them in one directory or put certificates in one
-directory (certdir) and ca and ca root certificates in another directory (trustdir) and run: 
+directory (certdir) and ca and ca root certificates in another directory (trustdir) and run:  
 `apicupcfg -certcopy -certdir dir [-trustdir dir]` 
 
 This command will build trust chains for all certificates in the certificate directory and copy each certificate
@@ -331,7 +331,7 @@ Note that default output directory is current directory: -out .
 
 Create *subsys-config.json* configuration file for the **OVA** install: `apicupcfg -initconfig`. 
 Comments are not part of *JSON* syntax.
-
+```
 {
 
     //
@@ -659,11 +659,11 @@ Comments are not part of *JSON* syntax.
         "DatapowerApiGatewayPort": 9443,
     }
 }
-
+```
 
 Create *subsys-config.json* configuration file for the **Kubernetes** install: `apicupcfg -initconfig -configtype k8s`. 
 Comments are not part of *JSON* syntax. 
-
+```
 {
 
     //
@@ -961,3 +961,4 @@ Comments are not part of *JSON* syntax.
         "ApicGwService": "gwd.my.domain.com"
     }
 }
+```
