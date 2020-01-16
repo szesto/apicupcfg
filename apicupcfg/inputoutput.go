@@ -66,7 +66,7 @@ func Input() (input string, outdir1 string, validateIp bool, initConfig bool, in
 	subsysOnly bool, certsOnly bool, certcopy bool, certdir string,
 	certverify bool, certfile, cafile string, rootcafile string, noexpire bool, certconcat bool, gen bool,
 	soma bool, req string, auth string, url string, setfile string, dpdir string, dpfile string,
-	datapowerOnly bool, dpdomain string, dpcacopy bool, certchaincopy bool, trustdir string) {
+	datapowerOnly bool, dpdomain string, dpcacopy bool, certchaincopy bool, trustdir string, version bool) {
 
 	// define command line flags
 	inputArg := flag.String("config", "subsys-config.json", "-config input-file")
@@ -119,6 +119,8 @@ func Input() (input string, outdir1 string, validateIp bool, initConfig bool, in
 
 	//certchaincopyArg := flag.Bool("certchaincopy", false, "-certchaincopy -cert cert.pem -ca ca.pem -rootca rootca.pem")
 
+	versionArg := flag.Bool("version", false, "-version (show release version)")
+
 	// scan command line args
 	flag.Parse()
 
@@ -161,7 +163,10 @@ func Input() (input string, outdir1 string, validateIp bool, initConfig bool, in
 
 	//certchaincopy = *certchaincopyArg
 
+	version = *versionArg
+
 	return input, outdir1, validateIp, initConfig, initConfigType, subsysOnly, certsOnly, certcopy, certdir,
 		certverify, certfile, cafile, rootcafile, noexpire, certconcat, gen,
-		soma, req, auth, url, setfile, dpdir, dpfile, datapowerOnly, dpdomain, dpcacopy, certchaincopy, trustdir
+		soma, req, auth, url, setfile, dpdir, dpfile, datapowerOnly, dpdomain, dpcacopy, certchaincopy, trustdir,
+		version
 }

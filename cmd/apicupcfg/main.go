@@ -14,7 +14,8 @@ func main() {
 	// input: configuration file, output dir, csr subdirectories
 	input, outdir, validateIp, initConfig, initConfigType, subsysOnly, certsOnly,
 	certcopy, certdir, certverify, certfile, cafile, rootcafile, noexpire, certconcat, gen,
-	soma, req, auth, url, setfile, dpdir, dpfile, datapowerOnly, dpdomain, dpcacopy, certchaincopy, trustdir := apicupcfg.Input()
+	soma, req, auth, url, setfile, dpdir, dpfile, datapowerOnly, dpdomain, dpcacopy, certchaincopy,
+	trustdir, version := apicupcfg.Input()
 
 	func (certdir string, certconcat bool, dpcacopy bool, certchaincopy bool) {} (certdir, certconcat, dpcacopy, certchaincopy)
 
@@ -34,10 +35,17 @@ func main() {
 
 	isInitConfigActionf := func() bool {return initConfig}
 
+	isVersionf := func() bool { return version }
+
+	if isVersionf() {
+		fmt.Printf("%s\n", showVersion())
+		return
+	}
+
 	// check input actions
 	if !isValidateIpActionf() && !isCertCopyActionf() &&
 		!isCertVerifyActionf() && !isGenActionf() &&
-		!isSomaf() && !isInitConfigActionf() && !isCertDirActionf() {
+		!isSomaf() && !isInitConfigActionf() && !isCertDirActionf() && !isVersionf() {
 
 		log.Fatalf("no action specified... use apicupcfg -h for help...")
 	}
