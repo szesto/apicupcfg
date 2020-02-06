@@ -151,6 +151,21 @@ func copyFile(srcfile string, dstfile string) {
 	writeFileBytes(dstfile, bytes)
 }
 
+func concatFiles2(srcfiles []string, dstfile string) {
+
+	bytes := make([]byte, 0)
+
+	for _, srcfile := range srcfiles {
+		bytes1 := readFileBytes(srcfile)
+
+		for _, b := range bytes1 {
+			bytes = append(bytes, b)
+		}
+	}
+
+	writeFileBytes(dstfile, bytes)
+}
+
 func concatFiles(srcfile1 string, srcfile2 string, dstfile string) {
 
 	bytes1 := readFileBytes(srcfile1)

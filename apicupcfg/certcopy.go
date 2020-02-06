@@ -45,6 +45,7 @@ func CopyCertDir(certdir, trustdir string, certs *Certs, mgmt ManagementSubsysDe
 	msubjfile := make(map[string]string)
 	mcerts := make(map[string]*x509.Certificate)
 	mcacerts := make(map[string]*x509.Certificate)
+	// deprecated
 	mrootcerts := make(map[string]*x509.Certificate)
 
 	parseCertFilef := func(certfile string) (*x509.Certificate, string, error) {
@@ -76,11 +77,14 @@ func CopyCertDir(certdir, trustdir string, certs *Certs, mgmt ManagementSubsysDe
 		}
 
 		if cert.IsCA {
+			fmt.Printf("ca-cert-subj: %v, ca-cert-issuer: %v\n", cert.Subject, cert.Issuer);
+
 			if cert.Subject.CommonName == cert.Issuer.CommonName {
 				fmt.Printf("found Root CA cert '%s', block-type '%s'\n", certfile, blockType)
 
 				msubjfile[cert.Subject.CommonName] = certfile
-				mrootcerts[cert.Subject.CommonName] = cert
+				mcacerts[cert.Subject.CommonName] = cert
+				mrootcerts[cert.Subject.CommonName] = cert // deprecated
 
 			} else {
 				fmt.Printf("found CA cert '%s', block-type '%s'\n", certfile, blockType)
@@ -151,55 +155,123 @@ func CopyCertDir(certdir, trustdir string, certs *Certs, mgmt ManagementSubsysDe
 
 	fmt.Printf("\nsearching for trust paths...\n\n")
 
-	isleaf := false
+	fmt.Printf("mcacerts... %v\n\n", mcacerts)
 
 	for subj, cert := range mcerts {
-		fmt.Printf("cert subject: %s\n", subj)
+		fmt.Printf("subj = '%s'\n", subj)
 
-		// start at the current cert
-		isleaf = false
+		path := make([]string, 0)
+		isleaf, leafpath := cawalk(cert.Issuer.CommonName, mcacerts, 0, path)
+		fmt.Printf("is-leaf = %v, leaf-path = %v\n", isleaf, leafpath)
 
-		for casubj, cacert := range mcacerts {
-			if isleaf {
-				// got to the leaf for the current cert
-				break
+		if isleaf {
+			// copy cert chain
+			certfile := msubjfile[subj]
+
+			cachain := make([]string, len(leafpath))
+			for pathidx, lp := range leafpath {
+				cachain[pathidx] = msubjfile[lp]
 			}
 
-			if cert.Issuer.CommonName == casubj {
-				for rootsubj, rootcert := range mrootcerts {
-					if isleaf {
-						// got to the leaf for the current cert
-						break
-					}
+			fmt.Printf("cert-file = '%s', ca-chain: %v\n\n", certfile, cachain)
 
-					if cacert.Issuer.CommonName == rootsubj {
-						// got to the leaf...
-						fmt.Printf("leaf root subject: %s\n", rootcert.Subject.CommonName)
+			err := CopyCertChain2(certfile, cachain, certs, mgmt, alyt, ptl, gwy, commonCsrOutDir, customCsrOutDir, isOva)
 
-						// copy cert chain
-						certfile := msubjfile[subj]
-						cafile := msubjfile[casubj]
-						rootcafile := msubjfile[rootsubj]
+			if err != nil {
+				fmt.Printf("%v\n", err)
+			}
+		}
+	}
 
-						fmt.Printf("copy-cert-chain args: '%s', '%s', '%s'", certfile, cafile, rootcafile)
+	//isleaf := false
+	//
+	//for subj, cert := range mcerts {
+	//	fmt.Printf("cert subject: %s\n", subj)
+	//
+	//	// start at the current cert
+	//	isleaf = false
+	//
+	//	for casubj, cacert := range mcacerts {
+	//		if isleaf {
+	//			// got to the leaf for the current cert
+	//			break
+	//		}
+	//
+	//		if cert.Issuer.CommonName == casubj {
+	//			for rootsubj, rootcert := range mrootcerts {
+	//				if isleaf {
+	//					// got to the leaf for the current cert
+	//					break
+	//				}
+	//
+	//				if cacert.Issuer.CommonName == rootsubj {
+	//					// got to the leaf...
+	//					fmt.Printf("leaf root subject: %s\n", rootcert.Subject.CommonName)
+	//
+	//					// copy cert chain
+	//					certfile := msubjfile[subj]
+	//					cafile := msubjfile[casubj]
+	//					rootcafile := msubjfile[rootsubj]
+	//
+	//					fmt.Printf("copy-cert-chain args: '%s', '%s', '%s'", certfile, cafile, rootcafile)
+	//
+	//					err := CopyCertChain(certfile, cafile, rootcafile,
+	//						certs, mgmt, alyt, ptl, gwy,
+	//						commonCsrOutDir, customCsrOutDir, isOva)
+	//
+	//					if err != nil {
+	//						fmt.Printf("%v\n", err)
+	//					}
+	//
+	//					// at the leaf for the current cert
+	//					isleaf = true
+	//				}
+	//			}
+	//		}
+	//	}
+	//}
 
-						err := CopyCertChain(certfile, cafile, rootcafile,
-							certs, mgmt, alyt, ptl, gwy,
-							commonCsrOutDir, customCsrOutDir, isOva)
+	return nil
+}
 
-						if err != nil {
-							fmt.Printf("%v\n", err)
-						}
+func cawalk(issuercn string, cacerts map[string]*x509.Certificate, depth int, path []string) (bool, []string) {
+	fmt.Printf("issuer-cn = '%s', depth = %d\n", issuercn, depth)
 
-						// at the leaf for the current cert
-						isleaf = true
-					}
+	for casubj, cacert := range cacerts {
+		fmt.Printf("\tcurr-ca-subj = '%s', curr-ca-issuer = '%s'\n", casubj, cacert.Issuer.CommonName)
+
+		if casubj == issuercn {
+			isleaf := casubj == cacert.Issuer.CommonName
+			fmt.Printf("\t\tnew path segment = '%s', is-leaf = %v\n", casubj, isleaf)
+
+			// build current path
+			currpath := make([]string, 0)
+			for _, cp := range path {
+				currpath = append(currpath, cp)
+			}
+			currpath = append(currpath, casubj)
+
+			if isleaf {
+				fmt.Printf("\t\tleaf-path... %v\n", currpath)
+
+				return true, currpath
+
+			} else {
+				fmt.Printf("\t\tdeep-dive... casubj = '%s', issuer = '%s'\n", casubj, cacert.Issuer.CommonName)
+				fmt.Printf("\t\tcurrent-path... %v\n", currpath)
+
+				isleaf, outpath := cawalk(cacert.Issuer.CommonName, cacerts, depth+1, currpath)
+
+				// if we reached the leaf we are done, otherwise continue to the next ca...
+				if isleaf {
+					return isleaf, outpath
 				}
 			}
 		}
 	}
 
-	return nil
+	fmt.Printf("\tend-of current range... depth = %d\n", depth)
+	return false, []string{}
 }
 
 func logCertCopy(dir, logm string) error {
@@ -212,6 +284,37 @@ func logCertCopy(dir, logm string) error {
 	defer func() {_ = logf.Close()}()
 
 	_, _ = fmt.Fprintf(logf, "%s: %s\n", time.Now().Format(time.RFC822), logm)
+	return nil
+}
+
+func concatChainFile2(cafiles []string, chainfile string, cacerts []*x509.Certificate) error {
+
+	// check if destination chain file exists
+	exists, err := isFileExist(chainfile)
+	if err != nil {
+		return err
+	}
+
+	if exists {
+		fmt.Printf("skip cert chain merge, destination file '%s' already exists...\n", chainfile)
+
+	} else {
+		concatFiles2(cafiles, chainfile)
+
+		chaindetails := ""
+		for j := 0; j < len(cafiles); j++ {
+			chaindetails = fmt.Sprintf("%s ... ca file '%s' (%s<-%s)", chaindetails, cafiles[j], cacerts[j].Subject.CommonName, cacerts[j].Issuer.CommonName)
+		}
+
+		logm := fmt.Sprintf("merged %s into ca chain file '%s'", chaindetails, chainfile)
+
+		fmt.Printf("%s\n", logm)
+
+		if err := logCertCopy(filepath.Dir(chainfile), logm); err != nil {
+			return err
+		}
+	}
+
 	return nil
 }
 
@@ -265,6 +368,169 @@ func copyCaFile(cacertfile, dstfile string, cacert *x509.Certificate, carole str
 
 		if err := logCertCopy(filepath.Dir(dstfile), logm); err != nil {
 			return err
+		}
+	}
+
+	return nil
+}
+
+func CopyCertChain2(certfile string, chainfiles []string, certs *Certs, mgmt ManagementSubsysDescriptor,
+	alyt AnalyticsSubsysDescriptor, ptl PortalSubsysDescriptor, gwy GatewaySubsysDescriptor,
+	commonCsrOutDir string, customCsrOutDir string, isOva bool) error {
+
+	// check input
+	if len(certfile) == 0 {
+		return fmt.Errorf("certfile name is empty")
+	}
+
+	if len(chainfiles) == 0 {
+		return fmt.Errorf("ca file name list is empty")
+	}
+
+	// build trust chain
+	const noexpire = false
+	if ischain, err := CertVerify2(certfile, chainfiles, noexpire); err != nil {
+		return err
+
+	} else if ischain == false {
+		// no trust chain, return...
+		return fmt.Errorf("could not build a trust chain from certificates %s, %v\n", certfile, chainfiles)
+	}
+
+	// parse certfile
+	var cert *x509.Certificate
+	var err error
+
+	if cert, err = ParseCertFile(certfile); err != nil {
+		return err
+	}
+
+	// parse ca files
+	chaincerts := make([]*x509.Certificate, len(chainfiles))
+	for j := 0; j < len(chainfiles); j++ {
+		if chaincerts[j], err = ParseCertFile(chainfiles[j]); err != nil {
+			return err
+		}
+	}
+
+	// update cert specs
+	updateCertSpecs(certs, mgmt, alyt, ptl, gwy, commonCsrOutDir, customCsrOutDir)
+
+	var verifyErrors = make([]error, 100)
+
+	// wildcard cert can match one or more hostnames
+	matchcount := 0
+
+	// public user facing certs
+	for _, certSpec := range certs.PublicUserFacingEkuServerAuth {
+		// copy cert file
+		err = verifyCopyCertfile(certfile, cert, &certSpec)
+
+		if err != nil {
+			verifyErrors = append(verifyErrors, err)
+		} else {
+			matchcount++
+
+			// concat issuing ca and root ca files into ca chain file
+			dstfile := certSpec.CsrSubdir + string(os.PathSeparator) + certSpec.CaFile
+			if err = concatChainFile2(chainfiles, dstfile, chaincerts); err != nil {
+				return err
+			}
+		}
+	}
+
+	// mutual auth server auth
+	for _, certSpec := range certs.MutualAuthEkuServerAuth {
+		err := verifyCopyCertfile(certfile, cert, &certSpec)
+		if err != nil {
+			verifyErrors = append(verifyErrors, err)
+
+		} else {
+			matchcount++
+
+			// concat issuing ca and root ca files into ca chain file
+			dstfile := certSpec.CsrSubdir + string(os.PathSeparator) + certSpec.CaFile
+			if err = concatChainFile2(chainfiles, dstfile, chaincerts); err != nil {
+				return err
+			}
+		}
+	}
+
+	// common client certs
+	for _, certSpec := range certs.CommonEkuClientAuth {
+		err := verifyCopyCertfile(certfile, cert, &certSpec)
+		if err != nil {
+			verifyErrors = append(verifyErrors, err)
+
+		} else {
+			matchcount++
+
+			// concat issuing ca and root ca files into ca chain file
+			dstfile := certSpec.CsrSubdir + string(os.PathSeparator) + certSpec.CaFile
+			if err = concatChainFile2(chainfiles, dstfile, chaincerts); err != nil {
+				return err
+			}
+		}
+	}
+
+	// gateway subsystem for ova
+	if isOva {
+		// gateway director
+		certSpec := CertSpec{}
+		certSpec.Cn = gwy.GetApicGatewayServiceEndpoint()
+		updateCertSpec(certs, gwy.GetGatewaySubsysName(), "gateway-director", &certSpec, DatapowerOutDir)
+
+		err = verifyCopyCertfile(certfile, cert, &certSpec)
+		if err != nil {
+			verifyErrors = append(verifyErrors, err)
+
+		} else {
+			matchcount++
+
+			// concat issuing-ca and root-ca files into ca chain file
+			dstfile := certSpec.CsrSubdir + string(os.PathSeparator) + certSpec.CaFile
+			if err = concatChainFile2(chainfiles, dstfile, chaincerts); err != nil {
+				return err
+			}
+
+			// copy issuing-ca cert file
+			dstfile = certSpec.CsrSubdir + string(os.PathSeparator) + dot2dash(certSpec.Cn) + ".issuing-ca.pem"
+			cafile := chainfiles[0]
+			cacert := chaincerts[0]
+			if err := copyCaFile(cafile, dstfile, cacert, "issuing"); err != nil {
+				return err
+			}
+
+			// todo: copy all other intermidiate certs
+
+			// copy root-ca cert file
+			rootcafile := chainfiles[len(chainfiles)-1]
+			rootcert := chaincerts[len(chaincerts)-1]
+			dstfile = certSpec.CsrSubdir + string(os.PathSeparator) + dot2dash(certSpec.Cn) + ".root-ca.pem"
+			if err := copyCaFile(rootcafile, dstfile, rootcert, "root"); err != nil {
+				return err
+			}
+		}
+
+		//// api gateway
+		//certSpec = CertSpec{}
+		//certSpec.Cn = gwy.GetApiGatewayEndpoint()
+		//updateCertSpec(certs, gwy.GetGatewaySubsysName(), "api-gateway", &certSpec, DatapowerOutDir)
+		//
+		//err = verifyCopyCertfile(certfile, cert, &certSpec)
+		//if err != nil {
+		//	verifyErrors = append(verifyErrors, err)
+		//} else {
+		//	matchcount++
+		//}
+	}
+
+	// no hostname match for the cert, show errors
+	if matchcount == 0 {
+		for _, err := range verifyErrors {
+			if err != nil {
+				fmt.Printf("failed verify... %v\n", err)
+			}
 		}
 	}
 
