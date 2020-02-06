@@ -72,15 +72,14 @@ func CopyCertDir(certdir, trustdir string, certs *Certs, mgmt ManagementSubsysDe
 	saveCertf := func(certfile string, cert *x509.Certificate, blockType string) {
 
 		if _, ok := msubjfile[cert.Subject.CommonName]; ok {
-			fmt.Printf("cert file '%s' is a duplicate, skip...\n", certfile)
+			fmt.Printf("cert file '%s', subject '%s' is a duplicate, skip...\n", certfile, cert.Subject.CommonName)
 			return
 		}
 
 		if cert.IsCA {
-			fmt.Printf("ca-cert-subj: %v, ca-cert-issuer: %v\n", cert.Subject, cert.Issuer)
-
 			if cert.Subject.CommonName == cert.Issuer.CommonName {
 				fmt.Printf("found Root CA cert '%s', block-type '%s'\n", certfile, blockType)
+				fmt.Printf("\tsubj: %v, issuer: %v\n", cert.Subject, cert.Issuer)
 
 				msubjfile[cert.Subject.CommonName] = certfile
 				mcacerts[cert.Subject.CommonName] = cert
@@ -88,6 +87,7 @@ func CopyCertDir(certdir, trustdir string, certs *Certs, mgmt ManagementSubsysDe
 
 			} else {
 				fmt.Printf("found CA cert '%s', block-type '%s'\n", certfile, blockType)
+				fmt.Printf("\tsubj: %v, issuer: %v\n", cert.Subject, cert.Issuer)
 
 				msubjfile[cert.Subject.CommonName] = certfile
 				mcacerts[cert.Subject.CommonName] = cert
@@ -95,6 +95,7 @@ func CopyCertDir(certdir, trustdir string, certs *Certs, mgmt ManagementSubsysDe
 
 		} else {
 			fmt.Printf("found cert '%s', block-type '%s'\n", certfile, blockType)
+			fmt.Printf("\tsubj: %v, issuer: %v\n", cert.Subject, cert.Issuer)
 
 			msubjfile[cert.Subject.CommonName] = certfile
 			mcerts[cert.Subject.CommonName] = cert
@@ -155,10 +156,10 @@ func CopyCertDir(certdir, trustdir string, certs *Certs, mgmt ManagementSubsysDe
 
 	fmt.Printf("\nsearching for trust paths...\n\n")
 
-	fmt.Printf("mcacerts... %v\n\n", mcacerts)
+	//fmt.Printf("mcacerts... %v\n\n", mcacerts)
 
 	for subj, cert := range mcerts {
-		fmt.Printf("\n\n... begin subj = '%s'\n", subj)
+		fmt.Printf("\n... begin subj = '%s', issuer = '%s'\n", subj, cert.Issuer.CommonName)
 
 		path := make([]string, 0)
 		isleaf, leafpath := cawalk(cert.Issuer.CommonName, mcacerts, 0, path)
@@ -183,7 +184,7 @@ func CopyCertDir(certdir, trustdir string, certs *Certs, mgmt ManagementSubsysDe
 
 		} else {
 			// complain no trust path...
-			fmt.Printf("... no trust path found for subject %s, cert %s\n", subj, msubjfile[subj])
+			fmt.Printf("... no trust path found for subject '%s', issuer '%s', cert '%s'\n", subj, cert.Issuer.CommonName, msubjfile[subj])
 		}
 	}
 
