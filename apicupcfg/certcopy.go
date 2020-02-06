@@ -158,7 +158,7 @@ func CopyCertDir(certdir, trustdir string, certs *Certs, mgmt ManagementSubsysDe
 	fmt.Printf("mcacerts... %v\n\n", mcacerts)
 
 	for subj, cert := range mcerts {
-		fmt.Printf("subj = '%s'\n", subj)
+		fmt.Printf("\n\n... begin subj = '%s'\n", subj)
 
 		path := make([]string, 0)
 		isleaf, leafpath := cawalk(cert.Issuer.CommonName, mcacerts, 0, path)
@@ -173,13 +173,17 @@ func CopyCertDir(certdir, trustdir string, certs *Certs, mgmt ManagementSubsysDe
 				cachain[pathidx] = msubjfile[lp]
 			}
 
-			fmt.Printf("cert-file = '%s', ca-chain: %v\n\n", certfile, cachain)
+			fmt.Printf("copying cert chain... cert-file = '%s', ca-chain: %v\n\n", certfile, cachain)
 
 			err := CopyCertChain2(certfile, cachain, certs, mgmt, alyt, ptl, gwy, commonCsrOutDir, customCsrOutDir, isOva)
 
 			if err != nil {
 				fmt.Printf("%v\n", err)
 			}
+
+		} else {
+			// complain no trust path...
+			fmt.Printf("... no trust path found for subject %s, cert %s\n", subj, msubjfile[subj])
 		}
 	}
 
@@ -235,14 +239,23 @@ func CopyCertDir(certdir, trustdir string, certs *Certs, mgmt ManagementSubsysDe
 }
 
 func cawalk(issuercn string, cacerts map[string]*x509.Certificate, depth int, path []string) (bool, []string) {
-	fmt.Printf("issuer-cn = '%s', depth = %d\n", issuercn, depth)
+
+	isdebugf := func() bool {return false}
+
+	if isdebugf() {
+		fmt.Printf("issuer-cn = '%s', depth = %d\n", issuercn, depth)
+	}
 
 	for casubj, cacert := range cacerts {
-		fmt.Printf("\tcurr-ca-subj = '%s', curr-ca-issuer = '%s'\n", casubj, cacert.Issuer.CommonName)
+		if isdebugf() {
+			fmt.Printf("\tcurr-ca-subj = '%s', curr-ca-issuer = '%s'\n", casubj, cacert.Issuer.CommonName)
+		}
 
 		if casubj == issuercn {
 			isleaf := casubj == cacert.Issuer.CommonName
-			fmt.Printf("\t\tnew path segment = '%s', is-leaf = %v\n", casubj, isleaf)
+			if isdebugf() {
+				fmt.Printf("\t\tnew path segment = '%s', is-leaf = %v\n", casubj, isleaf)
+			}
 
 			// build current path
 			currpath := make([]string, 0)
@@ -252,13 +265,17 @@ func cawalk(issuercn string, cacerts map[string]*x509.Certificate, depth int, pa
 			currpath = append(currpath, casubj)
 
 			if isleaf {
-				fmt.Printf("\t\tleaf-path... %v\n", currpath)
+				if isdebugf() {
+					fmt.Printf("\t\tleaf-path... %v\n", currpath)
+				}
 
 				return true, currpath
 
 			} else {
-				fmt.Printf("\t\tdeep-dive... casubj = '%s', issuer = '%s'\n", casubj, cacert.Issuer.CommonName)
-				fmt.Printf("\t\tcurrent-path... %v\n", currpath)
+				if isdebugf() {
+					fmt.Printf("\t\tdeep-dive... casubj = '%s', issuer = '%s'\n", casubj, cacert.Issuer.CommonName)
+					fmt.Printf("\t\tcurrent-path... %v\n", currpath)
+				}
 
 				isleaf, outpath := cawalk(cacert.Issuer.CommonName, cacerts, depth+1, currpath)
 
@@ -270,7 +287,10 @@ func cawalk(issuercn string, cacerts map[string]*x509.Certificate, depth int, pa
 		}
 	}
 
-	fmt.Printf("\tend-of current range... depth = %d\n", depth)
+	if isdebugf() {
+		fmt.Printf("\tend-of current range... depth = %d\n", depth)
+	}
+
 	return false, []string{}
 }
 
