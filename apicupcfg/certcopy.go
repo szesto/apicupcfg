@@ -77,7 +77,7 @@ func CopyCertDir(certdir, trustdir string, certs *Certs, mgmt ManagementSubsysDe
 		}
 
 		if cert.IsCA {
-			fmt.Printf("ca-cert-subj: %v, ca-cert-issuer: %v\n", cert.Subject, cert.Issuer);
+			fmt.Printf("ca-cert-subj: %v, ca-cert-issuer: %v\n", cert.Subject, cert.Issuer)
 
 			if cert.Subject.CommonName == cert.Issuer.CommonName {
 				fmt.Printf("found Root CA cert '%s', block-type '%s'\n", certfile, blockType)
@@ -501,7 +501,17 @@ func CopyCertChain2(certfile string, chainfiles []string, certs *Certs, mgmt Man
 				return err
 			}
 
-			// todo: copy all other intermidiate certs
+			// copy all other intermidiate certs
+			dstbase := certSpec.CsrSubdir + string(os.PathSeparator) + dot2dash(certSpec.Cn)
+
+			for j := 1; j < len(chainfiles) - 1; j++ {
+				dstfile = fmt.Sprintf("%s.intermidiate-ca-%d.pem", dstbase, j)
+				cafile := chainfiles[j]
+				cacert := chaincerts[j]
+				if err := copyCaFile(cafile, dstfile, cacert, "intermidiate"); err != nil {
+					return err
+				}
+			}
 
 			// copy root-ca cert file
 			rootcafile := chainfiles[len(chainfiles)-1]
