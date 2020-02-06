@@ -163,7 +163,6 @@ func CopyCertDir(certdir, trustdir string, certs *Certs, mgmt ManagementSubsysDe
 
 		path := make([]string, 0)
 		isleaf, leafpath := cawalk(cert.Issuer.CommonName, mcacerts, 0, path)
-		fmt.Printf("is-leaf = %v, leaf-path = %v\n", isleaf, leafpath)
 
 		if isleaf {
 			// copy cert chain
@@ -174,7 +173,8 @@ func CopyCertDir(certdir, trustdir string, certs *Certs, mgmt ManagementSubsysDe
 				cachain[pathidx] = msubjfile[lp]
 			}
 
-			fmt.Printf("copying cert chain... cert-file = '%s', ca-chain: %v\n\n", certfile, cachain)
+			fmt.Printf("leaf-path = %v\n", leafpath)
+			fmt.Printf("copying chain... cert-file = '%s', ca-chain: %v\n\n", certfile, cachain)
 
 			err := CopyCertChain2(certfile, cachain, certs, mgmt, alyt, ptl, gwy, commonCsrOutDir, customCsrOutDir, isOva)
 
