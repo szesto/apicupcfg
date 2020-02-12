@@ -263,6 +263,50 @@ func dpWebGui(outdir, outfile string, dp DpWebGui, tbox *rice.Box) {
 	dpWriteTemplate(outdir, outfile, dp, "dp-web-gui.tmpl", tbox)
 }
 
+func datapowerApiOpensslConfig(subsys GatewaySubsysDescriptor, certs *Certs, outfiles map[string]string, passiveCrypto bool, scriptTag string, tbox *rice.Box) {
+
+	// parse templates
+	ekuServerClient := parseTemplate(tbox, tpdir(tbox) + "csr-server-client-eku.tmpl")
+	keypairTemplate := parseTemplates(tbox, tpdir(tbox) + "keypair.tmpl", tpdir(tbox) + "helpers.tmpl")
+	combinedCsrTemplate := parseTemplates(tbox, tpdir(tbox) + "combined-csr.tmpl", tpdir(tbox) + "helpers.tmpl")
+	p12Template := parseTemplates(tbox, tpdir(tbox) + "pkcs12.tmpl", tpdir(tbox) + "helpers.tmpl")
+
+	certmap := make(map[string]CertSpec)
+
+	// apic gateway service
+	cs := CertSpec{}
+	cs.Cn = subsys.GetApiGatewayEndpoint()
+	updateCertSpec(certs, subsys.GetGatewaySubsysName(), "api-gateway", &cs, DatapowerOutDir)
+
+	// save cert-spec in combined cert-map
+	certmap[cs.Cn] = cs
+
+	// os env
+	var osenv OsEnv
+	osenv.init()
+
+	// datapower output directory
+	dpoutdir := concatSubdir(outfiles[outdir], outfiles[DatapowerOutDir])
+	outputdir := dpoutdir
+
+	// csr
+	outpath := fileName(outputdir, cs.CsrConf)
+	writeTemplate(ekuServerClient, outpath, cs)
+
+	// key-pair
+	outpath = fileName(outputdir, cs.CsrConf + osenv.ShellExt)
+	writeTemplate(keypairTemplate, outpath, OsEnvCert{OsEnv: osenv, CertSpec: cs, Passive: passiveCrypto})
+
+	// p12
+	cs12 := cs
+	outpath = fileName(outputdir, cs12.KeyFile + ".p12" + osenv.ShellExt)
+	writeTemplate(p12Template, outpath, OsEnvCert{OsEnv: osenv, CertSpec: cs12, Passive: passiveCrypto})
+
+	// combine key and csr scripts
+	outpath = fileName(outputdir, tagOutputFileName("all-datapower-csr", scriptTag) + osenv.ShellExt)
+	writeTemplate(combinedCsrTemplate, outpath, OsEnvCerts{OsEnv: osenv, CertSpecs: certmap})
+}
+
 func datapowerOpensslConfig(subsys *SubsysVm, outputdir string, osenv OsEnv, tbox *rice.Box) {
 
 	// parse templates

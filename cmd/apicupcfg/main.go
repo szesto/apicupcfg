@@ -183,7 +183,7 @@ func main() {
 
 		} else {
 			// create output directories
-			datapowerdir := ""
+			datapowerdir := apicupcfg.DatapowerOutDir
 			err := apicupcfg.CreateOutputDirectories(outdir, apicupcfg.CommonCsrOutDir,
 				apicupcfg.CustomCsrOutDir, apicupcfg.SharedCsrOutDir, apicupcfg.ProjectOutDir, datapowerdir)
 
@@ -230,7 +230,7 @@ func main() {
 
 			} else if isGenActionf() {
 				// apply templates
-				apicupcfg.ApplyTemplatesK8s(subsysk8s, output, subsysOnly, certsOnly, tbox)
+				apicupcfg.ApplyTemplatesK8s(subsysk8s, output, subsysOnly, certsOnly, datapowerOnly, tbox)
 			}
 		}
 

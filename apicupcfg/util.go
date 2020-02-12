@@ -161,6 +161,9 @@ func concatFiles2(srcfiles []string, dstfile string) {
 		for _, b := range bytes1 {
 			bytes = append(bytes, b)
 		}
+
+		// add new-line
+		bytes = append(bytes, byte('\n'))
 	}
 
 	writeFileBytes(dstfile, bytes)

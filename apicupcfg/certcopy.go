@@ -543,17 +543,54 @@ func CopyCertChain2(certfile string, chainfiles []string, certs *Certs, mgmt Man
 			}
 		}
 
-		//// api gateway
-		//certSpec = CertSpec{}
-		//certSpec.Cn = gwy.GetApiGatewayEndpoint()
-		//updateCertSpec(certs, gwy.GetGatewaySubsysName(), "api-gateway", &certSpec, DatapowerOutDir)
-		//
-		//err = verifyCopyCertfile(certfile, cert, &certSpec)
-		//if err != nil {
-		//	verifyErrors = append(verifyErrors, err)
-		//} else {
-		//	matchcount++
-		//}
+	} else {
+
+		// api gateway
+		certSpec := CertSpec{}
+		certSpec.Cn = gwy.GetApiGatewayEndpoint()
+		updateCertSpec(certs, gwy.GetGatewaySubsysName(), "api-gateway", &certSpec, DatapowerOutDir)
+
+		err = verifyCopyCertfile(certfile, cert, &certSpec)
+		if err != nil {
+			verifyErrors = append(verifyErrors, err)
+		} else {
+			matchcount++
+
+			// concat issuing-ca and root-ca files into ca chain file
+			dstfile := certSpec.CsrSubdir + string(os.PathSeparator) + certSpec.CaFile
+			if err = concatChainFile2(chainfiles, dstfile, chaincerts); err != nil {
+				return err
+			}
+
+			// copy issuing-ca cert file
+			dstfile = certSpec.CsrSubdir + string(os.PathSeparator) + dot2dash(certSpec.Cn) + ".issuing-ca.pem"
+			cafile := chainfiles[0]
+			cacert := chaincerts[0]
+			if err := copyCaFile(cafile, dstfile, cacert, "issuing"); err != nil {
+				return err
+			}
+
+			// copy all other intermidiate certs
+			dstbase := certSpec.CsrSubdir + string(os.PathSeparator) + dot2dash(certSpec.Cn)
+
+			for j := 1; j < len(chainfiles) - 1; j++ {
+				dstfile = fmt.Sprintf("%s.intermidiate-ca-%d.pem", dstbase, j)
+				cafile := chainfiles[j]
+				cacert := chaincerts[j]
+				if err := copyCaFile(cafile, dstfile, cacert, "intermidiate"); err != nil {
+					return err
+				}
+			}
+
+			// copy root-ca cert file
+			rootcafile := chainfiles[len(chainfiles)-1]
+			rootcert := chaincerts[len(chaincerts)-1]
+			dstfile = certSpec.CsrSubdir + string(os.PathSeparator) + dot2dash(certSpec.Cn) + ".root-ca.pem"
+			if err := copyCaFile(rootcafile, dstfile, rootcert, "root"); err != nil {
+				return err
+			}
+		}
+
 	}
 
 	// no hostname match for the cert, show errors

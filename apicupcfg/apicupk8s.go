@@ -193,7 +193,7 @@ func LoadSubsysK8s(jsonConfigFile string) *SubsysK8s {
 	return subsys
 }
 
-func ApplyTemplatesK8s(subsys *SubsysK8s, outfiles map[string]string, subsysOnly, certsOnly bool, tbox *rice.Box)  {
+func ApplyTemplatesK8s(subsys *SubsysK8s, outfiles map[string]string, subsysOnly, certsOnly bool, datapowerOnly bool, tbox *rice.Box)  {
 
 	// parse templates
 	mgtt := parseTemplates(tbox, tpdir(tbox) + "management-k8s.tmpl", tpdir(tbox) + "helpers.tmpl")
@@ -212,7 +212,7 @@ func ApplyTemplatesK8s(subsys *SubsysK8s, outfiles map[string]string, subsysOnly
 
 	outpath := ""
 
-	if isManagement && !certsOnly {
+	if isManagement && !(certsOnly || datapowerOnly) {
 		outpath = fileName(outfiles[outdir], tagOutputFileName(outfiles[managementOut], subsys.Tag)) + shellExt
 		writeTemplate(mgtt, outpath, subsys.Management)
 
@@ -222,7 +222,7 @@ func ApplyTemplatesK8s(subsys *SubsysK8s, outfiles map[string]string, subsysOnly
 		}
 	}
 
-	if isGateway && !certsOnly {
+	if isGateway && !(certsOnly || datapowerOnly) {
 		outpath = fileName(outfiles[outdir], tagOutputFileName(outfiles[gatewayOut], subsys.Tag)) + shellExt
 		writeTemplate(gwyt, outpath, subsys.Gateway)
 
@@ -232,7 +232,7 @@ func ApplyTemplatesK8s(subsys *SubsysK8s, outfiles map[string]string, subsysOnly
 		}
 	}
 
-	if isAnalytics && !certsOnly {
+	if isAnalytics && !(certsOnly || datapowerOnly) {
 		outpath = fileName(outfiles[outdir], tagOutputFileName(outfiles[analyticsOut], subsys.Tag)) + shellExt
 		writeTemplate(alytt, outpath, subsys.Analytics)
 
@@ -242,7 +242,7 @@ func ApplyTemplatesK8s(subsys *SubsysK8s, outfiles map[string]string, subsysOnly
 		}
 	}
 
-	if isPortal && !certsOnly {
+	if isPortal && !(certsOnly || datapowerOnly) {
 		outpath = fileName(outfiles[outdir], tagOutputFileName(outfiles[portalOut], subsys.Tag)) + shellExt
 		writeTemplate(ptlt, outpath, subsys.Portal)
 
@@ -257,7 +257,14 @@ func ApplyTemplatesK8s(subsys *SubsysK8s, outfiles map[string]string, subsysOnly
 		updateCertSpecs(&subsys.Certs, &subsys.Management, &subsys.Analytics, &subsys.Portal, &subsys.Gateway,
 			outfiles[CommonCsrOutDir], outfiles[CustomCsrOutDir])
 
-		outputCerts(&subsys.Certs, outfiles, subsys.Tag, subsys.Version, subsys.UseVersion, tbox)
+		if !datapowerOnly {
+			outputCerts(&subsys.Certs, outfiles, subsys.Tag, subsys.Version, subsys.UseVersion, tbox)
+		}
+
+		// datapower api invocation endpoint
+		if !certsOnly {
+			datapowerApiOpensslConfig(&subsys.Gateway, &subsys.Certs, outfiles, subsys.Passive, subsys.Tag, tbox)
+		}
 	}
 }
 
