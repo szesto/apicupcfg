@@ -1,6 +1,7 @@
 package apicupcfg
 
 import (
+	pkgbytes "bytes"
 	"crypto/x509"
 	"encoding/pem"
 	"errors"
@@ -48,58 +49,172 @@ func CopyCertDir(certdir, trustdir string, certs *Certs, mgmt ManagementSubsysDe
 	// deprecated
 	mrootcerts := make(map[string]*x509.Certificate)
 
-	parseCertFilef := func(certfile string) (*x509.Certificate, string, error) {
+	parseCertFilef := func(certfile string) ([]*x509.Certificate, []string, error) {
 
 		certlist, blockTypes, err := ParseCertFile2(certfile)
 		if err != nil {
-			return nil, "", err
+			return nil, nil, err
 		}
 
 		// it is possible that certlist is empty eg for private key file
 		if len(certlist) == 0 {
-			fmt.Printf("file '%s' is not a cert, skip...\n", certfile)
-			return nil, "", nil
+			//fmt.Printf("file '%s' is not a cert, skip...\n", certfile)
+			return nil, nil, fmt.Errorf("file '%s' is not a cert, skip...\n", certfile)
 		}
 
-		if len(certlist) > 1 {
-			fmt.Printf("file '%s' is a cert chain... %v, skip", certfile, blockTypes)
-			return nil, "", nil
-		}
+		//if len(certlist) > 1 {
+		//	//fmt.Printf("file '%s' is a cert chain... %v, skip", certfile, blockTypes)
+		//	return nil, nil, fmt.Errorf("file '%s' is a cert chain... %v, skip", certfile, blockTypes)
+		//}
 
-		return certlist[0], blockTypes[0], nil
+		//return certlist[0], blockTypes[0], nil
+		return certlist, blockTypes, nil
 	}
 
-	saveCertf := func(certfile string, cert *x509.Certificate, blockType string) {
+	encodeCertfilef := func(incertfile, subjectcn, workdir string, iscertchain bool) string {
+		if iscertchain {
+			paths := strings.Split(incertfile, string(os.PathSeparator))
 
-		if _, ok := msubjfile[cert.Subject.CommonName]; ok {
-			fmt.Printf("cert file '%s', subject '%s' is a duplicate, skip...\n", certfile, cert.Subject.CommonName)
+			b := fmt.Sprintf("__cert__ref__%s__%s", paths[len(paths)-1], subjectcn)
+			b = strings.ReplaceAll(b, " ", "_")
+			b = strings.ReplaceAll(b, ".", "_")
+
+			if len(workdir) > 0 {
+				b = workdir + string(os.PathSeparator) + b
+			}
+
+			paths[len(paths)-1] = b + ".pem"
+
+			if len(paths) == 1 {
+				return paths[0]
+			}
+			return strings.Join(paths, string(os.PathSeparator))
+		}
+		return incertfile
+	}
+
+	saveCertf := func(incertfile string, certs []*x509.Certificate, blockTypes []string) {
+
+		// input sanity checks
+		if certs == nil {
 			return
 		}
 
-		if cert.IsCA {
-			if cert.Subject.CommonName == cert.Issuer.CommonName {
-				fmt.Printf("found Root CA cert '%s', block-type '%s'\n", certfile, blockType)
-				fmt.Printf("\tsubj: %v, issuer: %v\n", cert.Subject, cert.Issuer)
+		if blockTypes == nil {
+			return
+		}
 
-				msubjfile[cert.Subject.CommonName] = certfile
-				mcacerts[cert.Subject.CommonName] = cert
-				mrootcerts[cert.Subject.CommonName] = cert // deprecated
+		if len(certs) == 0 {
+			return
+		}
 
-			} else {
-				fmt.Printf("found CA cert '%s', block-type '%s'\n", certfile, blockType)
-				fmt.Printf("\tsubj: %v, issuer: %v\n", cert.Subject, cert.Issuer)
+		if len(blockTypes) == 0 {
+			return
+		}
 
-				msubjfile[cert.Subject.CommonName] = certfile
-				mcacerts[cert.Subject.CommonName] = cert
+		if len(certs) != len(blockTypes) {
+			return
+		}
+
+		iscertchain := len(certs) > 1
+
+		for certidx := range certs {
+
+			cert := certs[certidx]
+			blockType := blockTypes[certidx]
+
+			certfile := encodeCertfilef(incertfile, cert.Subject.CommonName, "__workdir", iscertchain)
+
+			if _, ok := msubjfile[cert.Subject.CommonName]; ok {
+				fmt.Printf("cert file '%s', subject '%s' is a duplicate, skip...\n", certfile, cert.Subject.CommonName)
+				return
 			}
 
-		} else {
-			fmt.Printf("found cert '%s', block-type '%s'\n", certfile, blockType)
-			fmt.Printf("\tsubj: %v, issuer: %v\n", cert.Subject, cert.Issuer)
+			if iscertchain {
+				if abscertfile, err := filepath.Abs(certfile); err == nil {
+					if err = os.MkdirAll(filepath.Dir(abscertfile), os.ModePerm); err != nil {
+						fmt.Printf(err.Error())
+						continue
+					}
 
-			msubjfile[cert.Subject.CommonName] = certfile
-			mcerts[cert.Subject.CommonName] = cert
+				} else {
+					fmt.Printf(err.Error())
+					continue
+				}
+
+				if f, err := openFile(certfile); err == nil {
+					err = pem.Encode(f, &pem.Block{Type:  blockType, Bytes: cert.Raw,})
+					_ = f.Close()
+					if err != nil {
+						fmt.Printf("failed to pem encode file '%s'... %s\n", certfile, err.Error())
+						continue
+					}
+
+				} else {
+					fmt.Printf("failed to open cert file '%s'... %s\n", certfile, err.Error())
+					continue
+				}
+			}
+
+			if cert.IsCA {
+				if cert.Subject.CommonName == cert.Issuer.CommonName {
+					fmt.Printf("found Root CA cert '%s', block-type '%s'\n", incertfile, blockType)
+					fmt.Printf("\tsubj: %v, issuer: %v\n", cert.Subject, cert.Issuer)
+
+					msubjfile[cert.Subject.CommonName] = certfile
+					mcacerts[cert.Subject.CommonName] = cert
+					mrootcerts[cert.Subject.CommonName] = cert // deprecated
+
+				} else {
+					fmt.Printf("found CA cert '%s', block-type '%s'\n", incertfile, blockType)
+					fmt.Printf("\tsubj: %v, issuer: %v\n", cert.Subject, cert.Issuer)
+
+					msubjfile[cert.Subject.CommonName] = certfile
+					mcacerts[cert.Subject.CommonName] = cert
+				}
+
+			} else {
+				fmt.Printf("found cert '%s', block-type '%s'\n", certfile, blockType)
+				fmt.Printf("\tsubj: %v, issuer: %v\n", cert.Subject, cert.Issuer)
+
+				msubjfile[cert.Subject.CommonName] = certfile
+				mcerts[cert.Subject.CommonName] = cert
+			}
+
 		}
+
+		//cert := certs[0]
+		//blockType := blockTypes[0]
+		//
+		//if _, ok := msubjfile[cert.Subject.CommonName]; ok {
+		//	fmt.Printf("cert file '%s', subject '%s' is a duplicate, skip...\n", certfile, cert.Subject.CommonName)
+		//	return
+		//}
+		//
+		//if cert.IsCA {
+		//	if cert.Subject.CommonName == cert.Issuer.CommonName {
+		//		fmt.Printf("found Root CA cert '%s', block-type '%s'\n", certfile, blockType)
+		//		fmt.Printf("\tsubj: %v, issuer: %v\n", cert.Subject, cert.Issuer)
+		//
+		//		msubjfile[cert.Subject.CommonName] = certfile
+		//		mcacerts[cert.Subject.CommonName] = cert
+		//		mrootcerts[cert.Subject.CommonName] = cert // deprecated
+		//
+		//	} else {
+		//		fmt.Printf("found CA cert '%s', block-type '%s'\n", certfile, blockType)
+		//		fmt.Printf("\tsubj: %v, issuer: %v\n", cert.Subject, cert.Issuer)
+		//
+		//		msubjfile[cert.Subject.CommonName] = certfile
+		//		mcacerts[cert.Subject.CommonName] = cert
+		//	}
+		//
+		//} else {
+		//	fmt.Printf("found cert '%s', block-type '%s'\n", certfile, blockType)
+		//	fmt.Printf("\tsubj: %v, issuer: %v\n", cert.Subject, cert.Issuer)
+		//
+		//	msubjfile[cert.Subject.CommonName] = certfile
+		//	mcerts[cert.Subject.CommonName] = cert
+		//}
 	}
 
 	processDirf := func(certdir string) error {
@@ -946,7 +1061,7 @@ func ReadDecodeCertFile2(certfile string) ([]*pem.Block, error) {
 
 	certbytes := readFileBytes(certfile)
 
-	bytes := certbytes
+	bytes := pkgbytes.TrimSpace(certbytes)
 
 	blocks := make([]*pem.Block, 0, 10)
 
