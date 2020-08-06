@@ -1,449 +1,26 @@
 package apicupcfg
 
 import (
+	"bytes"
+	"encoding/json"
 	"fmt"
 	rice "github.com/GeertJohan/go.rice"
+	"os"
 	"text/template"
 )
-
-type NetworkInterface struct {
-	Device string // eth0
-	IpAddress string
-	SubnetMask string // dot notation
-	Gateway string
-	HostAlias string // datapower host alias
-}
-
-type HostVm struct {
-	Name string
-	NetworkInterface
-}
-
-type HostVmSubsys struct {
-	HostVm
-	HardDiskPassword string // luks storage encryption password
-}
-
-type GatewayRoute struct {
-	Destination string
-	NextHopRouter string
-	Metric string
-}
-
-type GatewayInterface struct {
-	NetworkInterface
-	Routes []GatewayRoute
-}
-
-type HostGateway struct {
-	HostVm
-
-	Interfaces []GatewayInterface // advanced datapower configuration
-
-	GwdPeeringPriority int
-	GwdPeeringInterface string
-
-	RateLimitPeeringPriority int
-	RateLimitPeeringInterface string
-
-	SubsPeeringPriority int
-	SubsPeeringInterface string
-
-	ApiProbePeeringPriority int
-	ApiProbePeeringInterface string
-}
-
-func (vm *HostVm) validateIp() {
-	DecodeAddress(vm.IpAddress, vm.Gateway, vm.SubnetMask)
-}
-
-type IpRanges struct {
-	PodNetwork string
-	ServiceNetwork string
-}
-
-func (ipr *IpRanges) copyDefaults(from IpRanges) {
-	if len(ipr.PodNetwork) == 0 {
-		ipr.PodNetwork = from.PodNetwork
-	}
-
-	if len(ipr.ServiceNetwork) == 0 {
-		ipr.ServiceNetwork = from.ServiceNetwork
-	}
-}
-
-type CloudInit struct {
-	CloudInitFile string
-	InitValues map[string]interface {}
-}
-
-func (c *CloudInit) copyDefaults(from CloudInit) {
-
-	if len(c.CloudInitFile) == 0 {
-		c.CloudInitFile = from.CloudInitFile
-	}
-
-	// todo: do not overwrite values...
-	c.InitValues = from.InitValues
-
-	if c.InitValues == nil {
-		c.InitValues = make(map[string]interface {})
-	}
-}
-
-type VmFirstBoot struct {
-	DnsServers []string
-	VmwareConsolePasswordHash string
-	IpRanges IpRanges
-	Hosts []HostVmSubsys
-}
-
-func (fb *VmFirstBoot) copyDefaults(from VmFirstBoot) {
-
-	// copy dns servers
-	fb.DnsServers = copySlices(fb.DnsServers, from.DnsServers)
-
-	// copy hash password
-	if len(fb.VmwareConsolePasswordHash) == 0 {
-		fb.VmwareConsolePasswordHash = from.VmwareConsolePasswordHash
-	}
-
-	// copy ip ranges
-	fb.IpRanges.copyDefaults(from.IpRanges)
-
-	// do not copy hosts
-	if fb.Hosts == nil {
-		fb.Hosts = []HostVmSubsys{}
-	}
-}
-
-type SubsysVmBase struct {
-	SubsysName string
-	Mode string
-
-	CloudInit CloudInit
-	SearchDomains []string
-	VmFirstBoot VmFirstBoot
-	SshPublicKeyFile string
-
-	OsEnv
-}
-
-func (b *SubsysVmBase) copyDefaults(from SubsysVm) {
-	// copy osenv
-	b.OsEnv.copyDefaults(from.OsEnv)
-
-	// copy mode
-	if len(b.Mode) == 0 {
-		b.Mode = from.Mode
-	}
-
-	// copy cloud-init
-	b.CloudInit.copyDefaults(from.CloudInit)
-
-	// copy search domains
-	b.SearchDomains = copySlices(b.SearchDomains, from.SearchDomains)
-
-	// copy first-boot
-	b.VmFirstBoot.copyDefaults(from.VmFirstBoot)
-
-	// copy ssh-public-key
-	if len(b.SshPublicKeyFile) == 0 {
-		b.SshPublicKeyFile = from.SshPublicKeyFile
-	}
-}
-
-type MgtSubsysVm struct {
-	SubsysVmBase
-
-	CassandraBackup Backup
-
-	CassandraEncryptionKeyFile string
-
-	PlatformApi string
-	ApiManagerUi string
-	CloudAdminUi string
-	ConsumerApi string
-}
-
-type AltSubsysVm struct {
-	SubsysVmBase
-
-	AnalyticsIngestion string
-	AnalyticsClient string
-
-	EnableMessageQueue bool
-}
-
-type PtlSubsysVm struct {
-	SubsysVmBase
-
-	SiteBackup Backup
-
-	PortalAdmin string
-	PortalWww string
-}
-
-type GwySubsysVm struct {
-	SubsysName string
-	Mode string
-
-	// web-gui timeout
-	WebGuiIdleTimeout int
-
-	SearchDomains []string
-	DnsServers []string
-	Hosts []HostGateway
-
-	PassiveDatapowerCluster []string
-
-	ApiGateway string
-	ApicGwService string
-
-	// apic datapower domain
-	DatapowerDomain string
-
-	// apic configuration sequence (low level)
-	ConfigurationSequenceName string
-	ConfigurationExecutionInterval int
-
-	// API gateway
-	DatapowerApiGatewayPort int
-	DatapowerApiGatewayAddress string // host-alias
-
-	// API connect gateway service
-	DatapowerApicGwServicePort int // 3000
-	DatapowerApicGwServiceAddress string // host-alias
-
-	// NTP server (todo: list)
-	NTPServer string
-
-	// low level peering configuration
-
-	GwdPeering string
-	GwdPeeringLocalPort int
-	GwdPeeringMonitorPort int
-	GwdPeeringPersistence string // memory | raid
-
-	RateLimitPeering string
-	RateLimitPeeringLocalPort int
-	RateLimitPeeringMonitorPort int
-
-	SubsPeering string
-	SubsPeeringLocalPort int
-	SubsPeeringMonitorPort int
-
-	ApiProbePeering string
-	ApiProbePeeringLocalPort int
-	ApiProbePeeringMonitorPort int
-
-	// datapower cert configuration
-	DatapowerCryptoDir string
-
-	// gwd_key
-	DatapowerGwdKey string
-
-	// gwd_cert
-	DatapowerGwdCert string
-
-	// ca file, root-ca file, ca-chain file (ca+root-ca)
-	//CaFile string
-	//RootCaFile string
-	//CaChainFile string
-
-	// datapower crypto ca certs
-	DatapowerCaCert string
-	DatapowerRootCert string
-}
-
-//func (gwy *GwySubsysVm) GetCaFileOrDefault() string {
-//	caFileDefault := "dp-ca.pem"
-//	if len(gwy.CaFile) == 0 { return caFileDefault }
-//	return gwy.CaFile
-//}
-//
-//func (gwy *GwySubsysVm) GetRootCaFileOrDefault() string {
-//	rootCaFileDefault := "dp-root-ca.pem"
-//	if len(gwy.RootCaFile) == 0 { return rootCaFileDefault }
-//	return gwy.RootCaFile
-//}
-//
-//func (gwy *GwySubsysVm) GetCaChainFileOrDefault() string {
-//	caChainDefault := "dp-ca-chain.pem"
-//	if len(gwy.CaChainFile) == 0 { return caChainDefault }
-//	return gwy.CaChainFile
-//}
-
-func (gwy *GwySubsysVm) GetWebGuiIdleTimeoutOrDefault() int {
-	webGuiIdleTimeoutDefault := 600
-	if gwy.WebGuiIdleTimeout == 0 { return webGuiIdleTimeoutDefault }
-	return gwy.WebGuiIdleTimeout
-}
-
-func (gwy *GwySubsysVm) GetCryptoDirectoryOrDefault() string {
-	if len(gwy.DatapowerCryptoDir) == 0 {
-		return cryptoDir
-	}
-	return gwy.DatapowerCryptoDir
-}
-
-func (gwy *GwySubsysVm) GetGwdKeyOrDefault() string {
-	if len(gwy.DatapowerGwdKey) == 0 {
-		return gwdKey
-	}
-	return gwy.DatapowerGwdKey
-}
-
-func (gwy *GwySubsysVm) GetGwdCertOrDefault() string {
-	if len(gwy.DatapowerGwdCert) == 0 {
-		return gwdCert
-	}
-	return gwy.DatapowerGwdCert
-}
-
-func (gwy *GwySubsysVm) GetCaCertOrDefault() string {
-	if len(gwy.DatapowerCaCert) == 0 {
-		return "gwd_ca_cert"
-	}
-	return gwy.DatapowerCaCert
-}
-
-func (gwy *GwySubsysVm) GetRootCertOrDefault() string {
-	if len(gwy.DatapowerRootCert) == 0 {
-		return "gwd_root_cert"
-	}
-	return gwy.DatapowerRootCert
-}
-
-func (gwy *GwySubsysVm) GetDatapowerDomainOrDefault() string {
-	if len(gwy.DatapowerDomain) == 0 {
-		return "apiconnect"
-	}
-	return gwy.DatapowerDomain
-}
-
-func (gwy *GwySubsysVm) GetNTPServerOrDefault() string {
-	if len(gwy.NTPServer) == 0 {
-		return "pool.ntp.org"
-	}
-	return gwy.NTPServer
-}
-
-func (gwy *GwySubsysVm) GetGwdPeeringOrDefault() string {
-	if len(gwy.GwdPeering) == 0 {
-		return gwdPeering
-	}
-	return gwy.GwdPeering
-}
-
-func (gwy *GwySubsysVm) GetGwdPeeringLocalPortOrDefault() int {
-	if gwy.GwdPeeringLocalPort == 0 {
-		return gwdPeeringLocalPort
-	}
-	return gwy.GwdPeeringLocalPort
-}
-
-func (gwy *GwySubsysVm) GetGwdPeeringMonitorPortOrDefault() int {
-	if gwy.GwdPeeringMonitorPort == 0 {
-		return gwdPeeringMonitorPort
-	}
-	return gwy.GwdPeeringMonitorPort
-}
-
-func (gwy *GwySubsysVm) GetRateLimitPeeringOrDefault() string {
-	if len(gwy.RateLimitPeering) == 0 {
-		return rateLimitPeering
-	}
-	return gwy.RateLimitPeering
-}
-
-func (gwy *GwySubsysVm) GetRateLimitPeeringLocalPortOrDefault() int {
-	if gwy.RateLimitPeeringLocalPort == 0 {
-		return rateLimitPeeringLocalPort
-	}
-	return gwy.RateLimitPeeringLocalPort
-}
-
-func (gwy *GwySubsysVm) GetRateLimitPeeringMonitorPortOrDefault() int {
-	if gwy.RateLimitPeeringMonitorPort == 0 {
-		return rateLimitPeeringMonitorPort
-	}
-	return gwy.RateLimitPeeringMonitorPort
-}
-
-func (gwy *GwySubsysVm) GetSubsPeeringOrDefault() string {
-	if len(gwy.SubsPeering) == 0 {
-		return subsPeering
-	}
-	return gwy.SubsPeering
-}
-
-func (gwy *GwySubsysVm) GetSubsPeeringLocalPortOrDefault() int {
-	if gwy.SubsPeeringLocalPort == 0 {
-		return subsPeeringLocalPort
-	}
-	return gwy.SubsPeeringLocalPort
-}
-
-func (gwy *GwySubsysVm) GetSubsPeeringMonitorPortOrDefault() int {
-	if gwy.SubsPeeringMonitorPort == 0 {
-		return subsPeeringMonitorPort
-	}
-	return gwy.SubsPeeringMonitorPort
-}
-
-func (gwy *GwySubsysVm) GetApiProbePeeringOrDefault() string {
-	if len(gwy.ApiProbePeering) == 0 {
-		return apiProbePeering
-	}
-	return gwy.ApiProbePeering
-}
-
-func (gwy *GwySubsysVm) GetApiProbePeeringLocalPortOrDefault() int {
-	if gwy.ApiProbePeeringLocalPort == 0 {
-		return apiProbePeeringLocalPort
-	}
-	return gwy.ApiProbePeeringLocalPort
-}
-
-func (gwy *GwySubsysVm) GetApiProbePeeringMonitorPortOrDefault() int {
-	if gwy.ApiProbePeeringLocalPort == 0 {
-		return apiProbePeeringMonitorPort
-	}
-	return gwy.ApiProbePeeringMonitorPort
-}
-
-func (gwy *GwySubsysVm) GetApiGatewayPortOrDefault() int {
-	if gwy.DatapowerApiGatewayPort == 0 { return defaultApiGatewayPort }
-	return gwy.DatapowerApiGatewayPort
-}
-
-func (gwy *GwySubsysVm) GetApiGatewayAddressOrDefault() string {
-	if len(gwy.DatapowerApiGatewayAddress) == 0 {return defaultApiGatewayAddress}
-	return gwy.DatapowerApiGatewayAddress
-}
-
-func (gwy *GwySubsysVm) GetApicGwServicePortOrDefault() int {
-	if gwy.DatapowerApicGwServicePort == 0 {return defaultApicGwServicePort}
-	return gwy.DatapowerApicGwServicePort
-}
-
-func (gwy *GwySubsysVm) GetApicGwServiceAddressOrDefault() string {
-	if len(gwy.DatapowerApicGwServiceAddress) == 0 {return defaultApicGwServiceAddress}
-	return gwy.DatapowerApicGwServiceAddress
-}
 
 type SubsysVm struct {
 	InstallTypeHeader
 
 	Version string
 	Tag string
+	V10 bool
 
 	UseVersion bool // use version for the apic executable
-	Passive bool // passive site deployment, import crypto from active site
+	//Passive bool // passive site deployment, import crypto from active site, replace with byok in certs
 
 	// defaults
-	Mode string // dev|standard
+	Mode string // dev|standard, v10: Production|Nonproduction
 	SshPublicKeyFile string
 	SearchDomains[] string
 	VmFirstBoot VmFirstBoot
@@ -456,7 +33,7 @@ type SubsysVm struct {
 	Portal PtlSubsysVm
 	Gateway GwySubsysVm
 
-	OsEnv
+	//OsEnv
 
 	// config file from which this config was loaded
 	configFileName string
@@ -502,13 +79,66 @@ func ValidateHostIpVm(subsys *SubsysVm) {
 	}
 }
 
+func GenSubsysVm(jsonConfigFile string, v10 bool, verbose bool) error {
+	// gen subsys
+	subsys := &SubsysVm{}
+	subsys.gen(v10, verbose)
+
+	// json encode subsys
+	b, err := json.Marshal(subsys)
+	if err != nil {
+		return err
+	}
+
+	var out bytes.Buffer
+	_ = json.Indent(&out, b, "", "\t\t")
+	_, _ = out.WriteTo(os.Stdout)
+
+	return nil
+}
+
+func (subsys *SubsysVm) gen(v10, verbose bool) {
+	subsys.genDefaults(v10, verbose)
+
+	//subsys.Certs.gen();
+
+	subsys.Management.gen(v10, verbose);
+	subsys.Analytics.gen(v10, verbose);
+	subsys.Portal.gen(v10, verbose);
+	subsys.Gateway.gen(v10, verbose);
+}
+
+func (subsys *SubsysVm) genDefaults(v10, verbose bool) {
+	subsys.InstallType = InstallTypeOva
+
+	if v10 {
+		subsys.Version = "linux_lts_v10"
+	} else {
+		subsys.Version = "linux_lts_v2018.4.1.12"
+	}
+
+	subsys.Tag = "tag"
+	subsys.V10 = v10
+	subsys.UseVersion = true
+
+	if v10 {
+		subsys.Mode = "Production"
+	} else {
+		subsys.Mode = "standard"
+	}
+
+	subsys.SshPublicKeyFile = "/path/to/public-key-file"
+	subsys.SearchDomains = []string {"my.domain.com", "domain.com"}
+
+	subsys.VmFirstBoot.gen(v10, verbose, false, false)
+	subsys.CloudInit.gen(v10, verbose)
+}
+
 func LoadSubsysVm(jsonConfigFile string) *SubsysVm {
 
 	// unmarshal values file
 	subsys := &SubsysVm{}
-	unmarshallJsonFile(jsonConfigFile, &subsys)
-
-	subsys.OsEnv.init2(subsys.Version, subsys.UseVersion)
+	unmarshalJsonFile(jsonConfigFile, &subsys)
 
 	// save input config file
 	subsys.configFileName = jsonConfigFile
@@ -516,6 +146,7 @@ func LoadSubsysVm(jsonConfigFile string) *SubsysVm {
 	isManagement := len(subsys.Management.SubsysName) > 0
 	isAnalytics := len(subsys.Analytics.SubsysName) > 0
 	isPortal := len(subsys.Portal.SubsysName) > 0
+	isGateway := len(subsys.Gateway.SubsysName) > 0
 
 	// copy defaults
 	if isManagement {
@@ -530,8 +161,13 @@ func LoadSubsysVm(jsonConfigFile string) *SubsysVm {
 		subsys.Portal.copyDefaults(*subsys)
 	}
 
+	if isGateway {
+		// @todo: copy defaults
+	}
+
 	// copy certs defaults
-	subsys.Certs.Passive = subsys.Passive
+	byok := false
+	subsys.Certs.Passive = byok // subsys.Passive
 
 	return subsys
 }
@@ -563,8 +199,12 @@ func ApplyTemplateVm(subsys *SubsysVm, outfiles map[string]string, subsysOnly, c
 		cloudinitt = parseTemplates(tbox, tpdir(tbox) + "cloud-init-vm.tmpl", tpdir(tbox) + "helpers.tmpl")
 	}
 
+	var osenv OsEnv
+	osenv.init2(subsys.Version, subsys.UseVersion)
+
 	// execute templates
-	shellext := subsys.OsEnv.ShellExt
+	//shellext := subsys.OsEnv.ShellExt
+	shellext := osenv.ShellExt
 
 	var outpath string
 

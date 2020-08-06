@@ -15,6 +15,6 @@ type InstallTypeHeader struct {
 
 func InstallType(configFile string) string {
 	h := InstallTypeHeader{InstallType: InstallTypeUknown}
-	unmarshallJsonFile(configFile, &h)
+	unmarshalJsonFile(configFile, &h)
 	return strings.ToLower(strings.TrimSpace(h.InstallType))
 }

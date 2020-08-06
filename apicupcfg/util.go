@@ -27,6 +27,10 @@ func bytesInBox(file string, tbox *rice.Box) []byte {
 	return c
 }
 
+func FileName(dir string, file string) string {
+	return fileName(dir, file)
+}
+
 func fileName(dir string, file string) string {
 	dir2 := dir
 
@@ -330,7 +334,7 @@ func writeTemplate2(t *template.Template, file string, xf func(buf string) strin
 	writeFileBytes(file, []byte(xf(buf)))
 }
 
-func unmarshallJsonFile(file string, objptr interface{}) {
+func unmarshalJsonFile(file string, objptr interface{}) {
 	if err := json.Unmarshal(readFileBytes(file), objptr); err != nil {
 		log.Fatalf("json unmarshal failed... %s", err)
 	}

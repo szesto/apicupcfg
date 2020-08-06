@@ -2,27 +2,6 @@ package apicupcfg
 
 import rice "github.com/GeertJohan/go.rice"
 
-type Backup struct {
-	// sftp/objstore
-	BackupProtocol string
-
-	// sftp backup
-	BackupAuthUser string
-	BackupAuthPass string
-	BackupHost string
-	BackupPort int
-	BackupPath string
-
-	// objstore backup
-	// objstore://s3-secret-key-id@s3-secret-access-key/endpoint/region/bucket/subfolder
-	ObjstoreS3SecretKeyId string // -> auth-user
-	ObjstoreS3SecretAccessKey string // -> auth-pass
-	ObjstoreEndpointRegion string // endpoint/region -> host
-	ObjstoreBucketSubfolder string // bucket|bucket/subfolder -> backup-path
-
-	BackupSchedule string
-}
-
 type SubsysK8sBase struct {
 	OsEnv
 
@@ -178,7 +157,7 @@ type SubsysK8s struct {
 
 func LoadSubsysK8s(jsonConfigFile string) *SubsysK8s {
 	subsys := &SubsysK8s{}
-	unmarshallJsonFile(jsonConfigFile, &subsys)
+	unmarshalJsonFile(jsonConfigFile, &subsys)
 
 	subsys.OsEnv.init2(subsys.Version, subsys.UseVersion)
 

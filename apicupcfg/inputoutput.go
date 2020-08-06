@@ -20,12 +20,57 @@ const etUserFacingPublicCertsOut = "shared-endpoint-trust-userfacingpubliccerts"
 const etPublicCertsOut = "shared-endpoint-trust-publiccerts"
 const etMutualAuthCertsOut = "shared-endpoint-trust-mutualauthcerts"
 
+const allPublicUserFacingCsr = "all-public-user-facing-csr"
+const allPublicCsr = "all-public-csr"
+const allCommonCsr = "all-common-csr"
+const allInternalCsr = "all-internal-csr"
+
 const CommonCsrOutDir = "common-csr"
 const CustomCsrOutDir = "custom-csr"
 const SharedCsrOutDir = "shared-csr"
 const ProjectOutDir = "project"
 
 const DatapowerOutDir = "datapower"
+
+type Outfiles struct {
+	outmap map[string]string
+}
+
+func (outfiles Outfiles) Init(baseout string) {
+	outfiles.outmap = OutputFiles(baseout)
+}
+
+func (outfiles Outfiles) CustomCsrOutDir() string {
+	return concatSubdir(outfiles.outmap[outdir], outfiles.outmap[CustomCsrOutDir])
+}
+
+func (outfiles Outfiles) CommonCsrOutDir() string {
+	return concatSubdir(outfiles.outmap[outdir], outfiles.outmap[CommonCsrOutDir])
+}
+
+func (outfiles Outfiles) AllPublicUserFacingCsrFileName() string {
+	return fileName(outfiles.CustomCsrOutDir(), outfiles.outmap[allPublicUserFacingCsr])
+}
+
+func (outfiles Outfiles) AllPublicCsrFileName() string {
+	return fileName(outfiles.CustomCsrOutDir(), outfiles.outmap[allPublicCsr])
+}
+
+func (outfiles Outfiles) AllCommonCsrFileName() string {
+	return fileName(outfiles.CustomCsrOutDir(), outfiles.outmap[allCommonCsr])
+}
+
+func (outfiles Outfiles) AllInternalCsrFileName() string {
+	return fileName(outfiles.CustomCsrOutDir(), outfiles.outmap[allInternalCsr])
+}
+
+func (outfiles Outfiles) UserFacingPublicCertsOutFileName() string {
+	return fileName(outfiles.outmap[outdir], outfiles.outmap[userFacingPublicCertsOut])
+}
+
+func (outfiles Outfiles) PublicCertsOutFileName() string {
+	return fileName(outfiles.outmap[outdir], outfiles.outmap[publicCertsOut])
+}
 
 func OutputFiles(baseout string) map[string]string {
 

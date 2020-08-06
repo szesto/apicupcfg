@@ -191,7 +191,7 @@ func dpHostAlias(outdir, outfile string, dp DpHostAlias, tbox *rice.Box) {
 }
 
 type DpNTPService struct {
-	NTPServer string
+	NTPServers []string
 }
 
 func dpNTPService(outdir, outfile string, dp DpNTPService, tbox *rice.Box) {
@@ -334,12 +334,12 @@ func datapowerOpensslConfig(subsys *SubsysVm, outputdir string, osenv OsEnv, tbo
 	}
 
 	// add passive datapower cluster to alt cns
-	for _, hostname := range subsys.Gateway.PassiveDatapowerCluster {
-		if len(hostname) == 0 {
-			continue
-		}
-		cs.AltCns = append(cs.AltCns, hostname)
-	}
+	//for _, hostname := range subsys.Gateway.PassiveDatapowerCluster {
+	//	if len(hostname) == 0 {
+	//		continue
+	//	}
+	//	cs.AltCns = append(cs.AltCns, hostname)
+	//}
 
 	// save cert-spec in combined cert-map
 	certmap[cs.Cn] = cs
@@ -349,13 +349,14 @@ func datapowerOpensslConfig(subsys *SubsysVm, outputdir string, osenv OsEnv, tbo
 	writeTemplate(ekuServerClient, outpath, cs)
 
 	// key-pair
+	byok := false
 	outpath = fileName(outputdir, cs.CsrConf + osenv.ShellExt)
-	writeTemplate(keypairTemplate, outpath, OsEnvCert{OsEnv: osenv, CertSpec: cs, Passive: subsys.Passive})
+	writeTemplate(keypairTemplate, outpath, OsEnvCert{OsEnv: osenv, CertSpec: cs, Passive: byok})
 
 	// p12
 	cs12 := cs
 	outpath = fileName(outputdir, cs12.KeyFile + ".p12" + osenv.ShellExt)
-	writeTemplate(p12Template, outpath, OsEnvCert{OsEnv: osenv, CertSpec: cs12, Passive: subsys.Passive})
+	writeTemplate(p12Template, outpath, OsEnvCert{OsEnv: osenv, CertSpec: cs12, Passive: byok})
 
 /*
 	// api gateway
@@ -1308,8 +1309,8 @@ func datapowerCluster(subsys *SubsysVm, outfiles map[string]string, tbox *rice.B
 	}
 
 	// ntp service
-	ntpserver := gwy.GetNTPServerOrDefault()
-	dpntp := DpNTPService{NTPServer: ntpserver}
+	ntpservers := gwy.GetNTPServersOrDefault()
+	dpntp := DpNTPService{NTPServers: ntpservers}
 	outfile := fmt.Sprintf("%s", "dp-ntp-service.xml")
 	dpNTPService(somaoutdir, outfile, dpntp, tbox)
 
